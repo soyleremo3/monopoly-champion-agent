@@ -68,6 +68,14 @@ pytest 9.1.1
 Nothing was installed into the submodule or committed to this repo; the venv
 is local machine state only.
 
+**Training-path addendum** (found running the DDQN smoke, see
+[EXPERIMENTS.md](EXPERIMENTS.md)): `tools/train_and_save.py` additionally
+needs `psutil` — its memory watchdog (`training_guard.py`) has no working
+fallback on Windows without it (no `/proc`, no `resource` module). It also
+needs `PYTHONIOENCODING=utf-8` set, because the training loop's progress
+logging prints `ε` and Windows' default `cp1252` console encoding can't
+encode it. Neither is required for the evaluation-only path above.
+
 ## Test results
 
 Command (from `references/DeepRL_Monopoly`):
