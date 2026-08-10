@@ -1,0 +1,227 @@
+{
+  "checkpoint_hashes": {},
+  "disclaimer": "These are ppo-plus-v2 simulator results for ASU-inspired reconstructions; they do not reproduce or estimate either cited paper's reported win rates.",
+  "elapsed_seconds": 1.4926752999890596,
+  "final_net_worth": {
+    "fixed-a": {
+      "mean": 0.0,
+      "values": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "fixed-b": {
+      "mean": 7730.0,
+      "values": [
+        0.0,
+        0.0,
+        30920.0,
+        0.0
+      ]
+    },
+    "fixed-c": {
+      "mean": 4475.875,
+      "values": [
+        0.0,
+        0.0,
+        0.0,
+        17903.5
+      ]
+    },
+    "fixed-d": {
+      "mean": 23734.125,
+      "values": [
+        30905.0,
+        33795.0,
+        0.0,
+        30236.5
+      ]
+    }
+  },
+  "frozen_spec_hash": "9ab1907e0de1af4b253ce36ffa107c4fdb5e2b913858ef87c362423e61a6fd74",
+  "games": [
+    {
+      "decisions": 1484,
+      "elapsed_seconds": 0.1900690000038594,
+      "final_net_worth": [
+        30905.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "focus_seat": 0,
+      "focus_won": true,
+      "policies": [
+        "fixed-d",
+        "fixed-a",
+        "fixed-b",
+        "fixed-c"
+      ],
+      "provisional_leader": 0,
+      "rounds": 40,
+      "scripted_compatibility_fallbacks": [
+        0,
+        1,
+        5,
+        1
+      ],
+      "seed": 42,
+      "truncated": false,
+      "winner": 0,
+      "winner_policy": "fixed-d"
+    },
+    {
+      "decisions": 2498,
+      "elapsed_seconds": 0.3152787999861175,
+      "final_net_worth": [
+        0.0,
+        33795.0,
+        0.0,
+        0.0
+      ],
+      "focus_seat": 1,
+      "focus_won": true,
+      "policies": [
+        "fixed-a",
+        "fixed-d",
+        "fixed-b",
+        "fixed-c"
+      ],
+      "provisional_leader": 1,
+      "rounds": 92,
+      "scripted_compatibility_fallbacks": [
+        1,
+        1,
+        9,
+        19
+      ],
+      "seed": 42,
+      "truncated": false,
+      "winner": 1,
+      "winner_policy": "fixed-d"
+    },
+    {
+      "decisions": 2080,
+      "elapsed_seconds": 0.26257360000454355,
+      "final_net_worth": [
+        0.0,
+        30920.0,
+        0.0,
+        0.0
+      ],
+      "focus_seat": 2,
+      "focus_won": false,
+      "policies": [
+        "fixed-a",
+        "fixed-b",
+        "fixed-d",
+        "fixed-c"
+      ],
+      "provisional_leader": 1,
+      "rounds": 60,
+      "scripted_compatibility_fallbacks": [
+        1,
+        0,
+        14,
+        5
+      ],
+      "seed": 42,
+      "truncated": false,
+      "winner": 1,
+      "winner_policy": "fixed-b"
+    },
+    {
+      "decisions": 5301,
+      "elapsed_seconds": 0.7174008000001777,
+      "final_net_worth": [
+        0.0,
+        0.0,
+        17903.5,
+        30236.5
+      ],
+      "focus_seat": 3,
+      "focus_won": true,
+      "policies": [
+        "fixed-a",
+        "fixed-b",
+        "fixed-c",
+        "fixed-d"
+      ],
+      "provisional_leader": 3,
+      "rounds": 200,
+      "scripted_compatibility_fallbacks": [
+        1,
+        4,
+        0,
+        0
+      ],
+      "seed": 42,
+      "truncated": false,
+      "winner": 3,
+      "winner_policy": "fixed-d"
+    }
+  ],
+  "paired_block_size": 4,
+  "policy_ids": {
+    "focus": "fixed-d",
+    "opponents": [
+      "fixed-a",
+      "fixed-b",
+      "fixed-c"
+    ]
+  },
+  "ruleset": "ppo-plus-v2",
+  "scripted_compatibility_fallbacks": 62,
+  "seeds": [
+    42
+  ],
+  "truncations": 0,
+  "win_rates": {
+    "fixed-a": {
+      "games": 4,
+      "truncated_appearances": 0,
+      "wilson_95": [
+        0.0,
+        0.4898908364545973
+      ],
+      "win_rate": 0.0,
+      "win_rate_percent": 0.0,
+      "wins": 0
+    },
+    "fixed-b": {
+      "games": 4,
+      "truncated_appearances": 0,
+      "wilson_95": [
+        0.04558726080970055,
+        0.6993581574175981
+      ],
+      "win_rate": 0.25,
+      "win_rate_percent": 25.0,
+      "wins": 1
+    },
+    "fixed-c": {
+      "games": 4,
+      "truncated_appearances": 0,
+      "wilson_95": [
+        0.0,
+        0.4898908364545973
+      ],
+      "win_rate": 0.0,
+      "win_rate_percent": 0.0,
+      "wins": 0
+    },
+    "fixed-d": {
+      "games": 4,
+      "truncated_appearances": 0,
+      "wilson_95": [
+        0.30064184258240184,
+        0.9544127391902995
+      ],
+      "win_rate": 0.75,
+      "win_rate_percent": 75.0,
+      "wins": 3
+    }
+  }
+}
