@@ -1,0 +1,1462 @@
+{
+  "checkpoint_hashes": {
+    "ddqn:C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\training_smoke\\milestones\\ddqn_hybrid_20_v2_milestone.pt": "47f3c177c1ae42449b8b3d1a34c253204329e15240a6345d78412f4f900716f4"
+  },
+  "disclaimer": "These are ppo-plus-v2 simulator results for ASU-inspired reconstructions; they do not reproduce or estimate either cited paper's reported win rates.",
+  "elapsed_seconds": 46.7495061000227,
+  "final_net_worth": {
+    "ddqn:C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\training_smoke\\milestones\\ddqn_hybrid_20_v2_milestone.pt": {
+      "mean": 363.875,
+      "values": [
+        0.0,
+        5209.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        9346.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "fixed-a": {
+      "mean": 975.525,
+      "values": [
+        0.0,
+        4998.0,
+        0.0,
+        15120.0,
+        0.0,
+        0.0,
+        477.0,
+        860.0,
+        0.0,
+        4228.0,
+        3095.0,
+        0.0,
+        2012.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        8231.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "fixed-b": {
+      "mean": 18993.8375,
+      "values": [
+        0.0,
+        12353.5,
+        35950.0,
+        16175.5,
+        0.0,
+        0.0,
+        25726.0,
+        12880.0,
+        21503.5,
+        19632.5,
+        14834.5,
+        17394.0,
+        18642.0,
+        0.0,
+        35739.0,
+        43381.0,
+        32080.0,
+        41600.0,
+        31835.0,
+        0.0,
+        0.0,
+        13867.0,
+        31474.0,
+        17277.0,
+        41122.0,
+        37515.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        9536.0,
+        0.0,
+        40744.0,
+        35460.0,
+        26667.0,
+        0.0,
+        35730.0,
+        33032.0,
+        38311.0,
+        19292.0
+      ]
+    },
+    "fixed-c": {
+      "mean": 15388.6875,
+      "values": [
+        35718.0,
+        11929.5,
+        0.0,
+        5156.5,
+        39020.0,
+        40819.0,
+        8000.0,
+        9102.0,
+        8926.5,
+        9575.0,
+        14317.0,
+        25041.0,
+        12208.0,
+        35172.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        34241.0,
+        37495.0,
+        8429.0,
+        0.0,
+        27498.0,
+        0.0,
+        0.0,
+        37187.0,
+        35663.0,
+        34661.0,
+        40093.0,
+        22466.0,
+        32377.0,
+        0.0,
+        0.0,
+        0.0,
+        34921.0,
+        0.0,
+        0.0,
+        0.0,
+        15532.0
+      ]
+    }
+  },
+  "frozen_spec_hash": "9ab1907e0de1af4b253ce36ffa107c4fdb5e2b913858ef87c362423e61a6fd74",
+  "games": [
+    {
+      "decisions": 4623,
+      "elapsed_seconds": 2.28483970000525,
+      "final_net_worth": [
+        0.0,
+        0.0,
+        0.0,
+        35718.0
+      ],
+      "focus_seat": 0,
+      "focus_won": false,
+      "policies": [
+        "ddqn:C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\training_smoke\\milestones\\ddqn_hybrid_20_v2_milestone.pt",
+        "fixed-a",
+        "fixed-b",
+        "fixed-c"
+      ],
+      "provisional_leader": 3,
+      "rounds": 136,
+      "scripted_compatibility_fallbacks": [
+        0,
+        1,
+        15,
+        0
+      ],
+      "seed": 10000,
+      "truncated": false,
+      "winner": 3,
+      "winner_policy": "fixed-c"
+    },
+    {
+      "decisions": 8733,
+      "elapsed_seconds": 2.648615999991307,
+      "final_net_worth": [
+        4998.0,
+        5209.0,
+        12353.5,
+        11929.5
+      ],
+      "focus_seat": 1,
+      "focus_won": false,
+      "policies": [
+        "fixed-a",
+        "ddqn:C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\training_smoke\\milestones\\ddqn_hybrid_20_v2_milestone.pt",
+        "fixed-b",
+        "fixed-c"
+      ],
+      "provisional_leader": 2,
+      "rounds": 200,
+      "scripted_compatibility_fallbacks": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "seed": 10000,
+      "truncated": false,
+      "winner": 2,
+      "winner_policy": "fixed-b"
+    },
+    {
+      "decisions": 3188,
+      "elapsed_seconds": 0.7933135000057518,
+      "final_net_worth": [
+        0.0,
+        35950.0,
+        0.0,
+        0.0
+      ],
+      "focus_seat": 2,
+      "focus_won": false,
+      "policies": [
+        "fixed-a",
+        "fixed-b",
+        "ddqn:C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\training_smoke\\milestones\\ddqn_hybrid_20_v2_milestone.pt",
+        "fixed-c"
+      ],
+      "provisional_leader": 1,
+      "rounds": 82,
+      "scripted_compatibility_fallbacks": [
+        1,
+        0,
+        0,
+        2
+      ],
+      "seed": 10000,
+      "truncated": false,
+      "winner": 1,
+      "winner_policy": "fixed-b"
+    },
+    {
+      "decisions": 5753,
+      "elapsed_seconds": 1.2108660000085365,
+      "final_net_worth": [
+        15120.0,
+        16175.5,
+        5156.5,
+        0.0
+      ],
+      "focus_seat": 3,
+      "focus_won": false,
+      "policies": [
+        "fixed-a",
+        "fixed-b",
+        "fixed-c",
+        "ddqn:C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\training_smoke\\milestones\\ddqn_hybrid_20_v2_milestone.pt"
+      ],
+      "provisional_leader": 1,
+      "rounds": 200,
+      "scripted_compatibility_fallbacks": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "seed": 10000,
+      "truncated": false,
+      "winner": 1,
+      "winner_policy": "fixed-b"
+    },
+    {
+      "decisions": 4793,
+      "elapsed_seconds": 1.7029944000241812,
+      "final_net_worth": [
+        0.0,
+        0.0,
+        0.0,
+        39020.0
+      ],
+      "focus_seat": 0,
+      "focus_won": false,
+      "policies": [
+        "ddqn:C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\training_smoke\\milestones\\ddqn_hybrid_20_v2_milestone.pt",
+        "fixed-a",
+        "fixed-b",
+        "fixed-c"
+      ],
+      "provisional_leader": 3,
+      "rounds": 109,
+      "scripted_compatibility_fallbacks": [
+        0,
+        1,
+        10,
+        0
+      ],
+      "seed": 10001,
+      "truncated": false,
+      "winner": 3,
+      "winner_policy": "fixed-c"
+    },
+    {
+      "decisions": 3437,
+      "elapsed_seconds": 1.2376053000043612,
+      "final_net_worth": [
+        0.0,
+        0.0,
+        0.0,
+        40819.0
+      ],
+      "focus_seat": 1,
+      "focus_won": false,
+      "policies": [
+        "fixed-a",
+        "ddqn:C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\training_smoke\\milestones\\ddqn_hybrid_20_v2_milestone.pt",
+        "fixed-b",
+        "fixed-c"
+      ],
+      "provisional_leader": 3,
+      "rounds": 87,
+      "scripted_compatibility_fallbacks": [
+        1,
+        0,
+        4,
+        0
+      ],
+      "seed": 10001,
+      "truncated": false,
+      "winner": 3,
+      "winner_policy": "fixed-c"
+    },
+    {
+      "decisions": 5551,
+      "elapsed_seconds": 1.194687299983343,
+      "final_net_worth": [
+        477.0,
+        25726.0,
+        0.0,
+        8000.0
+      ],
+      "focus_seat": 2,
+      "focus_won": false,
+      "policies": [
+        "fixed-a",
+        "fixed-b",
+        "ddqn:C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\training_smoke\\milestones\\ddqn_hybrid_20_v2_milestone.pt",
+        "fixed-c"
+      ],
+      "provisional_leader": 1,
+      "rounds": 200,
+      "scripted_compatibility_fallbacks": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "seed": 10001,
+      "truncated": false,
+      "winner": 1,
+      "winner_policy": "fixed-b"
+    },
+    {
+      "decisions": 9036,
+      "elapsed_seconds": 3.620137899997644,
+      "final_net_worth": [
+        860.0,
+        12880.0,
+        9102.0,
+        9346.0
+      ],
+      "focus_seat": 3,
+      "focus_won": false,
+      "policies": [
+        "fixed-a",
+        "fixed-b",
+        "fixed-c",
+        "ddqn:C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\training_smoke\\milestones\\ddqn_hybrid_20_v2_milestone.pt"
+      ],
+      "provisional_leader": 1,
+      "rounds": 200,
+      "scripted_compatibility_fallbacks": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "seed": 10001,
+      "truncated": false,
+      "winner": 1,
+      "winner_policy": "fixed-b"
+    },
+    {
+      "decisions": 4378,
+      "elapsed_seconds": 0.9362876000232063,
+      "final_net_worth": [
+        0.0,
+        0.0,
+        21503.5,
+        8926.5
+      ],
+      "focus_seat": 0,
+      "focus_won": false,
+      "policies": [
+        "ddqn:C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\training_smoke\\milestones\\ddqn_hybrid_20_v2_milestone.pt",
+        "fixed-a",
+        "fixed-b",
+        "fixed-c"
+      ],
+      "provisional_leader": 2,
+      "rounds": 200,
+      "scripted_compatibility_fallbacks": [
+        0,
+        1,
+        0,
+        0
+      ],
+      "seed": 10002,
+      "truncated": false,
+      "winner": 2,
+      "winner_policy": "fixed-b"
+    },
+    {
+      "decisions": 5806,
+      "elapsed_seconds": 1.260409200011054,
+      "final_net_worth": [
+        4228.0,
+        0.0,
+        19632.5,
+        9575.0
+      ],
+      "focus_seat": 1,
+      "focus_won": false,
+      "policies": [
+        "fixed-a",
+        "ddqn:C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\training_smoke\\milestones\\ddqn_hybrid_20_v2_milestone.pt",
+        "fixed-b",
+        "fixed-c"
+      ],
+      "provisional_leader": 2,
+      "rounds": 200,
+      "scripted_compatibility_fallbacks": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "seed": 10002,
+      "truncated": false,
+      "winner": 2,
+      "winner_policy": "fixed-b"
+    },
+    {
+      "decisions": 6094,
+      "elapsed_seconds": 1.4511125999852084,
+      "final_net_worth": [
+        3095.0,
+        14834.5,
+        0.0,
+        14317.0
+      ],
+      "focus_seat": 2,
+      "focus_won": false,
+      "policies": [
+        "fixed-a",
+        "fixed-b",
+        "ddqn:C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\training_smoke\\milestones\\ddqn_hybrid_20_v2_milestone.pt",
+        "fixed-c"
+      ],
+      "provisional_leader": 1,
+      "rounds": 200,
+      "scripted_compatibility_fallbacks": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "seed": 10002,
+      "truncated": false,
+      "winner": 1,
+      "winner_policy": "fixed-b"
+    },
+    {
+      "decisions": 4951,
+      "elapsed_seconds": 1.055411200009985,
+      "final_net_worth": [
+        0.0,
+        17394.0,
+        25041.0,
+        0.0
+      ],
+      "focus_seat": 3,
+      "focus_won": false,
+      "policies": [
+        "fixed-a",
+        "fixed-b",
+        "fixed-c",
+        "ddqn:C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\training_smoke\\milestones\\ddqn_hybrid_20_v2_milestone.pt"
+      ],
+      "provisional_leader": 2,
+      "rounds": 200,
+      "scripted_compatibility_fallbacks": [
+        1,
+        0,
+        0,
+        0
+      ],
+      "seed": 10002,
+      "truncated": false,
+      "winner": 2,
+      "winner_policy": "fixed-c"
+    },
+    {
+      "decisions": 5358,
+      "elapsed_seconds": 0.9843611999822315,
+      "final_net_worth": [
+        0.0,
+        2012.0,
+        18642.0,
+        12208.0
+      ],
+      "focus_seat": 0,
+      "focus_won": false,
+      "policies": [
+        "ddqn:C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\training_smoke\\milestones\\ddqn_hybrid_20_v2_milestone.pt",
+        "fixed-a",
+        "fixed-b",
+        "fixed-c"
+      ],
+      "provisional_leader": 2,
+      "rounds": 200,
+      "scripted_compatibility_fallbacks": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "seed": 10003,
+      "truncated": false,
+      "winner": 2,
+      "winner_policy": "fixed-b"
+    },
+    {
+      "decisions": 3172,
+      "elapsed_seconds": 0.7492205000016838,
+      "final_net_worth": [
+        0.0,
+        0.0,
+        0.0,
+        35172.0
+      ],
+      "focus_seat": 1,
+      "focus_won": false,
+      "policies": [
+        "fixed-a",
+        "ddqn:C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\training_smoke\\milestones\\ddqn_hybrid_20_v2_milestone.pt",
+        "fixed-b",
+        "fixed-c"
+      ],
+      "provisional_leader": 3,
+      "rounds": 127,
+      "scripted_compatibility_fallbacks": [
+        1,
+        0,
+        25,
+        0
+      ],
+      "seed": 10003,
+      "truncated": false,
+      "winner": 3,
+      "winner_policy": "fixed-c"
+    },
+    {
+      "decisions": 2822,
+      "elapsed_seconds": 0.8290309000003617,
+      "final_net_worth": [
+        0.0,
+        35739.0,
+        0.0,
+        0.0
+      ],
+      "focus_seat": 2,
+      "focus_won": false,
+      "policies": [
+        "fixed-a",
+        "fixed-b",
+        "ddqn:C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\training_smoke\\milestones\\ddqn_hybrid_20_v2_milestone.pt",
+        "fixed-c"
+      ],
+      "provisional_leader": 1,
+      "rounds": 85,
+      "scripted_compatibility_fallbacks": [
+        1,
+        0,
+        0,
+        2
+      ],
+      "seed": 10003,
+      "truncated": false,
+      "winner": 1,
+      "winner_policy": "fixed-b"
+    },
+    {
+      "decisions": 3210,
+      "elapsed_seconds": 1.0298044999944977,
+      "final_net_worth": [
+        0.0,
+        43381.0,
+        0.0,
+        0.0
+      ],
+      "focus_seat": 3,
+      "focus_won": false,
+      "policies": [
+        "fixed-a",
+        "fixed-b",
+        "fixed-c",
+        "ddqn:C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\training_smoke\\milestones\\ddqn_hybrid_20_v2_milestone.pt"
+      ],
+      "provisional_leader": 1,
+      "rounds": 109,
+      "scripted_compatibility_fallbacks": [
+        1,
+        0,
+        3,
+        0
+      ],
+      "seed": 10003,
+      "truncated": false,
+      "winner": 1,
+      "winner_policy": "fixed-b"
+    },
+    {
+      "decisions": 3477,
+      "elapsed_seconds": 0.7540060999745037,
+      "final_net_worth": [
+        0.0,
+        0.0,
+        32080.0,
+        0.0
+      ],
+      "focus_seat": 0,
+      "focus_won": false,
+      "policies": [
+        "ddqn:C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\training_smoke\\milestones\\ddqn_hybrid_20_v2_milestone.pt",
+        "fixed-a",
+        "fixed-b",
+        "fixed-c"
+      ],
+      "provisional_leader": 2,
+      "rounds": 139,
+      "scripted_compatibility_fallbacks": [
+        0,
+        1,
+        0,
+        15
+      ],
+      "seed": 10004,
+      "truncated": false,
+      "winner": 2,
+      "winner_policy": "fixed-b"
+    },
+    {
+      "decisions": 3093,
+      "elapsed_seconds": 1.064876100019319,
+      "final_net_worth": [
+        0.0,
+        0.0,
+        41600.0,
+        0.0
+      ],
+      "focus_seat": 1,
+      "focus_won": false,
+      "policies": [
+        "fixed-a",
+        "ddqn:C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\training_smoke\\milestones\\ddqn_hybrid_20_v2_milestone.pt",
+        "fixed-b",
+        "fixed-c"
+      ],
+      "provisional_leader": 2,
+      "rounds": 80,
+      "scripted_compatibility_fallbacks": [
+        1,
+        0,
+        0,
+        11
+      ],
+      "seed": 10004,
+      "truncated": false,
+      "winner": 2,
+      "winner_policy": "fixed-b"
+    },
+    {
+      "decisions": 2891,
+      "elapsed_seconds": 0.9405787000141572,
+      "final_net_worth": [
+        0.0,
+        31835.0,
+        0.0,
+        0.0
+      ],
+      "focus_seat": 2,
+      "focus_won": false,
+      "policies": [
+        "fixed-a",
+        "fixed-b",
+        "ddqn:C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\training_smoke\\milestones\\ddqn_hybrid_20_v2_milestone.pt",
+        "fixed-c"
+      ],
+      "provisional_leader": 1,
+      "rounds": 82,
+      "scripted_compatibility_fallbacks": [
+        1,
+        0,
+        0,
+        5
+      ],
+      "seed": 10004,
+      "truncated": false,
+      "winner": 1,
+      "winner_policy": "fixed-b"
+    },
+    {
+      "decisions": 3388,
+      "elapsed_seconds": 0.8266943000198808,
+      "final_net_worth": [
+        0.0,
+        0.0,
+        34241.0,
+        0.0
+      ],
+      "focus_seat": 3,
+      "focus_won": false,
+      "policies": [
+        "fixed-a",
+        "fixed-b",
+        "fixed-c",
+        "ddqn:C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\training_smoke\\milestones\\ddqn_hybrid_20_v2_milestone.pt"
+      ],
+      "provisional_leader": 2,
+      "rounds": 127,
+      "scripted_compatibility_fallbacks": [
+        1,
+        6,
+        0,
+        0
+      ],
+      "seed": 10004,
+      "truncated": false,
+      "winner": 2,
+      "winner_policy": "fixed-c"
+    },
+    {
+      "decisions": 3641,
+      "elapsed_seconds": 0.7681892999971751,
+      "final_net_worth": [
+        0.0,
+        0.0,
+        0.0,
+        37495.0
+      ],
+      "focus_seat": 0,
+      "focus_won": false,
+      "policies": [
+        "ddqn:C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\training_smoke\\milestones\\ddqn_hybrid_20_v2_milestone.pt",
+        "fixed-a",
+        "fixed-b",
+        "fixed-c"
+      ],
+      "provisional_leader": 3,
+      "rounds": 127,
+      "scripted_compatibility_fallbacks": [
+        0,
+        1,
+        6,
+        0
+      ],
+      "seed": 10005,
+      "truncated": false,
+      "winner": 3,
+      "winner_policy": "fixed-c"
+    },
+    {
+      "decisions": 5610,
+      "elapsed_seconds": 1.2094779999752063,
+      "final_net_worth": [
+        8231.0,
+        0.0,
+        13867.0,
+        8429.0
+      ],
+      "focus_seat": 1,
+      "focus_won": false,
+      "policies": [
+        "fixed-a",
+        "ddqn:C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\training_smoke\\milestones\\ddqn_hybrid_20_v2_milestone.pt",
+        "fixed-b",
+        "fixed-c"
+      ],
+      "provisional_leader": 2,
+      "rounds": 200,
+      "scripted_compatibility_fallbacks": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "seed": 10005,
+      "truncated": false,
+      "winner": 2,
+      "winner_policy": "fixed-b"
+    },
+    {
+      "decisions": 1737,
+      "elapsed_seconds": 0.4682491999992635,
+      "final_net_worth": [
+        0.0,
+        31474.0,
+        0.0,
+        0.0
+      ],
+      "focus_seat": 2,
+      "focus_won": false,
+      "policies": [
+        "fixed-a",
+        "fixed-b",
+        "ddqn:C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\training_smoke\\milestones\\ddqn_hybrid_20_v2_milestone.pt",
+        "fixed-c"
+      ],
+      "provisional_leader": 1,
+      "rounds": 60,
+      "scripted_compatibility_fallbacks": [
+        1,
+        0,
+        0,
+        6
+      ],
+      "seed": 10005,
+      "truncated": false,
+      "winner": 1,
+      "winner_policy": "fixed-b"
+    },
+    {
+      "decisions": 4722,
+      "elapsed_seconds": 1.04993489998742,
+      "final_net_worth": [
+        0.0,
+        17277.0,
+        27498.0,
+        0.0
+      ],
+      "focus_seat": 3,
+      "focus_won": false,
+      "policies": [
+        "fixed-a",
+        "fixed-b",
+        "fixed-c",
+        "ddqn:C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\training_smoke\\milestones\\ddqn_hybrid_20_v2_milestone.pt"
+      ],
+      "provisional_leader": 2,
+      "rounds": 200,
+      "scripted_compatibility_fallbacks": [
+        1,
+        0,
+        0,
+        0
+      ],
+      "seed": 10005,
+      "truncated": false,
+      "winner": 2,
+      "winner_policy": "fixed-c"
+    },
+    {
+      "decisions": 4147,
+      "elapsed_seconds": 0.7933724999893457,
+      "final_net_worth": [
+        0.0,
+        0.0,
+        41122.0,
+        0.0
+      ],
+      "focus_seat": 0,
+      "focus_won": false,
+      "policies": [
+        "ddqn:C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\training_smoke\\milestones\\ddqn_hybrid_20_v2_milestone.pt",
+        "fixed-a",
+        "fixed-b",
+        "fixed-c"
+      ],
+      "provisional_leader": 2,
+      "rounds": 177,
+      "scripted_compatibility_fallbacks": [
+        0,
+        1,
+        0,
+        1
+      ],
+      "seed": 10006,
+      "truncated": false,
+      "winner": 2,
+      "winner_policy": "fixed-b"
+    },
+    {
+      "decisions": 2682,
+      "elapsed_seconds": 0.655794699996477,
+      "final_net_worth": [
+        0.0,
+        0.0,
+        37515.0,
+        0.0
+      ],
+      "focus_seat": 1,
+      "focus_won": false,
+      "policies": [
+        "fixed-a",
+        "ddqn:C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\training_smoke\\milestones\\ddqn_hybrid_20_v2_milestone.pt",
+        "fixed-b",
+        "fixed-c"
+      ],
+      "provisional_leader": 2,
+      "rounds": 92,
+      "scripted_compatibility_fallbacks": [
+        1,
+        0,
+        0,
+        7
+      ],
+      "seed": 10006,
+      "truncated": false,
+      "winner": 2,
+      "winner_policy": "fixed-b"
+    },
+    {
+      "decisions": 2677,
+      "elapsed_seconds": 0.6744136000052094,
+      "final_net_worth": [
+        0.0,
+        0.0,
+        0.0,
+        37187.0
+      ],
+      "focus_seat": 2,
+      "focus_won": false,
+      "policies": [
+        "fixed-a",
+        "fixed-b",
+        "ddqn:C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\training_smoke\\milestones\\ddqn_hybrid_20_v2_milestone.pt",
+        "fixed-c"
+      ],
+      "provisional_leader": 3,
+      "rounds": 92,
+      "scripted_compatibility_fallbacks": [
+        1,
+        6,
+        0,
+        0
+      ],
+      "seed": 10006,
+      "truncated": false,
+      "winner": 3,
+      "winner_policy": "fixed-c"
+    },
+    {
+      "decisions": 3041,
+      "elapsed_seconds": 0.9198876000009477,
+      "final_net_worth": [
+        0.0,
+        0.0,
+        35663.0,
+        0.0
+      ],
+      "focus_seat": 3,
+      "focus_won": false,
+      "policies": [
+        "fixed-a",
+        "fixed-b",
+        "fixed-c",
+        "ddqn:C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\training_smoke\\milestones\\ddqn_hybrid_20_v2_milestone.pt"
+      ],
+      "provisional_leader": 2,
+      "rounds": 89,
+      "scripted_compatibility_fallbacks": [
+        1,
+        3,
+        0,
+        0
+      ],
+      "seed": 10006,
+      "truncated": false,
+      "winner": 2,
+      "winner_policy": "fixed-c"
+    },
+    {
+      "decisions": 2757,
+      "elapsed_seconds": 0.7327766999951564,
+      "final_net_worth": [
+        0.0,
+        0.0,
+        0.0,
+        34661.0
+      ],
+      "focus_seat": 0,
+      "focus_won": false,
+      "policies": [
+        "ddqn:C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\training_smoke\\milestones\\ddqn_hybrid_20_v2_milestone.pt",
+        "fixed-a",
+        "fixed-b",
+        "fixed-c"
+      ],
+      "provisional_leader": 3,
+      "rounds": 102,
+      "scripted_compatibility_fallbacks": [
+        0,
+        1,
+        5,
+        0
+      ],
+      "seed": 10007,
+      "truncated": false,
+      "winner": 3,
+      "winner_policy": "fixed-c"
+    },
+    {
+      "decisions": 5450,
+      "elapsed_seconds": 1.7873878000245895,
+      "final_net_worth": [
+        0.0,
+        0.0,
+        0.0,
+        40093.0
+      ],
+      "focus_seat": 1,
+      "focus_won": false,
+      "policies": [
+        "fixed-a",
+        "ddqn:C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\training_smoke\\milestones\\ddqn_hybrid_20_v2_milestone.pt",
+        "fixed-b",
+        "fixed-c"
+      ],
+      "provisional_leader": 3,
+      "rounds": 151,
+      "scripted_compatibility_fallbacks": [
+        1,
+        0,
+        13,
+        0
+      ],
+      "seed": 10007,
+      "truncated": false,
+      "winner": 3,
+      "winner_policy": "fixed-c"
+    },
+    {
+      "decisions": 4922,
+      "elapsed_seconds": 1.0613727000018116,
+      "final_net_worth": [
+        0.0,
+        9536.0,
+        0.0,
+        22466.0
+      ],
+      "focus_seat": 2,
+      "focus_won": false,
+      "policies": [
+        "fixed-a",
+        "fixed-b",
+        "ddqn:C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\training_smoke\\milestones\\ddqn_hybrid_20_v2_milestone.pt",
+        "fixed-c"
+      ],
+      "provisional_leader": 3,
+      "rounds": 200,
+      "scripted_compatibility_fallbacks": [
+        1,
+        0,
+        0,
+        0
+      ],
+      "seed": 10007,
+      "truncated": false,
+      "winner": 3,
+      "winner_policy": "fixed-c"
+    },
+    {
+      "decisions": 2828,
+      "elapsed_seconds": 0.8730348999961279,
+      "final_net_worth": [
+        0.0,
+        0.0,
+        32377.0,
+        0.0
+      ],
+      "focus_seat": 3,
+      "focus_won": false,
+      "policies": [
+        "fixed-a",
+        "fixed-b",
+        "fixed-c",
+        "ddqn:C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\training_smoke\\milestones\\ddqn_hybrid_20_v2_milestone.pt"
+      ],
+      "provisional_leader": 2,
+      "rounds": 103,
+      "scripted_compatibility_fallbacks": [
+        1,
+        17,
+        0,
+        0
+      ],
+      "seed": 10007,
+      "truncated": false,
+      "winner": 2,
+      "winner_policy": "fixed-c"
+    },
+    {
+      "decisions": 5524,
+      "elapsed_seconds": 1.7365020000142977,
+      "final_net_worth": [
+        0.0,
+        0.0,
+        40744.0,
+        0.0
+      ],
+      "focus_seat": 0,
+      "focus_won": false,
+      "policies": [
+        "ddqn:C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\training_smoke\\milestones\\ddqn_hybrid_20_v2_milestone.pt",
+        "fixed-a",
+        "fixed-b",
+        "fixed-c"
+      ],
+      "provisional_leader": 2,
+      "rounds": 189,
+      "scripted_compatibility_fallbacks": [
+        0,
+        1,
+        0,
+        3
+      ],
+      "seed": 10008,
+      "truncated": false,
+      "winner": 2,
+      "winner_policy": "fixed-b"
+    },
+    {
+      "decisions": 2545,
+      "elapsed_seconds": 0.8764591000217479,
+      "final_net_worth": [
+        0.0,
+        0.0,
+        35460.0,
+        0.0
+      ],
+      "focus_seat": 1,
+      "focus_won": false,
+      "policies": [
+        "fixed-a",
+        "ddqn:C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\training_smoke\\milestones\\ddqn_hybrid_20_v2_milestone.pt",
+        "fixed-b",
+        "fixed-c"
+      ],
+      "provisional_leader": 2,
+      "rounds": 59,
+      "scripted_compatibility_fallbacks": [
+        1,
+        0,
+        0,
+        5
+      ],
+      "seed": 10008,
+      "truncated": false,
+      "winner": 2,
+      "winner_policy": "fixed-b"
+    },
+    {
+      "decisions": 2902,
+      "elapsed_seconds": 1.1079194000049029,
+      "final_net_worth": [
+        0.0,
+        26667.0,
+        0.0,
+        0.0
+      ],
+      "focus_seat": 2,
+      "focus_won": false,
+      "policies": [
+        "fixed-a",
+        "fixed-b",
+        "ddqn:C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\training_smoke\\milestones\\ddqn_hybrid_20_v2_milestone.pt",
+        "fixed-c"
+      ],
+      "provisional_leader": 1,
+      "rounds": 59,
+      "scripted_compatibility_fallbacks": [
+        1,
+        0,
+        0,
+        3
+      ],
+      "seed": 10008,
+      "truncated": false,
+      "winner": 1,
+      "winner_policy": "fixed-b"
+    },
+    {
+      "decisions": 3123,
+      "elapsed_seconds": 1.0017037999932654,
+      "final_net_worth": [
+        0.0,
+        0.0,
+        34921.0,
+        0.0
+      ],
+      "focus_seat": 3,
+      "focus_won": false,
+      "policies": [
+        "fixed-a",
+        "fixed-b",
+        "fixed-c",
+        "ddqn:C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\training_smoke\\milestones\\ddqn_hybrid_20_v2_milestone.pt"
+      ],
+      "provisional_leader": 2,
+      "rounds": 91,
+      "scripted_compatibility_fallbacks": [
+        1,
+        4,
+        0,
+        0
+      ],
+      "seed": 10008,
+      "truncated": false,
+      "winner": 2,
+      "winner_policy": "fixed-c"
+    },
+    {
+      "decisions": 3097,
+      "elapsed_seconds": 1.0298215999791864,
+      "final_net_worth": [
+        0.0,
+        0.0,
+        35730.0,
+        0.0
+      ],
+      "focus_seat": 0,
+      "focus_won": false,
+      "policies": [
+        "ddqn:C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\training_smoke\\milestones\\ddqn_hybrid_20_v2_milestone.pt",
+        "fixed-a",
+        "fixed-b",
+        "fixed-c"
+      ],
+      "provisional_leader": 2,
+      "rounds": 76,
+      "scripted_compatibility_fallbacks": [
+        0,
+        1,
+        0,
+        1
+      ],
+      "seed": 10009,
+      "truncated": false,
+      "winner": 2,
+      "winner_policy": "fixed-b"
+    },
+    {
+      "decisions": 3734,
+      "elapsed_seconds": 1.331305900006555,
+      "final_net_worth": [
+        0.0,
+        0.0,
+        33032.0,
+        0.0
+      ],
+      "focus_seat": 1,
+      "focus_won": false,
+      "policies": [
+        "fixed-a",
+        "ddqn:C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\training_smoke\\milestones\\ddqn_hybrid_20_v2_milestone.pt",
+        "fixed-b",
+        "fixed-c"
+      ],
+      "provisional_leader": 2,
+      "rounds": 83,
+      "scripted_compatibility_fallbacks": [
+        1,
+        0,
+        0,
+        1
+      ],
+      "seed": 10009,
+      "truncated": false,
+      "winner": 2,
+      "winner_policy": "fixed-b"
+    },
+    {
+      "decisions": 3289,
+      "elapsed_seconds": 0.8353013999876566,
+      "final_net_worth": [
+        0.0,
+        38311.0,
+        0.0,
+        0.0
+      ],
+      "focus_seat": 2,
+      "focus_won": false,
+      "policies": [
+        "fixed-a",
+        "fixed-b",
+        "ddqn:C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\training_smoke\\milestones\\ddqn_hybrid_20_v2_milestone.pt",
+        "fixed-c"
+      ],
+      "provisional_leader": 1,
+      "rounds": 103,
+      "scripted_compatibility_fallbacks": [
+        1,
+        0,
+        0,
+        3
+      ],
+      "seed": 10009,
+      "truncated": false,
+      "winner": 1,
+      "winner_policy": "fixed-b"
+    },
+    {
+      "decisions": 5189,
+      "elapsed_seconds": 1.2024511999916285,
+      "final_net_worth": [
+        0.0,
+        19292.0,
+        15532.0,
+        0.0
+      ],
+      "focus_seat": 3,
+      "focus_won": false,
+      "policies": [
+        "fixed-a",
+        "fixed-b",
+        "fixed-c",
+        "ddqn:C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\training_smoke\\milestones\\ddqn_hybrid_20_v2_milestone.pt"
+      ],
+      "provisional_leader": 1,
+      "rounds": 200,
+      "scripted_compatibility_fallbacks": [
+        1,
+        0,
+        0,
+        0
+      ],
+      "seed": 10009,
+      "truncated": false,
+      "winner": 1,
+      "winner_policy": "fixed-b"
+    }
+  ],
+  "paired_block_size": 4,
+  "policy_ids": {
+    "focus": "ddqn:C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\training_smoke\\milestones\\ddqn_hybrid_20_v2_milestone.pt",
+    "opponents": [
+      "fixed-a",
+      "fixed-b",
+      "fixed-c"
+    ]
+  },
+  "ruleset": "ppo-plus-v2",
+  "scripted_compatibility_fallbacks": 214,
+  "seeds": [
+    10000,
+    10001,
+    10002,
+    10003,
+    10004,
+    10005,
+    10006,
+    10007,
+    10008,
+    10009
+  ],
+  "truncations": 0,
+  "win_rates": {
+    "ddqn:C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\training_smoke\\milestones\\ddqn_hybrid_20_v2_milestone.pt": {
+      "games": 40,
+      "truncated_appearances": 0,
+      "wilson_95": [
+        0.0,
+        0.08762160119728664
+      ],
+      "win_rate": 0.0,
+      "win_rate_percent": 0.0,
+      "wins": 0
+    },
+    "fixed-a": {
+      "games": 40,
+      "truncated_appearances": 0,
+      "wilson_95": [
+        0.0,
+        0.08762160119728664
+      ],
+      "win_rate": 0.0,
+      "win_rate_percent": 0.0,
+      "wins": 0
+    },
+    "fixed-b": {
+      "games": 40,
+      "truncated_appearances": 0,
+      "wilson_95": [
+        0.47032439137301096,
+        0.7577702083276673
+      ],
+      "win_rate": 0.625,
+      "win_rate_percent": 62.5,
+      "wins": 25
+    },
+    "fixed-c": {
+      "games": 40,
+      "truncated_appearances": 0,
+      "wilson_95": [
+        0.24222979167233266,
+        0.5296756086269889
+      ],
+      "win_rate": 0.375,
+      "win_rate_percent": 37.5,
+      "wins": 15
+    }
+  }
+}

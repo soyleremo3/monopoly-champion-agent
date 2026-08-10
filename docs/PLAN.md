@@ -32,31 +32,39 @@ restrictions in `CLAUDE.md`. This document tracks phases as they are defined.
 - [x] Multi-seed support added to `run_baseline_match.py` (plain seeds and
       `START-END` ranges), `--seed` single-value usage unchanged
 
-## Phase 2 — First DDQN milestone (current)
+## Phase 2 — First DDQN milestone (done)
 
-- [ ] Reproducibility check: two independent 20-game DDQN training runs, same
+- [x] Reproducibility check: two independent 20-game DDQN training runs, same
       seed, same environment — checkpoint tensors (online/target net,
-      optimizer, replay buffer), epsilon, steps, and games trained must match
-      exactly; deterministic history fields must match, timing/memory fields
-      may differ. Stop on any mismatch — do not proceed to a larger run on an
-      unverified-reproducible trainer
-- [ ] Resume the 20-game checkpoint to 500 total games (CPU, seed 42), after
-      preserving the 20-game checkpoint as a separate, gitignored milestone
-      file (never committed — checkpoints are local artifacts only)
-- [ ] Greedy paired evaluation of the 20-game and 500-game checkpoints on
-      held-out seeds `10000-10009`, seat-rotated, vs. `fixed-a/b/c` — win
-      rate + Wilson interval, mean net worth, round-cap rate, fallbacks by
-      policy. No improvement claim unless the paired result actually supports
-      one
-- [ ] Record everything (SHA-256, epsilon, games trained, runtime, all of the
-      above) in `docs/EXPERIMENTS.md`
+      optimizer, replay buffer), epsilon, steps, and games trained matched
+      exactly (bit-exact via `torch.equal`); deterministic history fields
+      matched too. **Passed** — see `docs/EXPERIMENTS.md` (2026-08-11 entry)
+      and the new `scripts/compare_ddqn_checkpoints.py`. Note: raw checkpoint
+      file SHA-256 differs between reproducible runs (`torch.save` container
+      non-determinism) — that is expected and not itself a mismatch signal
+- [x] Resumed the 20-game checkpoint to 500 total games (CPU, seed 42, 111.4
+      min wall time), after preserving the 20-game checkpoint as
+      `artifacts/training_smoke/milestones/ddqn_hybrid_20_v2_milestone.pt`
+      (gitignored, not committed)
+- [x] Greedy paired evaluation of the 20-game and 500-game checkpoints on
+      held-out seeds `10000-10009` (never used in training), seat-rotated,
+      vs. `fixed-a/b/c`. Win rate: 20-game 0/40 (Wilson [0%, 8.76%]),
+      500-game 1/40 (Wilson [0.44%, 12.88%]) — intervals overlap almost
+      completely. **No improvement claim made**: 500 games at `epsilon≈0.78`
+      is not enough training for a measurable skill signal yet
+- [x] Recorded SHA-256, epsilon, games trained, runtime, win rates, Wilson
+      intervals, mean net worth, round-cap rate, fallbacks-by-policy in
+      `docs/EXPERIMENTS.md`
 
-## Next measurable milestones (after Phase 2 lands)
+## Next measurable milestones (Phase 3, not yet started)
 
-- A DDQN checkpoint trained long enough to beat `fixed-a/b/c` at better than
-  chance on held-out seeds, with a paired-seed statistical comparison (Wilson
-  interval, not a single-seed anecdote) against the 500-game checkpoint as
-  the new reference point.
+- A DDQN training run long enough to get `epsilon` meaningfully below the
+  ~0.78 reached at 500 games — the paper's own reference run used 10,000
+  games (`references/DeepRL_Monopoly/PPO_PLUS_RULES.md`) — then re-run the
+  exact same paired-seed evaluation protocol (seeds `10000-10009`,
+  seat-rotated, vs. `fixed-a/b/c`) against both the 20-game and 500-game
+  checkpoints as reference points, again requiring a statistically supported
+  Wilson-interval separation before claiming any improvement.
 - Decide, with evidence from that comparison, whether more DDQN training
   games or a different approach is the better next step — this decision must
   itself go through `docs/DECISIONS.md`, not be assumed here.

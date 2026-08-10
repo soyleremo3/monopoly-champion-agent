@@ -1,0 +1,75 @@
+
+============================================================
+  Algorithm : DDQN
+  Mode      : Hybrid
+  Games     : 500
+  Device    : cpu
+  Save to   : artifacts/training_smoke/ddqn_hybrid_20_v2.pt
+============================================================
+
+
+============================================================
+Training Hybrid DDQN agent (player 0)
+Total games: 480  |  Log every: 10
+============================================================
+  Game    30 | Win%:   0.0%  ε=0.985 | Props: 11.3 | Trades init/acc/dec: 53.4/6.7/22.4
+  Game    40 | Win%:   0.0%  ε=0.980 | Props: 11.0 | Trades init/acc/dec: 88.2/3.4/21.6
+  Game    50 | Win%:   0.0%  ε=0.975 | Props: 13.8 | Trades init/acc/dec: 76.5/5.9/41.5
+  Game    60 | Win%:   0.0%  ε=0.970 | Props: 10.4 | Trades init/acc/dec: 75.2/3.1/11.7
+  Game    70 | Win%:   0.0%  ε=0.966 | Props: 10.4 | Trades init/acc/dec: 49.2/2.8/9.5
+  Game    80 | Win%:   0.0%  ε=0.961 | Props: 10.5 | Trades init/acc/dec: 61.1/3.0/20.5
+  Game    90 | Win%:   0.0%  ε=0.956 | Props: 12.7 | Trades init/acc/dec: 62.7/8.9/30.3
+  Game   100 | Win%:   0.0%  ε=0.951 | Props: 9.0 | Trades init/acc/dec: 55.0/6.2/26.1
+  Game   110 | Win%:   0.0%  ε=0.946 | Props: 11.7 | Trades init/acc/dec: 91.1/3.8/28.4
+  Game   120 | Win%:   0.0%  ε=0.942 | Props: 13.1 | Trades init/acc/dec: 79.4/8.0/25.9
+  Game   130 | Win%:   0.0%  ε=0.937 | Props: 14.6 | Trades init/acc/dec: 61.5/7.0/35.0
+  Game   140 | Win%:   0.0%  ε=0.932 | Props: 10.4 | Trades init/acc/dec: 53.1/4.8/27.8
+  Game   150 | Win%:   0.0%  ε=0.928 | Props: 11.9 | Trades init/acc/dec: 73.3/7.8/20.3
+  Game   160 | Win%:   0.0%  ε=0.923 | Props: 11.4 | Trades init/acc/dec: 49.5/8.8/32.0
+  Game   170 | Win%:   0.0%  ε=0.918 | Props: 10.9 | Trades init/acc/dec: 66.3/7.5/24.5
+  Game   180 | Win%:   0.0%  ε=0.914 | Props: 10.9 | Trades init/acc/dec: 76.6/3.1/10.9
+  Game   190 | Win%:   0.0%  ε=0.909 | Props: 11.7 | Trades init/acc/dec: 64.3/5.8/31.3
+  Game   200 | Win%:   0.0%  ε=0.905 | Props: 12.9 | Trades init/acc/dec: 114.7/6.2/22.1
+  Game   210 | Win%:   0.0%  ε=0.900 | Props: 12.1 | Trades init/acc/dec: 98.2/4.0/16.1
+  Game   220 | Win%:   0.0%  ε=0.896 | Props: 11.4 | Trades init/acc/dec: 70.2/7.8/44.8
+  Game   230 | Win%:   0.0%  ε=0.891 | Props: 9.7 | Trades init/acc/dec: 92.7/9.0/20.0
+  Game   240 | Win%:   0.0%  ε=0.887 | Props: 10.8 | Trades init/acc/dec: 66.0/7.7/34.4
+  Game   250 | Win%:   0.0%  ε=0.882 | Props: 11.5 | Trades init/acc/dec: 81.7/5.6/32.0
+  Game   260 | Win%:   0.0%  ε=0.878 | Props: 9.3 | Trades init/acc/dec: 79.9/5.7/14.4
+  Game   270 | Win%:   0.0%  ε=0.874 | Props: 11.7 | Trades init/acc/dec: 116.5/6.2/28.1
+  Game   280 | Win%:   0.0%  ε=0.869 | Props: 9.5 | Trades init/acc/dec: 58.5/4.5/21.1
+  Game   290 | Win%:   0.0%  ε=0.865 | Props: 10.2 | Trades init/acc/dec: 64.7/8.7/29.2
+  Game   300 | Win%:   0.0%  ε=0.861 | Props: 11.9 | Trades init/acc/dec: 68.0/5.8/26.3
+  Game   310 | Win%:   0.0%  ε=0.856 | Props: 11.8 | Trades init/acc/dec: 89.6/5.1/11.8
+  Game   320 | Win%:   0.0%  ε=0.852 | Props: 12.8 | Trades init/acc/dec: 79.4/8.4/45.7
+  Game   330 | Win%:   0.0%  ε=0.848 | Props: 11.4 | Trades init/acc/dec: 56.1/7.0/38.7
+  Game   340 | Win%:   0.0%  ε=0.844 | Props: 11.0 | Trades init/acc/dec: 56.3/4.4/31.0
+  Game   350 | Win%:   0.0%  ε=0.839 | Props: 11.7 | Trades init/acc/dec: 48.7/5.0/24.4
+  Game   360 | Win%:   0.0%  ε=0.835 | Props: 9.4 | Trades init/acc/dec: 82.9/7.2/21.4
+  Game   370 | Win%:   0.0%  ε=0.831 | Props: 9.6 | Trades init/acc/dec: 63.4/6.3/30.6
+  Game   380 | Win%:   0.0%  ε=0.827 | Props: 7.7 | Trades init/acc/dec: 71.9/6.1/21.8
+  Game   390 | Win%:   0.0%  ε=0.823 | Props: 11.7 | Trades init/acc/dec: 77.9/3.5/12.2
+  Game   400 | Win%:   0.0%  ε=0.819 | Props: 9.1 | Trades init/acc/dec: 97.5/5.2/19.7
+  Game   410 | Win%:   0.0%  ε=0.815 | Props: 11.7 | Trades init/acc/dec: 77.0/6.6/33.4
+  Game   420 | Win%:   0.0%  ε=0.811 | Props: 9.6 | Trades init/acc/dec: 67.2/5.8/12.7
+  Game   430 | Win%:   0.0%  ε=0.806 | Props: 11.8 | Trades init/acc/dec: 62.1/9.3/30.8
+  Game   440 | Win%:   0.0%  ε=0.802 | Props: 10.5 | Trades init/acc/dec: 75.6/6.2/21.0
+  Game   450 | Win%:   0.0%  ε=0.798 | Props: 10.8 | Trades init/acc/dec: 86.1/8.2/19.8
+  Game   460 | Win%:   0.0%  ε=0.794 | Props: 12.3 | Trades init/acc/dec: 71.8/6.2/34.3
+  Game   470 | Win%:   0.0%  ε=0.791 | Props: 11.0 | Trades init/acc/dec: 90.4/3.4/20.9
+  Game   480 | Win%:   0.0%  ε=0.787 | Props: 8.9 | Trades init/acc/dec: 57.9/7.5/22.5
+  Game   490 | Win%:   0.0%  ε=0.783 | Props: 11.2 | Trades init/acc/dec: 46.3/8.6/24.4
+  Game   500 | Win%:   0.0%  ε=0.779 | Props: 11.2 | Trades init/acc/dec: 69.5/3.3/7.8
+
+Training complete in 6679.6s
+Games completed: 500/500
+Mean wall time: 13.916s/game
+Peak process RSS: 0.36 GiB
+Model saved to: artifacts/training_smoke/ddqn_hybrid_20_v2.pt
+Training history saved to: artifacts\training_smoke\ddqn_hybrid_20_v2_history.json
+
+Final win rate : 0.0%
+Best win rate  : 0.0%
+real 6681.37
+user 0.00
+sys 0.02

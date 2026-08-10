@@ -176,3 +176,181 @@ setup notes before any larger training run. The checkpoint itself is not a
 meaningful policy (20 games, ~99% epsilon, 0% win rate) — this smoke proves
 plumbing, not agent quality. No agent/training code of our own was written;
 everything here calls the reference's existing entry points.
+
+## 2026-08-11 — DDQN training reproducibility check, 500-game milestone, paired evaluation
+
+- Hypothesis: (1) the reference's DDQN trainer is bit-exact reproducible
+  given the same seed, so it's safe to build on; (2) resuming the 20-game
+  checkpoint to 500 games produces a checkpoint that is measurably different
+  from (and ideally stronger than) the 20-game one on held-out seeds.
+
+### Reproducibility check (task 4)
+
+Ran a second, independent 20-game DDQN training with identical parameters to
+the original smoke, to a separate output path:
+
+```bash
+PYTHONHASHSEED=0 PYTHONIOENCODING=utf-8 python references/DeepRL_Monopoly/tools/train_and_save.py \
+  --algo ddqn --games 20 --device cpu --seed 42 --checkpoint-every 10 \
+  --min-available-gib 1 \
+  --out artifacts/training_smoke/ddqn_hybrid_20_v2_repro.pt
+```
+
+`--min-available-gib 1` (down from the 2 GiB default) was added only because
+the memory watchdog interrupted two attempts on this machine at the default
+threshold while ambient system RAM (Chrome, other apps — not this training
+process, whose own peak RSS is ~0.35 GiB) was low; see the two failed
+attempts and the user's explicit go-ahead to lower this specific flag,
+earlier in this session. No other training parameter was changed.
+
+Compared with a new tool,
+[scripts/compare_ddqn_checkpoints.py](../scripts/compare_ddqn_checkpoints.py)
+(deep-compares every field `DDQNAgent.save()` writes — metadata,
+online/target network weights, optimizer state, replay buffer — via
+`torch.equal`, i.e. bit-exact, not a tolerance; and separately compares only
+the deterministic fields of the two `*_history.json` files, explicitly
+ignoring `elapsed_seconds`, `seconds_per_game`, `peak_rss_gib`,
+`peak_cuda_gib`, `training_segments`):
+
+```bash
+python scripts/compare_ddqn_checkpoints.py \
+  artifacts/training_smoke/ddqn_hybrid_20_v2.pt artifacts/training_smoke/ddqn_hybrid_20_v2_repro.pt \
+  --history-a artifacts/training_smoke/ddqn_hybrid_20_v2_history.json \
+  --history-b artifacts/training_smoke/ddqn_hybrid_20_v2_repro_history.json
+```
+
+**Result: `MATCH`.** Every metadata field, both network state dicts, the
+optimizer state, the replay buffer, `epsilon`, `step_count`, `games_trained`,
+and every deterministic history field (`win_rates`, `rewards`, trade/property
+counters, games-completed counters) were bit-identical between the two
+independent runs.
+
+**Noteworthy non-finding**: the two `.pt` files' raw SHA-256 differ
+(`47f3c177...` vs `4a630a14...`) despite the comparator reporting a full
+match. This is expected `torch.save` behavior — its pickle/zip container can
+differ in non-content metadata (e.g. storage-key ordering) between two calls
+even when every tensor and Python value it encodes is identical — so file
+hash is not a valid reproducibility check for `.pt` files; the field-by-field
+tensor/value comparison above is. Recording this so a future bare hash
+mismatch on a "should be reproducible" checkpoint isn't mistaken for a bug.
+
+**Conclusion: reproducibility passes.** Proceeded to the 500-game run per
+plan. (Both `psutil` and `PYTHONIOENCODING=utf-8`, from the original smoke,
+were still required and still used.)
+
+### Preserving the 20-game checkpoint as a milestone (task 5)
+
+Before resuming the main checkpoint past 20 games, copied it (and its
+history) to a separate path, both gitignored, neither committed:
+
+```
+artifacts/training_smoke/milestones/ddqn_hybrid_20_v2_milestone.pt
+artifacts/training_smoke/milestones/ddqn_hybrid_20_v2_milestone_history.json
+```
+
+Copy verified byte-for-byte identical to the original (SHA-256
+`47f3c177c1ae42449b8b3d1a34c253204329e15240a6345d78412f4f900716f4` both
+before and after copying).
+
+### 500-game resume (task 5)
+
+```bash
+PYTHONHASHSEED=0 PYTHONIOENCODING=utf-8 python references/DeepRL_Monopoly/tools/train_and_save.py \
+  --algo ddqn --games 500 --device cpu --seed 42 --checkpoint-every 100 --resume \
+  --out artifacts/training_smoke/ddqn_hybrid_20_v2.pt
+```
+
+Ran in the background; no parameters changed from what was specified going
+in. RAM was rechecked before launch (3.49 GiB available, comfortably above
+the default 2 GiB floor) and the run completed without any watchdog
+interruption.
+
+- Wall time: **6681.37s** real (**111.4 min**); script-reported "Training
+  complete in 6679.6s", mean **13.916s/game** for the 480 games this run
+  actually played (resume only trains the remaining games toward the 500
+  total, matching `games_completed_this_run: 480`,
+  `games_completed: 500`, `resumed_from_games: 0` — the merged history
+  correctly folds both segments; `training_segments` has 2 entries, one per
+  training call).
+- Games completed: **500/500**. No crash, no interruption, no illegal
+  action (an illegal DDQN action raises `ValueError` and aborts the process —
+  exit code was 0).
+- Peak process RSS this run: **0.36 GiB**.
+- Win rate stayed **0.0%** in every logged 10-game window through game 500;
+  epsilon decayed from ~0.99 to **0.7787520933134615** (still high — 500
+  games is early-stage exploration for this trainer's 0.9995/game decay
+  toward a 0.05 floor).
+- Checkpoint: `artifacts/training_smoke/ddqn_hybrid_20_v2.pt`,
+  62,151,119 bytes. Not committed (gitignored).
+- **Checkpoint SHA-256**:
+  `fee4f2952461364bf9fab6f1d545ea223f3634f131f25e55d5fc811e6c953a72`
+- `games_trained: 500`, `step_count: 211097` (read directly from the
+  checkpoint payload).
+
+### Greedy paired evaluation on held-out seeds 10000-10009 (tasks 6-7)
+
+Held-out seeds were never used in training (training used
+`seed=42`-derived per-game seeds only). Evaluated both checkpoints with the
+same seat-rotated, seed-paired protocol as the earlier engine/inference
+smokes, now via the multi-seed range support added to
+`scripts/run_baseline_match.py` in this session:
+
+```bash
+PYTHONHASHSEED=0 python scripts/run_baseline_match.py \
+  --focus "ddqn:<path to checkpoint>" --opponents fixed-a fixed-b fixed-c \
+  --seed 10000-10009 \
+  --output docs/baseline_runs/eval_<20game|500game>_seeds10000-10009.json
+```
+
+10 seeds × 4 seat rotations = 40 games per checkpoint. "Greedy" here means
+what the evaluator's `_NeuralAdapter` already does — masked argmax over
+Q-values, no epsilon sampling — not an extra setting we had to add.
+
+| | 20-game checkpoint | 500-game checkpoint |
+|---|---|---|
+| Wall time | 48.31s (46.75s in-loop) | 57.13s (55.48s in-loop) |
+| DDQN win rate | 0/40 = **0.0%** | 1/40 = **2.5%** |
+| DDQN Wilson 95% CI | **[0.0%, 8.76%]** | **[0.44%, 12.88%]** |
+| DDQN mean net worth | 363.9 | 608.1 |
+| fixed-a win rate | 0/40 = 0.0%, CI [0.0%, 8.76%] | 1/40 = 2.5%, CI [0.44%, 12.88%] |
+| fixed-b win rate | 25/40 = 62.5%, CI [47.03%, 75.78%] | 25/40 = 62.5%, CI [47.03%, 75.78%] |
+| fixed-c win rate | 15/40 = 37.5%, CI [24.22%, 52.97%] | 13/40 = 32.5%, CI [20.08%, 47.98%] |
+| Round-cap rate (200 rounds) | 13/40 games | 13/40 games |
+| Fallbacks by policy | ddqn: **0**, fixed-a: 32, fixed-b: 114, fixed-c: 68 (total 214) | ddqn: **0**, fixed-a: 28, fixed-b: 142, fixed-c: 97 (total 267) |
+| Truncations / crashes / illegal actions | 0 / 0 / 0 | 0 / 0 / 0 |
+
+DDQN fallbacks are 0 in both evaluations **by construction**, not
+coincidence: `_NeuralAdapter.choose_action` in
+`ASU_FROZEN_TEACHER/evaluate.py` always masks illegal actions to `-inf`
+before `argmax`, so it can never select (or need a fallback for) an illegal
+action — unlike `_ScriptedAdapter`, which wraps a fixed policy that can
+propose an illegal action and needs the compatibility fallback. This matches
+and generalizes the correction made earlier in this log for the first
+inference smoke.
+
+**No improvement claim**: the 500-game checkpoint won 1/40 vs. the 20-game
+checkpoint's 0/40. The two Wilson 95% intervals ([0%, 8.76%] and
+[0.44%, 12.88%]) overlap almost completely. One additional win out of 40
+paired games is not a statistically supported improvement — it is
+indistinguishable from noise at this sample size. **Conclusion: do not claim
+the 500-game checkpoint is stronger than the 20-game checkpoint** based on
+this evaluation. Both remain far below `fixed-b`/`fixed-c` (which are
+unaffected fixed policies, so their similar win rates across both
+evaluations are an internal consistency check, not a finding).
+
+### Conclusion / next step
+
+Reproducibility is solid (bit-exact given the same seed and environment),
+so it's safe to keep extending this checkpoint's training. 500 games at
+`epsilon≈0.78` is still too early in this trainer's decay schedule to expect
+a measurable skill signal against fixed opponents — the paired evaluation
+correctly shows no statistically supported difference from the 20-game
+checkpoint, and that absence of a claim is itself the correct, honest
+result, not a failure of the experiment. Next milestone should pick a games
+target that gets `epsilon` meaningfully lower (it decays ~0.05%/game
+multiplicatively, so reaching the 0.05 floor needs several thousand games,
+consistent with the paper's 10,000-game reference run in
+`references/DeepRL_Monopoly/PPO_PLUS_RULES.md`) before re-running this same
+paired-seed evaluation protocol. Both checkpoints and all raw JSON outputs
+from this entry are preserved locally (gitignored, not committed) for exact
+re-comparison later.
