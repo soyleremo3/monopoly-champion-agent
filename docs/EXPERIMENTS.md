@@ -147,8 +147,21 @@ PYTHONHASHSEED=0 python scripts/run_baseline_match.py \
   illegal actions, 0 scripted-compatibility fallbacks in this specific game.
 - Full 4-game block: DDQN won **0/4** seat rotations (0.0% — expected for a
   near-random, 20-game checkpoint; not a strength claim). Total
-  `scripted_compatibility_fallbacks` across the block: **15**. `truncations:
-  0`. No crashes, no illegal actions (the evaluator's `RuntimeError` guard on
+  `scripted_compatibility_fallbacks` across the block: **15 — all 15 from the
+  fixed opponents (fixed-a/b/c); the DDQN checkpoint had 0 fallbacks in every
+  game**. Correction: an earlier draft of this entry reported the 15 as an
+  undifferentiated block total without attributing them; verified by reading
+  `scripted_compatibility_fallbacks` per seat in
+  `docs/baseline_runs/inference_ddqn_smoke.json` against each game's
+  `policies` list — the DDQN checkpoint's own seat is `0` in all 4 games
+  (game 1: `[0,0,0,0]`, seat 0 = ddqn; game 2: `[1,0,5,0]`, seat 1 = ddqn;
+  game 3: `[1,0,0,0]`, seat 2 = ddqn; game 4: `[1,7,0,0]`, seat 3 = ddqn).
+  The compatibility fallback only fires for the scripted-agent adapter (see
+  `_ScriptedAdapter` in `ASU_FROZEN_TEACHER/evaluate.py`); the DDQN/neural
+  adapter (`_NeuralAdapter`) always plays a masked argmax over legal actions
+  and has no fallback path, so a 0-fallback DDQN result is expected by
+  construction, not just an empirical observation. `truncations: 0`. No
+  crashes, no illegal actions (the evaluator's `RuntimeError` guard on
   illegal actions was never triggered).
 
 ### Conclusion / next step
