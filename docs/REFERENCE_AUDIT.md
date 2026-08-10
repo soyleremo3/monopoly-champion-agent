@@ -13,10 +13,18 @@ this audit.
 - `PPO_PLUS_RULES.md` — the `ppo-plus-v2` ruleset: 4 players, standard 40-space
   board, $1,500 start, $200 Go, taxes, jail, auctions, mortgages, houses/hotels
   with a finite 32-house/12-hotel bank. Explicitly **not** official Monopoly:
-  no Chance/Community Chest card effects, no even-building enforcement, deeds
+  no Chance/Community Chest card effects, no even-*selling* enforcement, deeds
   sellable back to the bank at mortgage value, 200-round cap with net-worth
-  tie-break. Do not treat this as our competition's ruleset — see
-  [RULES_SPEC.md](RULES_SPEC.md), which stays `TBD` until verified separately.
+  tie-break. **Even building is enforced** — confirmed by code inspection of
+  `monopoly_game_engine/env.py::_improve_actions`: both `improve_house` and
+  `improve_hotel` actions require `self._is_least_developed(prop)`, so a
+  player can only build on the least-developed property in a color group.
+  **Even selling is not enforced** — the `sell_house` branch in the same
+  method (`if 1 <= prop.houses < 5`) has no `_is_least_developed` gate, so a
+  house can be sold from any developed property in the group regardless of
+  the group's distribution. Do not treat any of this as our competition's
+  ruleset — see [RULES_SPEC.md](RULES_SPEC.md), which stays `TBD` until
+  verified separately.
 - `TRAINING_RESULTS.md` — prior measured runs (PPO 2,000 games ≈31 min on a
   laptop GPU, weak win rate; CFR one full game ≈25 min). Confirms training is
   expensive and out of scope for this pass, consistent with the "no training"
@@ -92,10 +100,14 @@ after running training, which this audit deliberately did not do (`artifacts/`
 is git-ignored upstream and was never present). Expected given the "no
 training" constraint, not a defect in `monopoly_bench` itself.
 
-## Baseline match — see [BASELINE.md](BASELINE.md)
+## Engine smoke test — see [BASELINE.md](BASELINE.md)
 
 Ran via `ASU_FROZEN_TEACHER.evaluate.evaluate_lineup` (imported from the
 submodule, not copied) through [scripts/run_baseline_match.py](../scripts/run_baseline_match.py).
+Reclassified as an engine smoke test, not a strength baseline — 62
+scripted-compatibility fallbacks in that run invalidate any win-rate
+conclusion. See [BASELINE.md](BASELINE.md) for the full reclassification
+note.
 
 ## Critical issue found
 

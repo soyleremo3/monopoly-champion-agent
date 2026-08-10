@@ -26,3 +26,10 @@ These rules govern how work proceeds in this repo. They override default behavio
 ## Rules Specification
 
 - `docs/RULES_SPEC.md` holds only verified competition rules. Do not fabricate rules — leave unknowns as `TBD`.
+
+## ASU Restrictions
+
+- Never copy, imitate, distill, label from, or reproduce ASU (`ASU_FROZEN_TEACHER`) outputs. No training signal, dataset, label, or policy weight may derive from ASU decisions, values, or rollouts.
+- ASU may only be used as an evaluation opponent (a fixed benchmark to play against), never as a teacher, data source, or training target.
+- Do not modify or advance `references/DeepRL_Monopoly` (the submodule). It is read-only research reference material; consume it via import/CLI at its pinned SHA, never edit it in place.
+- Do not use `monopoly_bench train`, `monopoly_bench collect-asu`, or `monopoly_bench export-teacher`. These pipelines bootstrap from or distill ASU/PPO artifacts and are out of scope for this project's own agent development.

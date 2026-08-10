@@ -1,8 +1,22 @@
-# Baseline Match
+# Engine Smoke Test (fixed agents)
 
-First reproducible baseline: a training-free, checkpoint-free 4-player match
-on the `references/DeepRL_Monopoly` `ppo-plus-v2` engine, using only the
-scripted fixed agents (fastest available path — no ASU lookahead, no neural
+**Reclassified**: this is an engine smoke test — proof the engine runs,
+produces well-formed games, and is reproducible under a pinned hash seed. It
+is **not** a strength/performance baseline and must not be read as one.
+`scripted_compatibility_fallbacks: 62` (see Result below) means the fixed
+agents returned an illegal action and fell back to a compatibility default
+(first legal action, or `END_TURN`) 62 times across the 4-game block — i.e.
+in a meaningful fraction of decisions, the agents were not playing their
+intended policy. Any win/round/decision count downstream of those fallbacks
+reflects fallback behavior as much as agent skill, so no win-rate or
+relative-strength conclusion should be drawn from this run. Treat it purely
+as: the engine executes fixed-vs-fixed games end to end, without crashing or
+allowing illegal actions past the fallback layer, and is reproducible given
+`PYTHONHASHSEED=0`.
+
+Training-free, checkpoint-free 4-player match on the
+`references/DeepRL_Monopoly` `ppo-plus-v2` engine, using only the scripted
+fixed agents (fastest available path — no ASU lookahead, no neural
 inference).
 
 ## Setup
@@ -53,12 +67,18 @@ and
   returns a decided winner at the round cap via a net-worth tie-break
   (seat 3: 30,236.5 vs. seat 2: 17,903.5), it does not require elimination
   down to one player.
-- `scripted_compatibility_fallbacks: 62` total across the block — expected,
-  documented behavior (fixed agents sometimes return `END_TURN` when only
+- `scripted_compatibility_fallbacks: 62` total across the block — documented
+  upstream behavior (fixed agents sometimes return `END_TURN` when only
   liquidation/trade actions are legal; the evaluator's compatibility fallback
-  picks the first legal action instead and counts it). Not an error.
-- fixed-d (TheBuilder) won 3 of 4 seat rotations in this single seed —  not a
-  performance claim, one seed is not a statistically meaningful sample.
+  picks the first legal action instead and counts it), not a crash. **This is
+  also why win-rate/strength conclusions are invalid here**: 62 fallbacks
+  means the agents deviated from their intended policy in a meaningful share
+  of decisions, so the outcomes reflect fallback behavior, not measured
+  skill. See the reclassification note at the top of this file.
+- fixed-d (TheBuilder) won 3 of 4 seat rotations in this single seed — this is
+  **not** a performance or strength claim: one seed is not a statistically
+  meaningful sample, and, per above, 62 compatibility fallbacks in the block
+  mean the win pattern cannot be attributed to policy strength.
 
 ## Runtime
 
