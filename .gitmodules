@@ -1,0 +1,3 @@
+[submodule "references/DeepRL_Monopoly"]
+	path = references/DeepRL_Monopoly
+	url = https://github.com/Darkosxl/DeepRL_Monopoly.git
