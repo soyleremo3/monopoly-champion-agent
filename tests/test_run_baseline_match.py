@@ -7,6 +7,7 @@ require torch/numpy to be installed.
 
 from __future__ import annotations
 
+import argparse
 import importlib.util
 import os
 import subprocess
@@ -67,3 +68,44 @@ def test_cli_fails_fast_with_wrong_pinned_hash_seed():
     )
     assert result.returncode != 0
     assert "PYTHONHASHSEED=0" in result.stderr
+
+
+# ── Multi-seed parsing ──────────────────────────────────────────────────────
+
+
+def test_single_seed_token_matches_legacy_behavior():
+    assert run_baseline_match._parse_seed_token("42") == [42]
+
+
+def test_negative_seed_token_is_not_treated_as_a_range():
+    assert run_baseline_match._parse_seed_token("-5") == [-5]
+
+
+def test_range_token_expands_inclusive():
+    assert run_baseline_match._parse_seed_token("10000-10009") == list(
+        range(10000, 10010)
+    )
+
+
+def test_single_element_range_token():
+    assert run_baseline_match._parse_seed_token("7-7") == [7]
+
+
+@pytest.mark.parametrize("token", ["abc", "10-", "10-5-3", "10009-10000"])
+def test_invalid_seed_tokens_raise(token):
+    with pytest.raises(argparse.ArgumentTypeError):
+        run_baseline_match._parse_seed_token(token)
+
+
+def test_expand_seeds_default_matches_legacy_single_seed():
+    assert run_baseline_match._expand_seeds(["42"]) == [42]
+
+
+def test_expand_seeds_mixes_plain_and_range_tokens_and_dedupes():
+    assert run_baseline_match._expand_seeds(["1", "2", "1-3"]) == [1, 2, 3]
+
+
+def test_expand_seeds_range_token():
+    assert run_baseline_match._expand_seeds(["10000-10009"]) == list(
+        range(10000, 10010)
+    )

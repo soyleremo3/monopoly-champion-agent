@@ -57,15 +57,48 @@ def _require_pinned_hash_seed() -> None:
     )
 
 
+def _parse_seed_token(token: str) -> list[int]:
+    """Parse one --seed token: a plain int, or an inclusive "START-END" range.
+
+    "42" -> [42]; "10000-10009" -> [10000, ..., 10009]. A leading "-" (a
+    negative literal, e.g. "-5") is not treated as a range.
+    """
+    if "-" in token[1:]:
+        start_str, _, end_str = token.partition("-")
+        try:
+            start, end = int(start_str), int(end_str)
+        except ValueError:
+            raise argparse.ArgumentTypeError(f"invalid seed or seed range: {token!r}")
+        if end < start:
+            raise argparse.ArgumentTypeError(
+                f"seed range end must be >= start: {token!r}"
+            )
+        return list(range(start, end + 1))
+    try:
+        return [int(token)]
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"invalid seed or seed range: {token!r}")
+
+
+def _expand_seeds(tokens: list[str]) -> list[int]:
+    """Expand --seed tokens into an ordered, de-duplicated list of seeds."""
+    seeds: list[int] = []
+    for token in tokens:
+        for seed in _parse_seed_token(token):
+            if seed not in seeds:
+                seeds.append(seed)
+    return seeds
+
+
 def main(argv: list[str] | None = None) -> int:
     _require_pinned_hash_seed()
 
-    if str(REFERENCE_ROOT) not in sys.path:
-        sys.path.insert(0, str(REFERENCE_ROOT))
-    from ASU_FROZEN_TEACHER.evaluate import evaluate_lineup
-
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument(
+        "--seed", nargs="+", default=["42"], dest="seed",
+        help="one or more seeds and/or START-END ranges, "
+        "e.g. --seed 42  or  --seed 10000-10009  or  --seed 1 2 10000-10002",
+    )
     parser.add_argument("--focus", default=DEFAULT_FOCUS)
     parser.add_argument(
         "--opponents", nargs=3, default=DEFAULT_OPPONENTS,
@@ -73,8 +106,13 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--output", type=Path)
     args = parser.parse_args(argv)
+    seeds = _expand_seeds(args.seed)
 
-    result = evaluate_lineup(args.focus, tuple(args.opponents), (args.seed,))
+    if str(REFERENCE_ROOT) not in sys.path:
+        sys.path.insert(0, str(REFERENCE_ROOT))
+    from ASU_FROZEN_TEACHER.evaluate import evaluate_lineup
+
+    result = evaluate_lineup(args.focus, tuple(args.opponents), tuple(seeds))
     payload = json.dumps(result, indent=2, sort_keys=True)
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)
