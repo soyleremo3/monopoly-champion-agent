@@ -354,3 +354,64 @@ consistent with the paper's 10,000-game reference run in
 paired-seed evaluation protocol. Both checkpoints and all raw JSON outputs
 from this entry are preserved locally (gitignored, not committed) for exact
 re-comparison later.
+
+## 2026-08-11 — ASU-value-v1 as evaluation opponent only (short benchmark)
+
+- Hypothesis: `asu-value-v1` can be run as a **fixed evaluation opponent**
+  (always permitted, unchanged by today's `CLAUDE.md` ASU-policy correction)
+  against `fixed-a/b/c` on a held-out seed, cleanly — no crashes, no illegal
+  actions, no compatibility fallbacks — and its per-game cost is worth
+  measuring before considering it as a teacher signal.
+- Setup: reused `scripts/run_baseline_match.py` unmodified (no ASU-specific
+  code needed — `asu-value-v1` was already a supported `--focus`/`--opponents`
+  value via the reference's own `ASU_FROZEN_TEACHER.evaluate` CLI).
+  `PYTHONHASHSEED=0` enforced by the script's existing guard. Seed `20000`
+  chosen fresh — not used in the DDQN training or either DDQN paired
+  evaluation, so this is an independent held-out probe.
+
+```bash
+PYTHONHASHSEED=0 python scripts/run_baseline_match.py \
+  --focus asu-value-v1 --opponents fixed-a fixed-b fixed-c \
+  --seed 20000 \
+  --output docs/baseline_runs/asu_eval_probe_seed20000.json
+```
+
+- Wall time: **2,126.6s (35.4 min) for 4 games** (one seed, full seat
+  rotation) — **~531.7s/game average**. This is roughly **1,000x** slower
+  than the fixed-vs-fixed engine smoke (which ran 4 games in ~1.5s) or the
+  DDQN paired evaluations (~1.2-1.4s/game). The cost is inherent to ASU's
+  heuristic (5-turn dice enumeration + 5-lap landing distribution evaluated
+  for every legal action at every decision), not this project's code. Only
+  **one seed** was run — going further (e.g. the same `10000-10009` range
+  used for the DDQN evaluations) would cost on the order of 15-20 CPU-hours
+  at this rate, which is why this is a short, single-seed probe rather than a
+  matched 10-seed benchmark.
+- Result: `asu-value-v1` won **3/4** games in this single seed's rotation
+  (Wilson 95% CI **[30.1%, 95.4%]** — extremely wide at `n=4`, not a
+  strength claim, just what one seed shows). Mean net worth 31,711.25 vs.
+  fixed-a 0.0, fixed-b 6,072.5, fixed-c 0.0.
+- **Fallbacks by policy**: `asu-value-v1`: **0** (every game); `fixed-a`: 4,
+  `fixed-b`: 22, `fixed-c`: 10 (total 36 — matches the block total exactly).
+  Same pattern already established for the DDQN checkpoints: ASU's adapter
+  (`ASU_FROZEN_TEACHER.evaluate`'s ASU wrapper) never needs the scripted
+  compatibility fallback; only the raw fixed-policy adapter does.
+- **Illegal actions**: 0 — the evaluator's `RuntimeError` guard on illegal
+  actions was never triggered (would have aborted the whole run non-zero;
+  exit code was 0). **Crashes**: 0. **Truncations**: 0 (all 4 games completed
+  normally; one hit the 200-round cap with a real net-worth-tie-break
+  winner, same pattern documented for earlier smokes).
+- ASU was used **only** as an evaluation opponent here, per `CLAUDE.md` — no
+  ASU output was collected, imitated, distilled, or used as a training
+  label. This does not touch or start the `monopoly_bench collect-asu`/
+  `train` pipeline investigated separately in `docs/REFERENCE_AUDIT.md`.
+
+### Conclusion / next step
+
+ASU-value-v1 runs cleanly as a fixed evaluation opponent — no plumbing
+concerns. Its cost (~530s/game blended, i.e. much worse per ASU-side
+decision) is the real constraint on ever using it as a `collect-asu` teacher
+signal at scale: see `docs/REFERENCE_AUDIT.md`'s MonopolyZero/ASU-teacher
+section for the resulting cost extrapolation and the recommended smallest
+next step (`python -m monopoly_bench smoke`, which needs a PPO bootstrap
+checkpoint we don't have yet, before any ASU-teacher training is even
+attempted).
