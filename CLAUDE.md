@@ -29,7 +29,25 @@ These rules govern how work proceeds in this repo. They override default behavio
 
 ## ASU Restrictions
 
-- Never copy, imitate, distill, label from, or reproduce ASU (`ASU_FROZEN_TEACHER`) outputs. No training signal, dataset, label, or policy weight may derive from ASU decisions, values, or rollouts.
-- ASU may only be used as an evaluation opponent (a fixed benchmark to play against), never as a teacher, data source, or training target.
-- Do not modify or advance `references/DeepRL_Monopoly` (the submodule). It is read-only research reference material; consume it via import/CLI at its pinned SHA, never edit it in place.
-- Do not use `monopoly_bench train`, `monopoly_bench collect-asu`, or `monopoly_bench export-teacher`. These pipelines bootstrap from or distill ASU/PPO artifacts and are out of scope for this project's own agent development.
+*Corrected 2026-08-11 — the original version of this section banned using ASU
+as a teacher/data source outright. That was wrong; corrected below.*
+
+- ASU (`ASU_FROZEN_TEACHER`) may be used as a teacher/expert signal for
+  training our own student model(s) — e.g. bootstrap supervision, policy/value
+  targets, imitation data. This is permitted.
+- ASU may never be, or become, this project's final/core competition agent.
+  The competition entry must be our own trained model — not ASU itself
+  (frozen or otherwise), and not a thin wrapper that just calls ASU at
+  inference time.
+- ASU may never be used as our Modal training/deployment model. Modal-hosted
+  training and deployment run our own architecture; ASU stays a local,
+  reference-only component, never the thing we train or deploy on Modal.
+- ASU may always be used as a fixed evaluation opponent, independent of the
+  above.
+- `references/DeepRL_Monopoly` (the submodule) stays read-only research
+  reference material at all times, regardless of how ASU is used — consume it
+  via import/CLI at its pinned SHA, never edit it in place.
+- Running `monopoly_bench train`, `collect-asu`, or `export-teacher` (or
+  starting any MonopolyZero/teacher-bootstrap training) requires its own
+  explicit decision logged in `docs/DECISIONS.md` first — permitted in
+  principle now, but not assumed just because ASU-as-teacher is allowed.
