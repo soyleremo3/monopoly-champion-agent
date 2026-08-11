@@ -18,7 +18,18 @@ Unknown items are marked `TBD` until confirmed against an official source.
 - Auction on declined property purchase: TBD
 - Trading rules (allowed/disallowed, timing): TBD
 - Mortgage/unmortgage rules: TBD
-- House/hotel building rules (even building, shortage): TBD
+- House/hotel building rules: **even building CONFIRMED** per official
+  competition guidance (2026-08-11) — houses/hotels must be built evenly
+  across a color group (cannot add a 2nd house to one property in the group
+  before every property in that group has at least 1, and so on). This is
+  the one and only confirmed special game rule so far; do not extend it to
+  even-*selling* or anything else without separate confirmation. Consistent
+  with (but not sourced from) the reference engine's implementation —
+  `monopoly_game_engine/env.py::_improve_actions` gates both `improve_house`
+  and `improve_hotel` on `self._is_least_developed(prop)`; see
+  `docs/REFERENCE_AUDIT.md`. Building shortage (finite house/hotel bank)
+  remains TBD as an official rule, though the reference engine also models
+  one (32 houses / 12 hotels).
 - Jail rules (doubles, pay to leave, card usage): TBD
 - Bankruptcy/elimination handling: TBD
 

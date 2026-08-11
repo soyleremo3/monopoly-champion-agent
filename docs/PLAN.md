@@ -56,6 +56,25 @@ restrictions in `CLAUDE.md`. This document tracks phases as they are defined.
       intervals, mean net worth, round-cap rate, fallbacks-by-policy in
       `docs/EXPERIMENTS.md`
 
+## Competition strategy (locked 2026-08-11, see `docs/DECISIONS.md`)
+
+- Primary objective: **overall/generalizable win-rate**, not beating any one
+  fixed opponent (including ASU).
+- Hybrid RL + explicit deterministic edge-case algorithms are allowed, but
+  the trained model must make the large majority of ordinary decisions —
+  algorithms are a targeted supplement for rare, well-defined edge cases.
+- **ASU is evaluation-only, locked, no exceptions**: fixed evaluation
+  opponent and anti-ASU robustness benchmark. Never a training label, never
+  imitated/distilled/bootstrapped-from, never a runtime fallback, never the
+  core/final agent, never our Modal training/deployment model. See
+  `CLAUDE.md`'s ASU Restrictions section for the full, current rule set —
+  this supersedes an earlier same-day version of that section that had
+  (incorrectly) allowed ASU as a teacher.
+- `docs/RULES_SPEC.md`'s one confirmed special rule: even building
+  (color-group houses/hotels must be built evenly). Everything else in that
+  file stays `TBD` until separately confirmed — do not infer more rules from
+  the reference engine.
+
 ## Next measurable milestones (Phase 3, not yet started)
 
 - A DDQN training run long enough to get `epsilon` meaningfully below the
@@ -68,11 +87,60 @@ restrictions in `CLAUDE.md`. This document tracks phases as they are defined.
 - Decide, with evidence from that comparison, whether more DDQN training
   games or a different approach is the better next step — this decision must
   itself go through `docs/DECISIONS.md`, not be assumed here.
-- ASU may be added as an **evaluation opponent only** (never a data/label
-  source, per `CLAUDE.md`) once there is a checkpoint worth evaluating against
-  it.
-- `docs/RULES_SPEC.md` still needs the official competition ruleset filled
-  in — unblocked independently of the training track above, still `TBD`.
+- `docs/RULES_SPEC.md` still needs the rest of the official competition
+  ruleset filled in beyond even-building — unblocked independently of the
+  training track above, still `TBD`.
+
+## MonopolyZero (`monopoly_bench`) — ASU-independent parts only
+
+Investigated 2026-08-11 (read-only, submodule untouched, nothing run beyond
+what's already logged in `docs/EXPERIMENTS.md`) — see `docs/REFERENCE_AUDIT.md`
+for the full write-up. Summary of what's usable under the ASU re-lock:
+
+- **Usable as-is (no ASU coupling)**: `MonopolyZeroNet` (policy/value
+  network, `monopoly_bench/model.py`), `MaxNPUCT` (PUCT/Max-N search,
+  `monopoly_bench/search.py` — zero ASU references, verified by grep),
+  checkpoint/replay storage (`monopoly_bench/storage.py` — zero ASU
+  references), the generic `arena.play_game` mechanism (zero ASU references
+  itself; `monopoly_bench/ladder.py` chooses to call it with an ASU opponent
+  for gating, which is compliant evaluation use, not training).
+- **Not usable as shipped**: `Trainer`/`monopoly_bench train`'s bootstrap
+  (`bootstrap_asu_expert`/`expert_train_step` — direct ASU imitation, now
+  banned) and its self-play population generation
+  (`training.py::population_jobs` hardcodes `asu_count = max(1,
+  baseline_count // 2)` into every generation's "baseline" opponent slice,
+  with no config flag to exclude ASU). Using `Trainer.run_generation` as-is
+  would seat ASU as an opponent in self-play games that feed our replay
+  buffer and training updates — too close to the re-locked line to use
+  without modification, so it's out until we build our own opponent-pool
+  wiring that excludes ASU entirely.
+- `monopoly_bench/cli.py`'s `smoke` subcommand does **not** use `Trainer` at
+  all — it only loads a PPO checkpoint into `MonopolyZeroNet` and runs one
+  `MaxNPUCT.choose_action` call (4 simulations, depth 16). Zero ASU
+  involvement, zero training (pure inference). This is the smallest
+  ASU-independent smoke available, but requires a PPO checkpoint
+  (`artifacts/ppo_plus/ppo_hybrid_2000_v2.pt` by default) that we do not
+  currently have — we've only trained DDQN checkpoints so far, and DDQN
+  weights are not PPO-actor-compatible (different network class).
+
+### Smallest ASU-independent MonopolyZero smoke plan (not yet started)
+
+1. Train a small PPO checkpoint purely for architectural compatibility (not
+   policy quality) — e.g. `tools/train_and_save.py --algo ppo --games 20`,
+   mirroring the already-validated DDQN 20-game smoke recipe
+   (`PYTHONHASHSEED=0`, `PYTHONIOENCODING=utf-8`, `psutil` installed,
+   reproducibility check recommended the same way as the DDQN one before
+   trusting it).
+2. Run `python -m monopoly_bench smoke` against that checkpoint — inference
+   only, no ASU, no training. Confirms `MonopolyZeroNet.load_ppo_actor` +
+   `MaxNPUCT` work end to end on our machine.
+3. Only after that passes: consider a hand-built, ASU-excluded self-play
+   loop using `MaxNPUCT` + `arena.play_game` + a hand-picked opponent pool
+   (fixed-a/b/c, and/or our own PPO/DDQN checkpoints — never
+   `ASUAdapter`/`asu_value_v1`/`asu_rollout_v1`) — this is genuinely new
+   wiring, not an existing entry point, and needs its own
+   `docs/DECISIONS.md` entry and small-step plan before being built. Not
+   started.
 
 ## Future Phases (TBD)
 
