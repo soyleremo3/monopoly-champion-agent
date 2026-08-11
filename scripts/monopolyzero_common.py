@@ -190,7 +190,7 @@ def build_local_policy_only(model):
     return _PolicyOnlyPolicy()
 
 
-def build_local_hybrid_compat_policy(model):
+def build_local_hybrid_compat_policy(model, *, enable_buy: bool = True, enable_trade: bool = True):
     """Diagnostic-only policy — NOT a final-submission candidate. Reproduces
     the ORIGINAL hybrid-PPO agent's BUY_PROPERTY/ACCEPT_TRADE fixed-rule
     carve-out on top of otherwise-plain POLICY_ONLY inference, by
@@ -199,6 +199,18 @@ def build_local_hybrid_compat_policy(model):
     references/DeepRL_Monopoly/monopoly_game_engine/agent_ppo.py's
     `fixed_buy_decision`/`fixed_accept_trade_decision`, both zero-ASU
     functions taking only the raw env + player id).
+
+    `enable_buy`/`enable_trade` (both default True — the original hybrid
+    carve-out) gate which fixed-rule branch is allowed to fire:
+    BUY_ONLY = (True, False), TRADE_ONLY = (False, True), BOTH = (True,
+    True) (the only configuration this function offered before this
+    parameterization — unchanged default behavior), NEITHER = (False,
+    False) (behaviorally identical to `build_local_policy_only`: no
+    carve-out ever fires, no candidate-set narrowing ever happens — kept as
+    one configurable builder rather than four separate ones so the ONLY
+    thing that changes between configurations is which fixed-rule branch is
+    allowed to fire; the underlying action space, engine calls, and
+    neural-argmax mechanics are identical across all four).
 
     Exists to isolate whether `build_local_policy_only`'s flat legal-masked
     argmax (which has no such carve-out) silently lets the neural policy
@@ -210,13 +222,14 @@ def build_local_hybrid_compat_policy(model):
     copy (a pure weight copy, no training).
 
     Mirrors `PPOAgent.choose_action`'s hybrid branching exactly: BUY_PROPERTY
-    checked first (bought via rule if legal and the rule says yes; otherwise
-    falls through with BUY_PROPERTY removed from the neural candidate set —
-    original hybrid semantics, not "always buy"/"never buy"), then an
-    incoming-trade response checked next (decided directly via rule,
-    accept/decline, whenever ACCEPT_TRADE is legal AND a pending trade
-    targeting this seat is actually found — same double-condition the
-    reference agent uses, not just legality).
+    checked first, only if `enable_buy` (bought via rule if legal and the
+    rule says yes; otherwise falls through with BUY_PROPERTY removed from
+    the neural candidate set — original hybrid semantics, not "always
+    buy"/"never buy"), then an incoming-trade response checked next, only if
+    `enable_trade` (decided directly via rule, accept/decline, whenever
+    ACCEPT_TRADE is legal AND a pending trade targeting this seat is
+    actually found — same double-condition the reference agent uses, not
+    just legality).
 
     Every decision is additionally logged on `self.log` (one dict per call)
     recording the opportunity/intervention/disagreement-with-plain-
@@ -228,7 +241,11 @@ def build_local_hybrid_compat_policy(model):
     from monopoly_game_engine.actions import ActionType
     from monopoly_game_engine.agent_ppo import fixed_accept_trade_decision, fixed_buy_decision
 
-    fixed_ids = {int(ActionType.BUY_PROPERTY), int(ActionType.ACCEPT_TRADE)}
+    active_fixed_ids: set[int] = set()
+    if enable_buy:
+        active_fixed_ids.add(int(ActionType.BUY_PROPERTY))
+    if enable_trade:
+        active_fixed_ids.add(int(ActionType.ACCEPT_TRADE))
 
     class _HybridCompatPolicy:
         kind = "hybrid_compat"
@@ -257,11 +274,11 @@ def build_local_hybrid_compat_policy(model):
             chosen_action = None
             value = policy_only_value
 
-            if is_buy_opportunity and fixed_buy_decision(env, seat):
+            if enable_buy and is_buy_opportunity and fixed_buy_decision(env, seat):
                 chosen_action = int(ActionType.BUY_PROPERTY)
                 decision_kind = "buy_property_rule_bought"
 
-            if chosen_action is None and is_trade_opportunity:
+            if chosen_action is None and enable_trade and is_trade_opportunity:
                 pending = next(
                     (offer for offer in env.pending_trades.values() if offer.to_player == seat),
                     None,
@@ -273,13 +290,16 @@ def build_local_hybrid_compat_policy(model):
                     decision_kind = "trade_response_rule_accept" if accept else "trade_response_rule_decline"
 
             fixed_rule_fired = chosen_action is not None
-            nn_legal = tuple(action for action in legal if action not in fixed_ids)
+            nn_legal = tuple(action for action in legal if action not in active_fixed_ids)
 
             if chosen_action is None:
-                # Original hybrid semantics: BUY_PROPERTY/ACCEPT_TRADE are
-                # permanently excluded from the neural candidate set,
-                # regardless of why we got here (buy declined by rule, or an
-                # ACCEPT_TRADE-legal-but-no-pending-found edge case).
+                # Original hybrid semantics: only the ENABLED fixed-rule
+                # action type(s) are permanently excluded from the neural
+                # candidate set, regardless of why we got here (buy
+                # declined by rule, or an ACCEPT_TRADE-legal-but-no-
+                # pending-found edge case). A disabled action type is never
+                # touched — stays in the candidate set exactly like plain
+                # POLICY_ONLY.
                 candidate_legal = nn_legal if nn_legal else legal
                 if candidate_legal == legal:
                     priors = policy_only_priors
@@ -295,6 +315,8 @@ def build_local_hybrid_compat_policy(model):
                 {
                     "is_buy_opportunity": is_buy_opportunity,
                     "is_trade_opportunity": is_trade_opportunity,
+                    "buy_rule_active": enable_buy,
+                    "trade_rule_active": enable_trade,
                     "trade_pending_found": trade_pending_found,
                     "decision_kind": decision_kind,
                     "intervened": intervened,

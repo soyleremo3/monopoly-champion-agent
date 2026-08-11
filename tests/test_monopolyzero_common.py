@@ -334,7 +334,7 @@ class _FakeHybridEnv:
         return self._state
 
 
-def _build_hybrid_compat(model, *, buy_decision, accept_trade_decision):
+def _build_hybrid_compat(model, *, buy_decision, accept_trade_decision, enable_buy=True, enable_trade=True):
     """Monkeypatches the reference's fixed_buy_decision/fixed_accept_trade_decision
     on the actual module object before building the policy, since
     build_local_hybrid_compat_policy binds them via `from ... import ...` at
@@ -345,7 +345,7 @@ def _build_hybrid_compat(model, *, buy_decision, accept_trade_decision):
 
     agent_ppo_module.fixed_buy_decision = lambda env, pid: buy_decision
     agent_ppo_module.fixed_accept_trade_decision = lambda env, pid: accept_trade_decision
-    return common.build_local_hybrid_compat_policy(model)
+    return common.build_local_hybrid_compat_policy(model, enable_buy=enable_buy, enable_trade=enable_trade)
 
 
 def _action_type():
@@ -476,6 +476,101 @@ def test_hybrid_compat_log_accumulates_across_calls():
     policy.choose(game, seat=0, decision_seed=2)
 
     assert len(policy.log) == 2
+
+
+# ── HYBRID_COMPAT configurability: BUY_ONLY / TRADE_ONLY / BOTH / NEITHER ──
+
+
+def test_hybrid_compat_buy_only_ignores_trade_opportunity():
+    """enable_buy=True, enable_trade=False: BUY_PROPERTY still gets the
+    fixed-rule treatment, but ACCEPT_TRADE is left alone — stays in the
+    neural candidate set exactly like plain POLICY_ONLY, never decided by
+    the rule."""
+    AT = _action_type()
+    model = _FakeModel()
+    pending = {0: types.SimpleNamespace(to_player=2)}
+    policy = _build_hybrid_compat(
+        model, buy_decision=False, accept_trade_decision=True,
+        enable_buy=True, enable_trade=False,
+    )
+    legal = (int(AT.ACCEPT_TRADE), int(AT.DECLINE_TRADE))
+    game = _FakeGame(_FakeHybridEnv(legal=legal, pending_trades=pending))
+
+    result = policy.choose(game, seat=2, decision_seed=1)
+
+    # trade rule disabled -> full legal set goes to the model, last-legal wins
+    assert result.chosen_action == int(AT.DECLINE_TRADE)
+    entry = policy.log[-1]
+    assert entry["decision_kind"] == "no_opportunity"
+    assert entry["intervened"] is False
+    assert entry["is_trade_opportunity"] is True  # opportunity existed...
+    assert entry["trade_rule_active"] is False     # ...but the rule was off
+    assert entry["buy_rule_active"] is True
+
+
+def test_hybrid_compat_trade_only_ignores_buy_opportunity():
+    AT = _action_type()
+    model = _FakeModel()
+    policy = _build_hybrid_compat(
+        model, buy_decision=True, accept_trade_decision=False,
+        enable_buy=False, enable_trade=True,
+    )
+    legal = (int(AT.END_TURN), int(AT.BUY_PROPERTY))
+    game = _FakeGame(_FakeHybridEnv(legal=legal))
+
+    result = policy.choose(game, seat=0, decision_seed=1)
+
+    # buy rule disabled -> BUY_PROPERTY stays a normal neural candidate
+    assert result.chosen_action == int(AT.BUY_PROPERTY)
+    entry = policy.log[-1]
+    assert entry["decision_kind"] == "no_opportunity"
+    assert entry["intervened"] is False
+    assert entry["is_buy_opportunity"] is True
+    assert entry["buy_rule_active"] is False
+    assert entry["trade_rule_active"] is True
+
+
+def test_hybrid_compat_neither_behaves_like_policy_only():
+    """enable_buy=False, enable_trade=False must be behaviorally identical
+    to build_local_policy_only across both a buy and a trade opportunity —
+    no branch ever fires, no candidate set ever narrows."""
+    AT = _action_type()
+    model = _FakeModel()
+    plain = common.build_local_policy_only(model)
+
+    hybrid_neither = _build_hybrid_compat(
+        model, buy_decision=True, accept_trade_decision=True,
+        enable_buy=False, enable_trade=False,
+    )
+    buy_legal = (int(AT.END_TURN), int(AT.BUY_PROPERTY))
+    game = _FakeGame(_FakeHybridEnv(legal=buy_legal))
+    plain_result = plain.choose(game, seat=0, decision_seed=1)
+    hybrid_result = hybrid_neither.choose(game, seat=0, decision_seed=1)
+    assert hybrid_result.chosen_action == plain_result.chosen_action
+    assert hybrid_neither.log[-1]["intervened"] is False
+    assert hybrid_neither.log[-1]["decision_kind"] == "no_opportunity"
+
+    pending = {0: types.SimpleNamespace(to_player=2)}
+    trade_legal = (int(AT.ACCEPT_TRADE), int(AT.DECLINE_TRADE))
+    trade_game = _FakeGame(_FakeHybridEnv(legal=trade_legal, pending_trades=pending))
+    plain_trade = plain.choose(trade_game, seat=2, decision_seed=1)
+    hybrid_trade = hybrid_neither.choose(trade_game, seat=2, decision_seed=1)
+    assert hybrid_trade.chosen_action == plain_trade.chosen_action
+    assert hybrid_neither.log[-1]["intervened"] is False
+
+
+def test_hybrid_compat_default_kwargs_still_both():
+    """Regression: calling with no enable_buy/enable_trade kwargs must keep
+    reproducing the original (023) BOTH-mode behavior exactly."""
+    AT = _action_type()
+    model = _FakeModel()
+    policy = _build_hybrid_compat(model, buy_decision=True, accept_trade_decision=False)
+    legal = (int(AT.END_TURN), int(AT.BUY_PROPERTY))
+    game = _FakeGame(_FakeHybridEnv(legal=legal))
+    result = policy.choose(game, seat=0, decision_seed=1)
+    assert result.chosen_action == int(AT.BUY_PROPERTY)
+    assert policy.log[-1]["buy_rule_active"] is True
+    assert policy.log[-1]["trade_rule_active"] is True
 
 
 # ── _invoke_policy: normalizes search/policy_only/fixed return shapes ────
