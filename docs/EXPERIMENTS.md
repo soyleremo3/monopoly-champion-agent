@@ -415,3 +415,140 @@ section for the resulting cost extrapolation and the recommended smallest
 next step (`python -m monopoly_bench smoke`, which needs a PPO bootstrap
 checkpoint we don't have yet, before any ASU-teacher training is even
 attempted).
+
+## 2026-08-11 — ASU-independent MonopolyZero inference smoke (PPO-compatible checkpoint + `monopoly_bench smoke` + sim-count runtime)
+
+- Hypothesis: the MonopolyZero inference path (`MonopolyZeroNet` +
+  `MaxNPUCT` PUCT/Max-N search) can be exercised end to end — load, forward,
+  legal-action masking, search — with **zero ASU involvement**, once a
+  PPO-format-compatible checkpoint exists. Goal was checkpoint format/
+  architecture compatibility only, not policy strength, and no self-play,
+  ASU collection, large training, Modal, or LLM work was started.
+
+### Step 1 — minimal PPO-compatible checkpoint (CPU, seed 42, 1 game)
+
+`MonopolyZeroNet.load_ppo_actor` needs a real PPO-format checkpoint (DDQN
+weights are not compatible — different network class). Trained the smallest
+possible one purely for format/architecture compatibility:
+
+```bash
+PYTHONHASHSEED=0 PYTHONIOENCODING=utf-8 python references/DeepRL_Monopoly/tools/train_and_save.py \
+  --algo ppo --games 1 --device cpu --seed 42 --checkpoint-every 1 \
+  --out references/DeepRL_Monopoly/artifacts/ppo_plus/ppo_hybrid_2000_v2.pt
+```
+
+Saved to the exact path `monopoly_bench/cli.py`'s `smoke` subcommand
+hardcodes as `DEFAULT_PPO` (it takes no `--model`/`--checkpoint` flag) —
+`references/DeepRL_Monopoly/artifacts/ppo_plus/ppo_hybrid_2000_v2.pt`. This
+is inside the submodule's own working tree but under its own `.gitignore`
+(`artifacts/`), so it is genuinely local/untracked, not a submodule
+modification: `git -C references/DeepRL_Monopoly status --short` stayed
+empty before and after, confirmed both times.
+
+- Wall time: 12.88s real (7.4s reported training time; PPO on CPU is far
+  faster per-game than DDQN at this scale — 1 game, not a general claim).
+- Games completed: 1/1. Peak process RSS: 0.26 GiB. No crash.
+- Checkpoint metadata (read directly): `format_version: 3`,
+  `hidden_dim: 256` (matches `MonopolyZeroNet`'s default hidden_dim, verified
+  by reading both classes' constructors before running anything), `hybrid:
+  True`, `games_trained: 1`, `step_count: 598`.
+- Size: 14,204,371 bytes.
+- **SHA-256**: `1c825dcdd2c8d83651bd21100024ab2d0b8ce2ba276d701dceb3599536f615cb`
+- No ASU import anywhere in this step — `tools/train_and_save.py`'s PPO path
+  was already grepped clean of ASU references in the first DDQN smoke
+  entry's compliance check, and this run used the identical code path with
+  `--algo ppo` instead of `--algo ddqn`.
+
+### Step 2 — `python -m monopoly_bench smoke`
+
+```bash
+cd references/DeepRL_Monopoly
+PYTHONHASHSEED=0 PYTHONIOENCODING=utf-8 python -m monopoly_bench smoke
+```
+
+Output:
+
+```json
+{
+  "chosen_action": 1,
+  "dice_outcomes": 36,
+  "latency_s": 0.0707757,
+  "ruleset": "ppo-plus-v2",
+  "simulations": 4,
+  "status": "ok"
+}
+```
+
+- Wall time: 5.43s real (includes Python/torch startup; the search itself
+  was 0.071s). **Peak RSS measured separately at 0.2206 GiB** (polled the
+  child process + subprocesses via `psutil` every 20ms until exit).
+- **`MonopolyZeroNet` loads**: `model.load_ppo_actor(DEFAULT_PPO)` inside
+  `smoke()` did not raise — it validates `format_version`, `ruleset`,
+  `state_dim`, `action_dim`, `hidden_dim` before loading, so this is a real
+  compatibility check, not just "a file existed."
+- **Policy/value forward works**: `MaxNPUCT` calls the model's forward pass
+  internally on every simulation; the search completed and returned a
+  result, which is not possible if forward had raised.
+- **Legal-action masking works**: `smoke()` itself asserts
+  `result.chosen_action in game.env.get_allowed_actions(actor)` and raises
+  `RuntimeError("Smoke search selected an illegal action")` otherwise — it
+  did not raise, so this was verified, not assumed.
+- **Max-N PUCT with 4 simulations returns a valid action**: `simulations: 4`,
+  `chosen_action: 1`, confirmed legal per the above.
+- **Crash / illegal action / fallback**: none. Exit code 0, `"status":
+  "ok"`. No fallback mechanism applies here — `MaxNPUCT`/`SearchAdapter`
+  select only from the legal-action-masked policy output by construction
+  (see `docs/REFERENCE_AUDIT.md`'s ASU-independent-parts breakdown), unlike
+  the scripted-agent adapter, which is the only one that ever needs a
+  compatibility fallback.
+- Zero ASU coupling: `monopoly_bench/search.py` and `monopoly_bench/model.py`
+  both grepped clean of "asu" (see `docs/REFERENCE_AUDIT.md`); `smoke()`
+  itself never touches `Trainer`, `collect_asu_examples`, or
+  `bootstrap_asu_expert`.
+
+### Step 3 — 4/16/32-simulation runtime on the identical state
+
+`monopoly_bench smoke` hardcodes `simulations=4` with no CLI override, so
+[scripts/monopolyzero_sim_runtime.py](../scripts/monopolyzero_sim_runtime.py)
+reuses the exact same state-construction code (`SharedGame.new(23,
+max_rounds=2)`, same property-ownership setup, same decision seed `101`) to
+measure 4/16/32 simulations from an identical starting state each time. No
+ASU import (enforced by
+`tests/test_monopolyzero_sim_runtime.py::test_no_asu_import_in_script_source`).
+
+```bash
+PYTHONHASHSEED=0 PYTHONIOENCODING=utf-8 python scripts/monopolyzero_sim_runtime.py
+```
+
+| Simulations | Latency (s) | Chosen action | Legal |
+|---|---|---|---|
+| 4  | 0.0694 | 1 | yes |
+| 16 | 0.1114 | 1 | yes |
+| 32 | 0.2225 | 1 | yes |
+
+Roughly linear scaling with simulation count (0.069 → 0.111 → 0.222s), as
+expected for a search whose cost is dominated by per-simulation env
+clone + forward pass. Same chosen action (`1`) at every simulation count on
+this particular state — not a general claim that action choice is
+insensitive to simulation count, just what this one state showed. All three
+legal, no crash, no illegal action, no fallback (same reasoning as Step 2).
+
+### Conclusion / next step
+
+The full ASU-independent MonopolyZero inference path — checkpoint load,
+policy/value forward, legal-action masking, PUCT/Max-N search — works end to
+end on CPU with zero ASU involvement anywhere in the call graph. This
+directly enables the plan recorded in `docs/PLAN.md`'s MonopolyZero section.
+No self-play, no `collect-asu`, no large training, no Modal, no LLM — none
+of that was started, per this task's explicit scope.
+
+**Recommended next smallest training experiment** (not started): a tiny,
+**hand-built self-play smoke** — a handful of games (e.g. 2-4) played via
+`MaxNPUCT` + `arena.play_game` with a hand-picked, ASU-excluded opponent
+pool (self-copies and/or `fixed-a/b/c`, never `ASUAdapter`), just enough to
+prove positions can be collected into `ReplayBuffer` and one `train_step`
+update runs without error — mirroring how the 20-game DDQN smoke validated
+the DDQN training loop before scaling up. This needs its own
+`docs/DECISIONS.md` entry before starting, since it means writing new
+self-play wiring rather than calling an existing entry point (`Trainer.
+run_generation` is not usable as-is — see `docs/REFERENCE_AUDIT.md`).

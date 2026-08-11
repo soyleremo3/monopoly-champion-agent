@@ -1,0 +1,30 @@
+{
+  "decision_seed": 101,
+  "results": [
+    {
+      "actual_simulations": 4,
+      "chosen_action": 1,
+      "latency_s": 0.06937370001105592,
+      "legal": true,
+      "requested_simulations": 4,
+      "simulations": 4
+    },
+    {
+      "actual_simulations": 16,
+      "chosen_action": 1,
+      "latency_s": 0.11137200001394376,
+      "legal": true,
+      "requested_simulations": 16,
+      "simulations": 16
+    },
+    {
+      "actual_simulations": 32,
+      "chosen_action": 1,
+      "latency_s": 0.22249270000611432,
+      "legal": true,
+      "requested_simulations": 32,
+      "simulations": 32
+    }
+  ],
+  "ruleset": "ppo-plus-v2"
+}
