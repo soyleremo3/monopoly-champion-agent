@@ -214,12 +214,19 @@ Every `--output-dir` ends up with:
   completed seed, never after only part of a seed.
 - `metadata.json` — `git_head_sha`, `checkpoint_sha256`, `submodule_sha`,
   `arm`, `context`, `seed_start`, `seed_count`, `seeds`,
-  `self_play_optimized`, `games_per_seed`, `max_rounds`, plus
-  `finished_status`/`elapsed_s_this_invocation` once the shard completes.
+  `self_play_optimized`, `physical_games_per_seed`, `seat_records_per_seed`,
+  `max_rounds`, plus `finished_status`/`elapsed_s_this_invocation` once the
+  shard completes. `physical_games_per_seed` is 1 for the self-play-optimized
+  arm (`context=repaired`, `arm=both`), `seat_records_per_seed` is always 4 —
+  every seed always produces exactly 4 seat-record lines in `per_game.jsonl`
+  regardless of physical game count, and completeness (resume/merge) is
+  always checked against `seat_records_per_seed`, not the physical count.
 - `summary.json` — the full structured per-arm result (win rate, Wilson
   interval, bankruptcy rate, mean/median net worth, round-cap rate,
-  per-seat wins), rebuilt from the complete `per_game.jsonl` every time the
-  script exits (so it's always in sync, even mid-resume).
+  per-seat wins — all computed per seat-record, the correct paired-comparison
+  unit), plus explicit `physical_games`/`seat_records` counts, rebuilt from
+  the complete `per_game.jsonl` every time the script exits (so it's always
+  in sync, even mid-resume).
 - `run_log.txt` — a plain-text mirror of everything printed to stdout
   (per-seed progress lines, illegal/crash/incomplete flags), written
   incrementally so it survives even if the notebook's own cell output gets
@@ -243,11 +250,12 @@ recommended — with them, the merge additionally verifies the combined seed
 coverage exactly equals that declared full range (no gaps, no extras), not
 just that the shards you happened to point it at are mutually consistent.
 Without them, it still refuses (raises, does not silently proceed) on any
-of: a shard missing games for a seed it declared, a shard with games for
-an undeclared seed, two shards claiming an overlapping seed, shards whose
-`arm`/`context`/`checkpoint_sha256`/`git_head_sha`/`games_per_seed`/
-`max_rounds` disagree, or any duplicate `(seed, seat)` pair in the merged
-result.
+of: a shard missing seat records for a seed it declared, a seed with a
+partial (not exactly 4) or duplicate seat-record set, a shard with games
+for an undeclared seed, two shards claiming an overlapping seed, shards
+whose `arm`/`context`/`checkpoint_sha256`/`git_head_sha`/
+`physical_games_per_seed`/`seat_records_per_seed`/`max_rounds` disagree, or
+any duplicate `(seed, seat)` pair in the merged result.
 
 ## No local-path assumptions, by construction
 

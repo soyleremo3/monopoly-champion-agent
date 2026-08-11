@@ -66,11 +66,25 @@ def test_is_self_play_optimized(context, arm, expected):
     "context,arm,expected",
     [("repaired", "both", 1), ("crippled", "both", 4), ("crippled", "buy_only", 4), ("repaired", "trade_only", 4)],
 )
-def test_games_per_seed(context, arm, expected):
-    assert runner_module.games_per_seed(context, arm) == expected
+def test_physical_games_per_seed(context, arm, expected):
+    assert runner_module.physical_games_per_seed(context, arm) == expected
 
 
-# ── _read_completed_seeds ──────────────────────────────────────────────────
+@pytest.mark.parametrize(
+    "context,arm",
+    [("repaired", "both"), ("crippled", "both"), ("crippled", "buy_only"), ("repaired", "trade_only")],
+)
+def test_seat_records_per_seed_always_num_seats(context, arm):
+    """Regression: seat_records_per_seed must be NUM_SEATS (4) in every
+    mode, including self-play-optimized - a seed always produces one
+    seat-record per seat regardless of physical game count. This is the
+    count resume/merge completeness checks must use; using
+    physical_games_per_seed (1, in self-play-optimized mode) there was the
+    completeness bug (a seed with 1 of 4 records would pass a >= 1 check)."""
+    assert runner_module.seat_records_per_seed(context, arm) == runner_module.NUM_SEATS == 4
+
+
+# ── validate_seed_seat_completeness / _read_completed_seeds ────────────────
 
 
 def test_read_completed_seeds_missing_file_returns_empty(tmp_path):
@@ -82,17 +96,68 @@ def test_read_completed_seeds_counts_correctly(tmp_path):
     lines = [
         {"seed": 1, "focus_seat": 0}, {"seed": 1, "focus_seat": 1},
         {"seed": 1, "focus_seat": 2}, {"seed": 1, "focus_seat": 3},  # seed 1: complete (4)
+        # seed 2: no records at all - not yet attempted, not an error.
+    ]
+    jsonl_path.write_text("\n".join(json.dumps(line) for line in lines) + "\n", encoding="utf-8")
+    assert runner_module._read_completed_seeds(jsonl_path, 4) == {1}
+
+
+def test_read_completed_seeds_raises_on_partial_seed(tmp_path):
+    """Regression: a seed with SOME but not all seat records (2 of 4) must
+    STOP, not be silently excluded from the completed set and re-run (which
+    would append duplicate seat-0/seat-1 records on top of the existing
+    partial ones)."""
+    jsonl_path = tmp_path / "per_game.jsonl"
+    lines = [
+        {"seed": 1, "focus_seat": 0}, {"seed": 1, "focus_seat": 1},
         {"seed": 2, "focus_seat": 0}, {"seed": 2, "focus_seat": 1},  # seed 2: incomplete (2 of 4)
     ]
     jsonl_path.write_text("\n".join(json.dumps(line) for line in lines) + "\n", encoding="utf-8")
-    assert runner_module._read_completed_seeds(jsonl_path, required_games_per_seed=4) == {1}
+    with pytest.raises(RuntimeError, match="partial record set"):
+        runner_module._read_completed_seeds(jsonl_path, 4)
 
 
-def test_read_completed_seeds_self_play_mode_one_per_seed(tmp_path):
+def test_read_completed_seeds_raises_on_duplicate_seat(tmp_path):
+    jsonl_path = tmp_path / "per_game.jsonl"
+    lines = [
+        {"seed": 1, "focus_seat": 0}, {"seed": 1, "focus_seat": 0},
+        {"seed": 1, "focus_seat": 1}, {"seed": 1, "focus_seat": 2},
+    ]
+    jsonl_path.write_text("\n".join(json.dumps(line) for line in lines) + "\n", encoding="utf-8")
+    with pytest.raises(RuntimeError, match="duplicate seat record"):
+        runner_module._read_completed_seeds(jsonl_path, 4)
+
+
+def test_read_completed_seeds_raises_on_extra_seat_id(tmp_path):
+    jsonl_path = tmp_path / "per_game.jsonl"
+    lines = [{"seed": 1, "focus_seat": 0}, {"seed": 1, "focus_seat": 4}]  # seat 4 out of range for NUM_SEATS=4
+    jsonl_path.write_text("\n".join(json.dumps(line) for line in lines) + "\n", encoding="utf-8")
+    with pytest.raises(RuntimeError, match="unexpected seat id"):
+        runner_module._read_completed_seeds(jsonl_path, 4)
+
+
+def test_read_completed_seeds_self_play_mode_requires_all_four_seats(tmp_path):
+    """Regression for the exact bug reported: self-play-optimized mode (1
+    physical game -> 4 seat records per seed) still needs all 4 seat
+    records to count a seed as complete. A lone seat-0 record (what a
+    crash between the physical game finishing and the other 3 records
+    being written would leave) must STOP, not be silently treated as a
+    completed seed - the old `games_per_seed=1` metadata field made a
+    `>= 1` check pass here, which was the bug."""
     jsonl_path = tmp_path / "per_game.jsonl"
     lines = [{"seed": 5, "focus_seat": 0}]
     jsonl_path.write_text("\n".join(json.dumps(line) for line in lines) + "\n", encoding="utf-8")
-    assert runner_module._read_completed_seeds(jsonl_path, required_games_per_seed=1) == {5}
+    with pytest.raises(RuntimeError, match="partial record set"):
+        runner_module._read_completed_seeds(jsonl_path, runner_module.seat_records_per_seed("repaired", "both"))
+
+
+def test_read_completed_seeds_self_play_mode_all_four_seats_is_complete(tmp_path):
+    jsonl_path = tmp_path / "per_game.jsonl"
+    lines = [{"seed": 5, "focus_seat": seat} for seat in range(4)]
+    jsonl_path.write_text("\n".join(json.dumps(line) for line in lines) + "\n", encoding="utf-8")
+    assert runner_module._read_completed_seeds(
+        jsonl_path, runner_module.seat_records_per_seed("repaired", "both")
+    ) == {5}
 
 
 # ── run_benchmark (monkeypatched engine, no real games) ────────────────────
@@ -188,6 +253,8 @@ def test_run_shard_fresh_then_resume(monkeypatch, tmp_path):
     summary = runner_module.run_shard(resume=False, **common_kwargs)
     assert summary["status"] == "OK"
     assert summary["seeds_completed_this_run"] == 2
+    assert summary["physical_games"] == 8  # rotation mode: 2 seeds x 4 physical games
+    assert summary["seat_records"] == 8  # 1:1 with physical games in rotation mode
     assert (output_dir / "per_game.jsonl").is_file()
     assert (output_dir / "metadata.json").is_file()
     assert (output_dir / "summary.json").is_file()
@@ -203,6 +270,71 @@ def test_run_shard_fresh_then_resume(monkeypatch, tmp_path):
     assert summary2["seeds_already_complete_before_this_run"] == 2
     lines_after = (output_dir / "per_game.jsonl").read_text(encoding="utf-8").strip().splitlines()
     assert len(lines_after) == 8  # unchanged - nothing re-played
+
+
+def test_run_shard_self_play_optimized_reports_physical_vs_seat_records(monkeypatch, tmp_path):
+    """Regression: context=repaired/arm=both writes 4 seat records per seed
+    from 1 physical game - metadata and summary must reflect that split,
+    not conflate physical game count with seat-record count."""
+    runner_module.common.ensure_reference_on_path()
+    monkeypatch.setattr(runner_module.common, "play_local_game", lambda **kwargs: _fake_outcome())
+
+    output_dir = tmp_path / "shard_self_play"
+    summary = runner_module.run_shard(
+        seed_start=44500, seed_count=2, context="repaired", arm="both", output_dir=output_dir,
+        resume=False, model=_FakeModel(), git_head_sha="a" * 40, checkpoint_sha256="b" * 64, submodule_sha="c" * 40,
+    )
+    assert summary["status"] == "OK"
+    assert summary["physical_games"] == 2  # 2 seeds x 1 physical game
+    assert summary["seat_records"] == 8  # 2 seeds x 4 seat records
+    assert summary["games"] == 8  # win_rate/etc still computed per seat-record - unchanged semantics
+
+    metadata = json.loads((output_dir / "metadata.json").read_text(encoding="utf-8"))
+    assert metadata["physical_games_per_seed"] == 1
+    assert metadata["seat_records_per_seed"] == 4
+
+    lines = (output_dir / "per_game.jsonl").read_text(encoding="utf-8").strip().splitlines()
+    assert len(lines) == 8
+
+
+def test_run_shard_self_play_optimized_resume_stops_on_partial_seed(monkeypatch, tmp_path):
+    """Regression for the exact reported bug: a self-play-optimized shard
+    interrupted mid-seed (only some of the 4 seat records for the last
+    seed written) must STOP on --resume, not silently treat that seed as
+    complete - the old metadata.games_per_seed=1 made a >= 1 completeness
+    check pass on a 1-of-4-record seed."""
+    runner_module.common.ensure_reference_on_path()
+    monkeypatch.setattr(runner_module.common, "play_local_game", lambda **kwargs: _fake_outcome())
+
+    output_dir = tmp_path / "shard_self_play_partial"
+    output_dir.mkdir()
+    # Simulate a crash mid-seed: seed 44600 has only 2 of its 4 seat records.
+    (output_dir / "per_game.jsonl").write_text(
+        "\n".join(
+            json.dumps({
+                "seed": 44600, "focus_seat": seat, "completed": True, "winner": 0,
+                "focus_won": False, "rounds": 5, "decisions": 10,
+                "focus_net_worth": 100.0, "round_capped": False,
+            })
+            for seat in (0, 1)
+        ) + "\n",
+        encoding="utf-8",
+    )
+    (output_dir / "metadata.json").write_text(
+        json.dumps({
+            "git_head_sha": "a" * 40, "checkpoint_sha256": "b" * 64, "submodule_sha": "c" * 40,
+            "arm": "both", "context": "repaired", "seed_start": 44600, "seed_count": 1,
+            "seeds": [44600], "self_play_optimized": True,
+            "physical_games_per_seed": 1, "seat_records_per_seed": 4, "max_rounds": runner_module.MAX_ROUNDS,
+        }),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(RuntimeError, match="partial record set"):
+        runner_module.run_shard(
+            seed_start=44600, seed_count=1, context="repaired", arm="both", output_dir=output_dir,
+            resume=True, model=_FakeModel(), git_head_sha="a" * 40, checkpoint_sha256="b" * 64, submodule_sha="c" * 40,
+        )
 
 
 def test_run_shard_resume_with_no_prior_metadata_starts_fresh(monkeypatch, tmp_path):

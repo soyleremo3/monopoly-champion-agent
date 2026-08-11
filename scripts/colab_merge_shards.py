@@ -1,13 +1,15 @@
 """Merges multiple `colab_shard_runner.py` shard output directories into one
 combined dataset — STOPs (raises) rather than silently proceeding on any of:
 
-  - a shard whose per_game.jsonl is missing games for a seed it declared in
-    its own metadata.json (the shard didn't finish, or was truncated)
+  - a shard whose per_game.jsonl is missing seat records for a seed it
+    declared in its own metadata.json (the shard didn't finish, or was
+    truncated), or has a partial (not exactly `seat_records_per_seed`,
+    always 4) or duplicate seat-record set for a seed
   - a shard with games for a seed it never declared
   - two shards declaring an overlapping seed
   - shards whose metadata disagree on arm/context/checkpoint_sha256/
-    git_head_sha/games_per_seed/max_rounds (refusing to merge results from
-    different setups or code versions)
+    git_head_sha/physical_games_per_seed/seat_records_per_seed/max_rounds
+    (refusing to merge results from different setups or code versions)
   - (if --expected-seed-start/--expected-seed-count given) the merged seed
     coverage not exactly matching that declared full range - gaps or
     extras both fail
@@ -29,9 +31,13 @@ SCRIPTS_DIR = Path(__file__).resolve().parent
 if str(SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_DIR))
 
+import colab_shard_runner as runner  # noqa: E402
 import monopolyzero_hybrid_decomposition_audit as decomp  # noqa: E402
 
-CONSISTENCY_FIELDS = ("arm", "context", "checkpoint_sha256", "git_head_sha", "games_per_seed", "max_rounds")
+CONSISTENCY_FIELDS = (
+    "arm", "context", "checkpoint_sha256", "git_head_sha",
+    "physical_games_per_seed", "seat_records_per_seed", "max_rounds",
+)
 
 
 def _load_shard(shard_dir: Path) -> tuple[dict, list[dict]]:
@@ -67,21 +73,26 @@ def merge_shards(
         metadatas.append((shard_dir, metadata))
 
         declared_seeds = set(metadata["seeds"])
-        required_games_per_seed = metadata["games_per_seed"]
-        seed_counts: dict[int, int] = {}
+        required_seat_records_per_seed = metadata["seat_records_per_seed"]
+        seed_seats: dict[int, list[int]] = {}
         for game in per_game:
-            seed_counts[game["seed"]] = seed_counts.get(game["seed"], 0) + 1
+            seed_seats.setdefault(game["seed"], []).append(game["focus_seat"])
 
-        missing_in_shard = sorted(
-            seed for seed in declared_seeds if seed_counts.get(seed, 0) < required_games_per_seed
+        # Exact seat-set check (not a >= count check): a seed with only 1 of 4
+        # seat records (the self-play-optimized-mode bug this replaced) or a
+        # duplicate/out-of-range seat raises here rather than being silently
+        # accepted as "complete enough".
+        complete_seeds = runner.validate_seed_seat_completeness(
+            seed_seats, required_seat_records_per_seed, source=f"shard {shard_dir}",
         )
+        missing_in_shard = sorted(declared_seeds - complete_seeds)
         if missing_in_shard:
             raise RuntimeError(
                 f"STOP: shard {shard_dir} declares seeds {sorted(declared_seeds)} in its metadata.json "
                 f"but per_game.jsonl is missing/incomplete games for: {missing_in_shard} "
                 "(the shard did not finish, or was truncated - do not merge a partial shard)"
             )
-        extra_seeds = sorted(seed_counts.keys() - declared_seeds)
+        extra_seeds = sorted(seed_seats.keys() - declared_seeds)
         if extra_seeds:
             raise RuntimeError(
                 f"STOP: shard {shard_dir} has games for seed(s) {extra_seeds} it never declared in metadata.json"
@@ -165,6 +176,11 @@ def main(argv: list[str] | None = None) -> int:
     summary["shard_count"] = len(args.shard_dirs)
     summary["shard_dirs"] = [str(shard_dir) for shard_dir in args.shard_dirs]
     summary["merged_seeds"] = merged_seeds
+    summary["seat_records"] = len(all_per_game)
+    summary["physical_games"] = (
+        len({game["seed"] for game in all_per_game})
+        if reference_metadata.get("self_play_optimized") else len(all_per_game)
+    )
 
     summary_path = args.output_dir / "summary.json"
     summary_path.write_text(json.dumps(summary, indent=2, sort_keys=True, default=str), encoding="utf-8")

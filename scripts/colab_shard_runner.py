@@ -67,8 +67,22 @@ def is_self_play_optimized(context: str, arm: str) -> bool:
     return context == CONTEXT_REPAIRED and arm == decomp.ARM_BOTH
 
 
-def games_per_seed(context: str, arm: str) -> int:
+def physical_games_per_seed(context: str, arm: str) -> int:
+    """Real `play_local_game` calls per seed: 1 in self-play-optimized mode
+    (one physical game, 4 seats extracted from it), NUM_SEATS otherwise
+    (one physical game per focus seat)."""
     return 1 if is_self_play_optimized(context, arm) else NUM_SEATS
+
+
+def seat_records_per_seed(context: str, arm: str) -> int:
+    """Seat-record (per_game.jsonl line) count per seed: always NUM_SEATS -
+    every seed produces exactly one record per seat regardless of whether
+    self-play optimization reduced the physical game count. This is the
+    count that resume/merge completeness checks must use; using
+    `physical_games_per_seed` there (1, in self-play-optimized mode) was
+    the bug - a seed with only 1 of 4 seat records present would pass a
+    `>= 1` completeness check and be silently treated as done."""
+    return NUM_SEATS
 
 
 def build_peer_factory(context: str, model):
@@ -167,7 +181,7 @@ def run_benchmark(*, n_games: int, seed_start: int, context: str, arm: str, mode
     `sec_per_game` derived from that would be 4x too optimistic."""
     focus_factory = decomp._focus_policy_factory(model, arm)
     peer_factory = build_peer_factory(context, model)
-    physical_games_per_seed = 1 if is_self_play_optimized(context, arm) else NUM_SEATS
+    phys_per_seed = physical_games_per_seed(context, arm)
 
     started = time.perf_counter()
     physical_games_completed = 0
@@ -177,7 +191,7 @@ def run_benchmark(*, n_games: int, seed_start: int, context: str, arm: str, mode
         result = _play_one_seed(seed, context, arm, model, focus_factory, peer_factory)
         if result["total_illegal"] or result["total_crashed"]:
             raise RuntimeError(f"benchmark: illegal/crash at seed {seed} - {result}")
-        physical_games_completed += physical_games_per_seed
+        physical_games_completed += phys_per_seed
         seat_records_completed += len(result["per_game"])
         seed += 1
     elapsed_s = time.perf_counter() - started
@@ -198,18 +212,60 @@ def run_benchmark(*, n_games: int, seed_start: int, context: str, arm: str, mode
     }
 
 
-def _read_completed_seeds(jsonl_path: Path, required_games_per_seed: int) -> set[int]:
+def validate_seed_seat_completeness(
+    seed_seats: dict[int, list[int]], expected_seat_records_per_seed: int, *, source: str,
+) -> set[int]:
+    """Shared by `run_shard`'s resume logic and `colab_merge_shards.py`'s
+    per-shard completeness check. For each seed's list of recorded seat
+    ids: complete (included in the returned set) only if it is EXACTLY
+    `{0, ..., expected_seat_records_per_seed - 1}` with no duplicates. A
+    seed absent from `seed_seats` entirely (0 records) is fine - not yet
+    attempted, safe to (re)run, simply excluded from the result. Anything
+    else - a duplicate seat, a seat id outside the expected range, or a
+    non-empty-but-incomplete set - raises RuntimeError rather than being
+    silently treated as either complete or safely redoable: redoing a
+    partially-written seed would append duplicate (seed, seat) records on
+    top of the ones already there instead of replacing them."""
+    expected_seats = set(range(expected_seat_records_per_seed))
+    complete: set[int] = set()
+    for seed, seats in seed_seats.items():
+        seat_set = set(seats)
+        if len(seats) != len(seat_set):
+            raise RuntimeError(
+                f"{source}: seed {seed} has duplicate seat record(s) ({sorted(seats)}) - "
+                "refusing to treat as safely resumable/mergeable. Inspect/trim the data manually."
+            )
+        unexpected = seat_set - expected_seats
+        if unexpected:
+            raise RuntimeError(
+                f"{source}: seed {seed} has unexpected seat id(s) {sorted(unexpected)} outside "
+                f"0..{expected_seat_records_per_seed - 1} - refusing to treat as safely "
+                "resumable/mergeable. Inspect/trim the data manually."
+            )
+        if seat_set == expected_seats:
+            complete.add(seed)
+        elif seat_set:
+            raise RuntimeError(
+                f"{source}: seed {seed} has a partial record set {sorted(seat_set)} (expected "
+                f"exactly {sorted(expected_seats)}) - refusing to silently resume/merge onto a "
+                "partially-written seed. Inspect/trim the data manually (drop the partial seed's "
+                "lines) before continuing."
+            )
+    return complete
+
+
+def _read_completed_seeds(jsonl_path: Path, expected_seat_records_per_seed: int) -> set[int]:
     if not jsonl_path.is_file():
         return set()
-    counts: dict[int, int] = {}
+    seed_seats: dict[int, list[int]] = {}
     with jsonl_path.open("r", encoding="utf-8") as handle:
         for line in handle:
             line = line.strip()
             if not line:
                 continue
             record = json.loads(line)
-            counts[record["seed"]] = counts.get(record["seed"], 0) + 1
-    return {seed for seed, count in counts.items() if count >= required_games_per_seed}
+            seed_seats.setdefault(record["seed"], []).append(record["focus_seat"])
+    return validate_seed_seat_completeness(seed_seats, expected_seat_records_per_seed, source=str(jsonl_path))
 
 
 def run_shard(
@@ -225,13 +281,16 @@ def run_shard(
     summary_path = output_dir / "summary.json"
     log_path = output_dir / "run_log.txt"
 
-    required_games_per_seed = games_per_seed(context, arm)
+    this_physical_games_per_seed = physical_games_per_seed(context, arm)
+    this_seat_records_per_seed = seat_records_per_seed(context, arm)
     new_metadata = {
         "git_head_sha": git_head_sha, "checkpoint_sha256": checkpoint_sha256,
         "submodule_sha": submodule_sha, "arm": arm, "context": context,
         "seed_start": seed_start, "seed_count": seed_count, "seeds": seeds,
         "self_play_optimized": is_self_play_optimized(context, arm),
-        "games_per_seed": required_games_per_seed, "max_rounds": MAX_ROUNDS,
+        "physical_games_per_seed": this_physical_games_per_seed,
+        "seat_records_per_seed": this_seat_records_per_seed,
+        "max_rounds": MAX_ROUNDS,
     }
 
     if resume and metadata_path.is_file():
@@ -245,7 +304,7 @@ def run_shard(
             raise RuntimeError(
                 f"--resume refuses to continue: shard config differs from the prior run's metadata.json: {mismatched}"
             )
-        completed_seeds = _read_completed_seeds(jsonl_path, required_games_per_seed)
+        completed_seeds = _read_completed_seeds(jsonl_path, this_seat_records_per_seed)
     elif resume:
         # --resume given but metadata.json doesn't exist yet. If per_game.jsonl
         # is also missing/empty, this is a genuine first invocation - starts
@@ -310,7 +369,8 @@ def run_shard(
                 os.fsync(jsonl_handle.fileno())
                 seed_elapsed = time.perf_counter() - seed_started
                 _log(
-                    f"seed {seed}: {len(result['per_game'])} game(s) in {seed_elapsed:.1f}s "
+                    f"seed {seed}: {this_physical_games_per_seed} physical game(s), "
+                    f"{len(result['per_game'])} seat record(s) in {seed_elapsed:.1f}s "
                     f"(illegal={result['total_illegal']} crashed={result['total_crashed']} "
                     f"incomplete={result['incomplete']})"
                 )
@@ -333,6 +393,16 @@ def run_shard(
         summary["status"] = status
         summary["context"] = context
         summary["arm"] = arm
+        # "games" (from _arm_summary) is the seat-record count - the correct unit
+        # for win_rate/bankruptcy_rate/etc (each seat-record is one paired
+        # observation), unchanged. These two are added purely for clarity, since
+        # a self-play-optimized shard's physical game count differs from its
+        # seat-record count 4x.
+        summary["seat_records"] = len(all_per_game)
+        summary["physical_games"] = (
+            len({game["seed"] for game in all_per_game})
+            if is_self_play_optimized(context, arm) else len(all_per_game)
+        )
         summary["seeds_requested"] = seeds
         summary["seeds_completed_this_run"] = len(seeds) - len(completed_seeds)
         summary["seeds_already_complete_before_this_run"] = len(completed_seeds)
