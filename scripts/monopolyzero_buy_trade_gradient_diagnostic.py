@@ -31,12 +31,22 @@ defaults, 128 simulations/decision) is far more expensive per decision than
 the POLICY_ONLY/HYBRID_COMPAT arms 023/024 used (zero search there). A
 1-seed smoke test with a small SearchConfig(simulations=4, max_depth=16)
 and max_rounds=5 completes in seconds (see
-tests/test_monopolyzero_buy_trade_gradient_diagnostic.py). `main()`'s
-default config (SearchConfig() + MAX_ROUNDS=200, all 20 reused seeds) has
-NOT been benchmarked and should not be run as one long invocation without
-first measuring cost - same benchmark-before-committing discipline as
-scripts/colab_shard_runner.py. Whether the real run needs a reduced
-simulation count, reduced max_rounds, or sharding is TBD, not decided here.
+tests/test_monopolyzero_buy_trade_gradient_diagnostic.py). With no flags,
+`main()` reproduces the exact original hardcoded config (SearchConfig() +
+MAX_ROUNDS=200, all 20 reused seeds) - NOT benchmarked, should not be run
+as one long invocation without first measuring cost. `--seed-start`/
+`--seed-count`/`--simulations`/`--max-rounds` (all optional) exist
+specifically to run a controlled small benchmark first, e.g.:
+
+    PYTHONHASHSEED=0 python scripts/monopolyzero_buy_trade_gradient_diagnostic.py \
+      --seed-start 43000 --seed-count 1 --simulations 128 --max-rounds 20
+
+`--output PATH` additionally writes the same structured JSON payload to
+PATH (stdout is always printed regardless). A custom `--seed-start`/
+`--seed-count` range still goes through the same DEV-pool-only guard
+(`evaluation_protocol.require_seed_scope`) as the default 43000-43019
+range - no seed outside a registered DEV/PROMOTION/FINAL_BLIND range is
+ever accepted, and this diagnostic only ever requests DEV.
 
 Produces no automatic conclusion about which fix (if any) is needed - see
 this session's PLAN. Built on scripts/monopolyzero_common.py and
@@ -48,6 +58,7 @@ is registered in the DEV pool (`evaluation_protocol.require_seed_scope`).
 
 from __future__ import annotations
 
+import argparse
 import json
 import sys
 import time
@@ -386,10 +397,56 @@ def trade_response_aggregate(records: list[dict], *, side: str, action_id: int) 
     }
 
 
+def _resolve_seeds(seed_start: int | None, seed_count: int | None) -> list[int]:
+    """--seed-start/--seed-count must be given together or not at all;
+    omitting both reproduces the exact previous hardcoded seed range."""
+    if (seed_start is None) != (seed_count is None):
+        raise SystemExit("--seed-start and --seed-count must be given together")
+    if seed_start is None:
+        return list(SEEDS)
+    return list(range(seed_start, seed_start + seed_count))
+
+
+def build_arg_parser() -> argparse.ArgumentParser:
+    """Every flag is optional - omitting all of them reproduces the exact
+    previous hardcoded behavior (SEEDS=43000-43019, MAX_ROUNDS=200,
+    SearchConfig() defaults, stdout only). Added purely so a controlled
+    small run (e.g. 1 seed, low simulation count, short max_rounds) can be
+    benchmarked before committing to the full 20-seed/128-simulation/
+    200-round invocation - same discipline as scripts/colab_shard_runner.py's
+    --benchmark-games-before-shard workflow."""
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--seed-start", type=int, default=None,
+        help="first seed of a custom range; requires --seed-count too. Must be DEV-registered.",
+    )
+    parser.add_argument(
+        "--seed-count", type=int, default=None,
+        help="how many consecutive seeds from --seed-start; requires --seed-start too.",
+    )
+    parser.add_argument(
+        "--simulations", type=int, default=None,
+        help="MaxNPUCT simulations per decision (default: SearchConfig()'s own default, 128).",
+    )
+    parser.add_argument(
+        "--max-rounds", type=int, default=None,
+        help=f"max rounds per self-play game (default: {MAX_ROUNDS}).",
+    )
+    parser.add_argument(
+        "--output", type=Path, default=None,
+        help="path to also write the raw structured JSON payload to (stdout is always printed regardless).",
+    )
+    return parser
+
+
 def main(argv: list[str] | None = None) -> int:
+    args = build_arg_parser().parse_args(argv)
+    seeds = _resolve_seeds(args.seed_start, args.seed_count)
+    max_rounds = args.max_rounds if args.max_rounds is not None else MAX_ROUNDS
+
     common.require_pinned_hash_seed(Path(__file__).name)
     git_head_sha = common.require_clean_git_tree(Path(__file__).name)
-    ep.require_seed_scope(SEEDS, ep.SEED_CLASS_DEV, context="monopolyzero_buy_trade_gradient_diagnostic.py")
+    ep.require_seed_scope(seeds, ep.SEED_CLASS_DEV, context="monopolyzero_buy_trade_gradient_diagnostic.py")
     baseline_checkpoint_sha256 = verify_baseline_checkpoint()
 
     common.ensure_reference_on_path()
@@ -411,11 +468,18 @@ def main(argv: list[str] | None = None) -> int:
 
     model = MonopolyZeroNet.load_inference(CHECKPOINT_PATH)
     model.eval()
-    search_config = SearchConfig()
+    search_config = SearchConfig(simulations=args.simulations) if args.simulations is not None else SearchConfig()
+
+    def _emit(payload: dict) -> None:
+        text = json.dumps(payload, indent=2, sort_keys=True, default=str)
+        print(text)
+        if args.output is not None:
+            args.output.parent.mkdir(parents=True, exist_ok=True)
+            args.output.write_text(text, encoding="utf-8")
 
     started = time.perf_counter()
     with common.RssMonitor() as rss:
-        result = run_diagnostic(SEEDS, model, search_config, MAX_ROUNDS)
+        result = run_diagnostic(seeds, model, search_config, max_rounds)
         asu_modules_loaded = common.loaded_asu_modules()
     elapsed_s = time.perf_counter() - started
 
@@ -427,7 +491,7 @@ def main(argv: list[str] | None = None) -> int:
             "total_crashed": result["total_crashed"],
             "incomplete_games": result["incomplete"],
         }
-        print(json.dumps(payload, indent=2, sort_keys=True, default=str))
+        _emit(payload)
         raise RuntimeError(
             "Stopping before any stats: illegal={} crashed={} incomplete={}".format(
                 result["total_illegal"], result["total_crashed"], result["incomplete"]
@@ -438,9 +502,13 @@ def main(argv: list[str] | None = None) -> int:
         "status": "OK",
         "git_head_sha": git_head_sha,
         "config": {
-            "seeds": list(SEEDS),
-            "seeds_reused_from": "023 (43000-43019) - no new DEV seeds consumed",
-            "max_rounds": MAX_ROUNDS,
+            "seeds": list(seeds),
+            "seed_count": len(seeds),
+            "seeds_reused_from": (
+                "023 (43000-43019) - no new DEV seeds consumed"
+                if seeds == list(SEEDS) else "custom seed range - validated against the registered DEV pool"
+            ),
+            "max_rounds": max_rounds,
             "search_config": asdict(search_config),
             "policy": "pure MaxNPUCT self-play, all 4 seats, zero ASU, zero HYBRID_COMPAT, zero fixed rule",
             "physical_games": len(result["per_game"]),
@@ -462,7 +530,7 @@ def main(argv: list[str] | None = None) -> int:
         "elapsed_s": elapsed_s,
         "peak_rss_gib": rss.peak_gib,
     }
-    print(json.dumps(payload, indent=2, sort_keys=True, default=str))
+    _emit(payload)
     if asu_modules_loaded:
         raise RuntimeError(f"ASU modules loaded during evaluation: {asu_modules_loaded}")
     return 0

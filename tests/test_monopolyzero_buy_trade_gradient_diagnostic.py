@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import sys
 import types
 from pathlib import Path
@@ -376,6 +377,182 @@ def test_main_is_callable_without_arguments_signature():
 
     signature = inspect.signature(module.main)
     assert list(signature.parameters) == ["argv"]
+
+
+# ── _resolve_seeds ──────────────────────────────────────────────────────
+
+
+def test_resolve_seeds_defaults_to_023_range():
+    assert module._resolve_seeds(None, None) == list(module.SEEDS)
+
+
+def test_resolve_seeds_custom_range():
+    assert module._resolve_seeds(43005, 3) == [43005, 43006, 43007]
+
+
+def test_resolve_seeds_requires_both_args_together():
+    with pytest.raises(SystemExit):
+        module._resolve_seeds(43005, None)
+    with pytest.raises(SystemExit):
+        module._resolve_seeds(None, 3)
+
+
+# ── CLI argument parsing ─────────────────────────────────────────────────
+
+
+def test_arg_parser_all_flags_optional():
+    parser = module.build_arg_parser()
+    args = parser.parse_args([])
+    assert args.seed_start is None
+    assert args.seed_count is None
+    assert args.simulations is None
+    assert args.max_rounds is None
+    assert args.output is None
+
+
+def test_arg_parser_parses_all_flags():
+    parser = module.build_arg_parser()
+    args = parser.parse_args(
+        [
+            "--seed-start", "43000", "--seed-count", "1",
+            "--simulations", "128", "--max-rounds", "20",
+            "--output", "out.json",
+        ]
+    )
+    assert args.seed_start == 43000
+    assert args.seed_count == 1
+    assert args.simulations == 128
+    assert args.max_rounds == 20
+    assert args.output == Path("out.json")
+
+
+# ── main() wiring (no git-tree/checkpoint dependency - fully monkeypatched) ─
+
+
+def test_main_default_seed_range_matches_023(monkeypatch):
+    """No flags -> the exact seed range require_seed_scope sees must still
+    be 023's 43000-43019, unchanged from before the CLI was added."""
+    captured = {}
+    monkeypatch.setattr(module.common, "require_pinned_hash_seed", lambda name: None)
+    monkeypatch.setattr(module.common, "require_clean_git_tree", lambda name: "a" * 40)
+
+    def fake_require_seed_scope(seeds, seed_class, *, context):
+        captured["seeds"] = list(seeds)
+        raise RuntimeError("stop-here-sentinel")
+
+    monkeypatch.setattr(module.ep, "require_seed_scope", fake_require_seed_scope)
+
+    with pytest.raises(RuntimeError, match="stop-here-sentinel"):
+        module.main([])
+
+    assert captured["seeds"] == list(module.SEEDS)
+
+
+def test_main_passes_custom_seed_range_to_seed_scope_guard(monkeypatch):
+    """A custom --seed-start/--seed-count range must go through the exact
+    same DEV-pool-only guard as the default range - not skip it."""
+    captured = {}
+    monkeypatch.setattr(module.common, "require_pinned_hash_seed", lambda name: None)
+    monkeypatch.setattr(module.common, "require_clean_git_tree", lambda name: "a" * 40)
+
+    def fake_require_seed_scope(seeds, seed_class, *, context):
+        captured["seeds"] = list(seeds)
+        assert seed_class == module.ep.SEED_CLASS_DEV
+        raise RuntimeError("stop-here-sentinel")
+
+    monkeypatch.setattr(module.ep, "require_seed_scope", fake_require_seed_scope)
+
+    with pytest.raises(RuntimeError, match="stop-here-sentinel"):
+        module.main(["--seed-start", "43005", "--seed-count", "3"])
+
+    assert captured["seeds"] == [43005, 43006, 43007]
+
+
+def test_main_writes_output_file_and_records_actual_config(monkeypatch, tmp_path):
+    """Fully monkeypatched main() run (no git-tree/checkpoint dependency):
+    verifies --output writes the same JSON payload to disk, and that
+    config.seeds/max_rounds/search_config.simulations reflect what was
+    actually requested and actually run - not the old hardcoded values."""
+    module.common.ensure_reference_on_path()
+    from monopoly_bench.model import MonopolyZeroNet
+
+    monkeypatch.setattr(module.common, "require_pinned_hash_seed", lambda name: None)
+    monkeypatch.setattr(module.common, "require_clean_git_tree", lambda name: "a" * 40)
+    monkeypatch.setattr(module.ep, "require_seed_scope", lambda seeds, seed_class, *, context: None)
+    monkeypatch.setattr(module, "verify_baseline_checkpoint", lambda: "b" * 64)
+    monkeypatch.setattr(module.common, "loaded_asu_modules", lambda: [])
+
+    class _FakeModel:
+        def eval(self):
+            return self
+
+    monkeypatch.setattr(MonopolyZeroNet, "load_inference", classmethod(lambda cls, path: _FakeModel()))
+
+    fake_result = {
+        "per_game": [
+            {"seed": 43000, "completed": True, "decisions": 10, "search_calls": 8,
+             "buy_opportunities": 1, "trade_opportunities": 0}
+        ],
+        "records": [], "latencies": [], "total_illegal": 0, "total_crashed": 0, "incomplete": 0,
+        "buy_id": 3, "accept_id": 7, "decline_id": 8,
+    }
+    captured_call = {}
+
+    def fake_run_diagnostic(seeds, model, search_config, max_rounds):
+        captured_call["seeds"] = list(seeds)
+        captured_call["simulations"] = search_config.simulations
+        captured_call["max_rounds"] = max_rounds
+        return fake_result
+
+    monkeypatch.setattr(module, "run_diagnostic", fake_run_diagnostic)
+
+    output_path = tmp_path / "diag.json"
+    exit_code = module.main(
+        [
+            "--seed-start", "43000", "--seed-count", "1",
+            "--simulations", "128", "--max-rounds", "20",
+            "--output", str(output_path),
+        ]
+    )
+
+    assert exit_code == 0
+    assert captured_call == {"seeds": [43000], "simulations": 128, "max_rounds": 20}
+
+    assert output_path.is_file()
+    written = json.loads(output_path.read_text(encoding="utf-8"))
+    assert written["status"] == "OK"
+    assert written["config"]["seeds"] == [43000]
+    assert written["config"]["seed_count"] == 1
+    assert written["config"]["max_rounds"] == 20
+    assert written["config"]["search_config"]["simulations"] == 128
+
+
+def test_main_without_output_does_not_write_a_file(monkeypatch, tmp_path):
+    module.common.ensure_reference_on_path()
+    from monopoly_bench.model import MonopolyZeroNet
+
+    monkeypatch.setattr(module.common, "require_pinned_hash_seed", lambda name: None)
+    monkeypatch.setattr(module.common, "require_clean_git_tree", lambda name: "a" * 40)
+    monkeypatch.setattr(module.ep, "require_seed_scope", lambda seeds, seed_class, *, context: None)
+    monkeypatch.setattr(module, "verify_baseline_checkpoint", lambda: "b" * 64)
+    monkeypatch.setattr(module.common, "loaded_asu_modules", lambda: [])
+
+    class _FakeModel:
+        def eval(self):
+            return self
+
+    monkeypatch.setattr(MonopolyZeroNet, "load_inference", classmethod(lambda cls, path: _FakeModel()))
+
+    fake_result = {
+        "per_game": [], "records": [], "latencies": [], "total_illegal": 0,
+        "total_crashed": 0, "incomplete": 0, "buy_id": 3, "accept_id": 7, "decline_id": 8,
+    }
+    monkeypatch.setattr(module, "run_diagnostic", lambda seeds, model, search_config, max_rounds: fake_result)
+
+    before = set(tmp_path.iterdir())
+    exit_code = module.main(["--seed-start", "43000", "--seed-count", "1"])
+    assert exit_code == 0
+    assert set(tmp_path.iterdir()) == before
 
 
 # ── tiny REAL-engine smoke run (not a benchmark, not a long diagnostic) ──
