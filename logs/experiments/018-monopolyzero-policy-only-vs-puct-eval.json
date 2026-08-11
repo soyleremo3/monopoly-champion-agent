@@ -1,0 +1,68 @@
+{
+  "experiment_id": "018-monopolyzero-policy-only-vs-puct-eval",
+  "experiment_name": "POLICY_ONLY vs PUCT_4 ablation: does search add value over the bare policy head, 500-update checkpoint",
+  "experiment_type": "paired_evaluation",
+  "date": "2026-08-11",
+  "code_commit_sha": "1cf13cb5490f989eb6029adc72452cf842454442",
+  "reference_submodule_sha": "afd9205761317e196d77f679921c35fb04c7ab96",
+  "exact_commands": [
+    "PYTHONHASHSEED=0 PYTHONIOENCODING=utf-8 python scripts/monopolyzero_policy_only_vs_puct_eval.py"
+  ],
+  "seeds": [32000, 32001, 32002, 32003, 32004, 32005, 32006, 32007, 32008, 32009],
+  "algorithm_config": {
+    "held_out_seeds": [32000, 32001, 32002, 32003, 32004, 32005, 32006, 32007, 32008, 32009],
+    "seat_rotation": "4 seats x 10 seeds = 40 games per policy",
+    "policies_compared": {
+      "policy_only": "legal mask + policy-head softmax (MonopolyZeroNet.predict) + legal argmax, no search",
+      "puct_4": "MaxNPUCT, simulations=4, max_depth=16, self_play=False (the search config used by every prior MonopolyZero evaluation in this project)"
+    },
+    "max_rounds": 200,
+    "opponents": ["fixed-a", "fixed-b", "fixed-c"],
+    "shadow_query_method": "during puct_4's 40 games, policy_only is additionally asked what it would choose at every non-forced decision the checkpoint faces (same frozen pre-step state), without acting on it - the disagreement rate is measured on these exact decision states, not a separate offline sample",
+    "no_new_training": true,
+    "no_new_self_play_data_generated": true,
+    "asu_involved": false
+  },
+  "model_checkpoint": {
+    "sha256": "152c0a0f6136d1fc91e74973ac245b2f72774694c424d2a48854514ed2848383",
+    "path": "artifacts/monopolyzero_strength_pilot/trained_updates_500.pt",
+    "format_version": 1
+  },
+  "counts": {
+    "games_policy_only": 40,
+    "games_puct_4": 40,
+    "games_total": 80,
+    "action_disagreement_states": 31535
+  },
+  "runtime": {"wall_time_s": 666.7996292999887, "peak_rss_gib": 0.21031570434570312},
+  "metrics": {
+    "policy_only": {
+      "wins": 2, "completed_games": 40, "win_rate": 0.05,
+      "wilson_95": [0.013820667386148353, 0.1650387736914096],
+      "mean_net_worth": 3817.0, "median_net_worth": 0.0,
+      "bankruptcy_rate": 0.525, "round_cap_rate": 0.475,
+      "decision_latency_s": {"p50": 0.0012768000015057623, "p95": 0.004788799997186288, "mean": 0.0017195147686697879},
+      "wins_by_seat": {"0": 0, "1": 2, "2": 0, "3": 0},
+      "fixed_fallbacks_total": 151
+    },
+    "puct_4": {
+      "wins": 2, "completed_games": 40, "win_rate": 0.05,
+      "wilson_95": [0.013820667386148353, 0.1650387736914096],
+      "mean_net_worth": 3919.725, "median_net_worth": 2029.5,
+      "bankruptcy_rate": 0.5, "round_cap_rate": 0.525,
+      "decision_latency_s": {"p50": 0.009832100011408329, "p95": 0.038359700003638864, "mean": 0.013472822720835534},
+      "wins_by_seat": {"0": 0, "1": 2, "2": 0, "3": 0},
+      "fixed_fallbacks_total": 128
+    },
+    "action_disagreement_rate": 0.0293007769145394,
+    "latency_p50_diff_s": 0.008555300009902567,
+    "latency_p95_diff_s": 0.033570900006452575,
+    "puct_4_improvement_over_policy_only_statistically_supported": false,
+    "policy_only_improvement_over_puct_4_statistically_supported": false
+  },
+  "loss": null,
+  "integrity": {"illegal_actions": 0, "fallbacks": 279, "crashes": 0},
+  "result": "KILL the current PUCT/MCTS inference path. Both policies won exactly 2/40 held-out games (5.0%, identical Wilson-95 interval [1.4%, 16.5%]) on the same checkpoint/seeds/seats - PUCT_4 shows no statistically supported advantage over POLICY_ONLY (puct_4_improvement_over_policy_only_statistically_supported: false), and POLICY_ONLY shows no supported advantage over PUCT_4 either - they are indistinguishable within this sample. On the 31,535 non-forced decisions PUCT_4's own 40 evaluation games actually visited, POLICY_ONLY would have chosen the same action 97.07% of the time (2.93% disagreement) - a small fraction, consistent with 017's earlier finding that simulation-count scaling (4-vs-16) barely moves decisions on this checkpoint. PUCT_4 costs materially more per decision for that: p50 latency +8.6ms (0.0098s vs 0.0013s, ~7.7x), p95 +33.6ms (0.0384s vs 0.0048s, ~8.0x), for zero measurable win-rate benefit. Per the task's own decision rule: PUCT_4 shows no measurable/consistent advantage -> KILL search as currently used. POLICY_ONLY is equal (not worse) -> the next experiment should pivot toward a search-free learning objective/architecture rather than further MCTS tuning. No new training data or self-play games were generated; ASU was not imported (asu_modules_loaded: []); zero illegal actions/crashes in either policy across 80 games.",
+  "raw_logs": ["docs/baseline_runs/monopolyzero_policy_only_vs_puct_eval_stdout.txt"],
+  "notes": "integrity.fallbacks is the sum of both policies' fixed-agent fallback totals (151 policy_only-side games + 128 puct_4-side games = 279) - these are LocalFixedPolicy substitutions for the three non-focus opponent seats, not fallbacks by the checkpoint itself; the checkpoint (either policy) had 0 illegal actions in both runs. action_disagreement_states (31,535) counts every non-forced decision across puct_4's 40 games, not a fixed offline sample like 017's 200 states - the raw per-decision shadow-query list itself (record: turn_index/seat/actual_action/shadow_action/agree) was NOT persisted to raw_logs (would be several MB of small dicts); only the aggregate rate is recorded here, matching this project's small-raw-stdout convention. Despite the low disagreement rate, both policies happened to win on the exact same two (seed, seat) pairs (32001/seat1, 32009/seat1) - not a bug (verified: per-game decision counts differ slightly between the two policies on shared seeds, e.g. 6687 vs 5775 decisions on seed 32001/seat0, confirming genuinely different trajectories where they occurred) - this is the expected consequence of a ~97% agreement rate: most games play out nearly identically since the two policies mostly choose the same actions, so most outcomes coincide too."
+}

@@ -1130,3 +1130,78 @@ result above, neither "train longer on the same data" nor "search harder
 at inference time" moved the needle for the 500-update checkpoint. The
 remaining unexplored lever, per both entries, is more self-play data —
 starting that needs its own `docs/DECISIONS.md` entry, not assumed here.
+
+## 2026-08-11 (later still) — POLICY_ONLY vs PUCT_4: does search add value at all
+
+017 asked whether *more* simulation budget helps (4 vs 16 vs 32) and found
+it doesn't. This asks the more basic question underneath it: does search
+help *at all*, compared to just reading the policy head off the same
+checkpoint? Two inference policies, same 500-update checkpoint
+(`152c0a0f...`, integrity-verified before running), same held-out seeds
+`32000-32009`, 4-seat rotation, vs. fixed-a/b/c, `max_rounds=200`:
+
+- **POLICY_ONLY**: `MonopolyZeroNet.predict()`'s legal-masked softmax,
+  legal argmax. No MCTS.
+- **PUCT_4**: the 4-simulation, depth-16, `self_play=False` search every
+  prior MonopolyZero evaluation in this project has used.
+
+40 games each. During PUCT_4's 40 games, POLICY_ONLY was additionally
+shadow-queried at every non-forced decision the checkpoint faced — same
+frozen pre-step state, answer recorded but never acted on — so the
+disagreement rate below is measured on the *exact* decision states PUCT_4's
+own win-rate numbers came from, not a separate offline sample.
+
+| | POLICY_ONLY | PUCT_4 |
+|---|---|---|
+| Win rate (Wilson 95% CI) | 5.0% (2/40) `[1.4%, 16.5%]` | 5.0% (2/40) `[1.4%, 16.5%]` |
+| Mean / median net worth | 3817.0 / 0.0 | 3919.7 / 2029.5 |
+| Bankruptcy rate | 52.5% | 50.0% |
+| Round-cap rate | 47.5% | 52.5% |
+| Decision latency p50 / p95 | 1.28ms / 4.79ms | 9.83ms / 38.36ms |
+| Illegal actions / crashes | 0 / 0 | 0 / 0 |
+| Fixed-opponent fallbacks | 151 | 128 |
+| Wins by seat | seat 1: 2, others: 0 | seat 1: 2, others: 0 |
+
+**Action disagreement (PUCT_4 vs POLICY_ONLY, same 31,535 decision states
+from PUCT_4's own games): 2.93%.** PUCT_4 costs ~7.7x more at p50 and ~8.0x
+more at p95 per decision (+8.6ms / +33.6ms) for a chosen-action difference
+under 3%.
+
+Both policies won on the exact same two (seed, seat) pairs — not a
+coincidence worth being suspicious of, and checked: per-game decision
+counts differ slightly between the two policies on shared seeds (e.g. 6687
+vs 5775 decisions on seed 32001/seat 0), confirming the trajectories really
+do diverge where the policies disagree. At ~97% agreement, most games play
+out almost identically, so most outcomes land the same way too — this is
+the expected shape of a low-disagreement result, not evidence of a bug.
+
+Neither direction is statistically supported:
+`puct_4_improvement_over_policy_only_statistically_supported: false`,
+`policy_only_improvement_over_puct_4_statistically_supported: false`.
+Zero ASU imports (`asu_modules_loaded_count: 0`), zero new training or
+self-play data generated. Wall time 666.8s (80 games total), peak RSS
+0.21 GiB.
+
+**GO / NO-SIGNAL / KILL: KILL the current PUCT/MCTS inference path.**
+PUCT_4 shows no measurable or consistent advantage over POLICY_ONLY — per
+the task's own decision rule, that's a kill. POLICY_ONLY is equal (not
+worse), which per the same rule means the next experiment should pivot
+toward a search-free learning objective/architecture rather than further
+MCTS tuning — spending more inference-time compute on this checkpoint is
+not where the missing skill is.
+
+Full structured record:
+[logs/experiments/018-monopolyzero-policy-only-vs-puct-eval.json](../logs/experiments/018-monopolyzero-policy-only-vs-puct-eval.json).
+
+### Conclusion / next step
+
+Combined with 013/014 (32-game pilot, NO-SIGNAL), 015/016 (update-budget
+sweep, NO-SIGNAL), and 017 (search-budget scaling, KILL), this closes out
+every scaling lever tried so far on the current recipe/checkpoint family:
+training longer, searching harder, and searching at all versus not
+searching, all land at the same place. See `docs/DECISIONS.md`'s
+"Pause current MonopolyZero recipe scaling entirely" entry. The two open
+levers going forward are (a) a genuinely larger/fresh self-play dataset,
+and (b) a different learning objective/architecture that doesn't lean on
+search at inference time — neither is started by this entry; each needs
+its own proposed experiment and decision log.
