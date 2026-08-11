@@ -151,6 +151,124 @@ property, not something we patched — we did not modify submodule code.
 Worth re-checking against a newer commit of `DeepRL_Monopoly` before relying
 on seeded reproducibility for real experiments later.
 
+## MonopolyZero / ASU-teacher-bootstrap path (read-only investigation, 2026-08-11)
+
+Investigated `monopoly_bench/` (`cli.py`, `training.py`, `model.py`,
+`config.py`, `watchdog.py`) to understand how ASU is used as a teacher there,
+without running any of it — no `monopoly_bench train`/`collect-asu`/
+`export-teacher` command was executed, per `CLAUDE.md`'s gate on starting
+this pipeline. Submodule untouched.
+
+### Scripts / entry points
+
+`python -m monopoly_bench <command>`, dispatched from `monopoly_bench/cli.py`:
+
+- `smoke` — one inference-only `MaxNPUCT` search (4 simulations, depth 16)
+  using a freshly PPO-bootstrapped `MonopolyZeroNet`. No training, no ASU
+  data collection. Requires
+  `artifacts/ppo_plus/ppo_hybrid_2000_v2.pt` (the default PPO checkpoint
+  path) to already exist.
+- `collect-asu` — plays real games with ASU (`ASUAdapter`, i.e.
+  `ASU_FROZEN_TEACHER`) occupying a rotating seat against 3 fixed opponents,
+  records ASU's chosen actions + resulting states + the real game's winner,
+  saves as an `.npz` shard (`monopoly_bench/training.py::collect_asu_examples`
+  / `save_asu_examples`).
+- `train` — full `Trainer` loop (bootstrap once, then repeated
+  self-play-generate → train → promotion-gate generations).
+- `gate` / `evaluate` — promotion ladder checks against baselines
+  (`monopoly_bench/ladder.py`).
+- `export-teacher` — exports a champion model as a distillation teacher for
+  something downstream (not investigated further — out of scope here).
+
+### Student model
+
+`monopoly_bench/model.py::MonopolyZeroNet` — reuses the reference's PPO
+`ActorNetwork` trunk (loaded via `load_ppo_actor`, requires a real PPO
+checkpoint), adds a 4-player win-probability value head
+(`nn.Linear(hidden_dim, NUM_PLAYERS)` + softmax). This is **our own
+architecture's bootstrap target, not ASU's** — ASU never contributes weights,
+only training labels (below). `save_inference`/`load_inference` write a
+separate, MonopolyZero-specific checkpoint format (`format_version: 1`,
+distinct from the DDQN/PPO format-3 checkpoints already in `EXPERIMENTS.md`).
+
+### Where ASU is exactly the teacher
+
+`monopoly_bench/training.py::expert_train_step` (docstring: *"Imitate a
+frozen ASU action while learning value from the real winner"*):
+
+- **Policy head**: trained with `F.cross_entropy(logits, actions)` where
+  `actions` are ASU's recorded action choices from `collect_asu_examples` —
+  direct imitation of ASU's decisions. This is the "ASU as teacher/expert"
+  step the corrected `CLAUDE.md` policy now explicitly permits.
+  `bootstrap_asu_expert` runs this for `training.value_updates` (default
+  **2,000**) updates right after PPO-loading the trunk, freezing the trunk for
+  the first quarter of updates.
+- **Value head**: trained from the real game's actual winner
+  (`outcome[game.env.winner()] = 1.0`), never from ASU's own value estimate —
+  ASU's `V(s)` heuristic is not used as a training target anywhere in this
+  file.
+- Later self-play generations mix a **decaying fraction** of further ASU
+  imitation updates back in (`config.training.expert_fraction=0.20`,
+  decaying to 0 over `expert_decay_generations=8` generations) alongside
+  ordinary self-play replay training (`train_step`, from MCTS visit counts
+  and real game outcomes, no ASU involvement).
+- The exported/inference checkpoint (`save_inference`) has **no runtime
+  dependency on ASU** — this matches `monopoly_bench/README.md`'s own claim
+  ("The final inference checkpoint has no runtime dependency on either ASU
+  policy") and the corrected policy's "ASU may never be the final/core
+  agent" rule: even in the reference's own design, ASU is a training-time
+  signal only, not part of the deployed model.
+
+### CPU/GPU need
+
+- `training.py::_device("auto")` picks CUDA if available, else CPU — CPU-only
+  is fully supported, no hard GPU requirement in the code.
+- `torch.amp.GradScaler`/`autocast` are CUDA-only paths (`enabled=device.type
+  == "cuda"`); on CPU everything just runs in full precision, slower but
+  functional.
+- Self-play game generation (`generate_population_games`) parallelizes across
+  **CPU processes** via `multiprocessing.get_context("spawn").Pool(workers)`
+  (`config.training.workers`, default **4**) — this is a CPU-parallel
+  workload, not GPU-parallel.
+- `ResourceWatchdog` (`monopoly_bench/watchdog.py`) enforces RSS/available-RAM/
+  disk/VRAM limits (defaults: soft RSS 3 GiB, hard RSS 4 GiB, min available
+  RAM 2 GiB, min free disk 20 GiB, reserved VRAM 1 GiB — VRAM check only
+  applies if CUDA is present) — same shape of guard as `training_guard.py`,
+  same Windows caveat: needs `psutil` (already installed in our venv from the
+  DDQN smoke).
+
+### Cost signal actually measured this session
+
+Not from `monopoly_bench` itself (not run), but from benchmarking
+`asu-value-v1` (the same ASU policy `collect-asu` would use as teacher) as an
+**evaluation opponent only** via `scripts/run_baseline_match.py` — see
+`docs/EXPERIMENTS.md`'s 2026-08-11 ASU-benchmark entry: **~531s/game average**
+(2,126.6s for 4 games, one seed), roughly **1,000x slower per decision** than
+the scripted fixed agents or the DDQN checkpoint. ASU's per-action cost comes
+from its 5-turn dice-enumeration + 5-lap landing-distribution heuristic
+(`ASU_FROZEN_TEACHER/README.md`'s `R_short`/`R_long`/`M_monopoly` terms),
+evaluated for every legal action at every decision.
+
+This directly bounds `collect-asu`'s cost: its default `bootstrap_games=256`
+plays ASU seated in **every** game (`teacher_seat = game_index % NUM_PLAYERS`,
+so ASU acts in all 256, not just a rotating quarter), so 256 games at
+roughly the per-game cost observed above (order of magnitude:
+minutes-per-game, highly state-dependent) is a multi-hour-to-day CPU cost
+just for `collect-asu`, before any of `train`'s 2,000-update bootstrap or
+further generations. This is an extrapolation from one seed's measured cost,
+not a direct measurement of `collect-asu` itself — flagged as an estimate,
+not a fact, in the numbers given to the user.
+
+### Does it need Modal?
+
+No. Zero references to "modal" anywhere in `monopoly_bench/` (checked via
+grep across the whole directory). The only remote-execution concept present
+is `fallback_colab` / `monopoly_bench/colab.py`'s `ColabLauncher` and
+`build_resume_bundle` — a **Google Colab** handoff/resume mechanism for when
+local resources run out (triggered by `ResourceLimitReached`), unrelated to
+Modal. Nothing here requires Modal specifically; Modal (if used) would be our
+own infrastructure choice, not something this pipeline assumes.
+
 ## License / copying
 
 No `LICENSE` file in `Darkosxl/DeepRL_Monopoly` (GitHub API reports
