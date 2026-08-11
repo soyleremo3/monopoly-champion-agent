@@ -1,0 +1,90 @@
+{
+  "experiment_id": "022-monopolyzero-value-decision-audit",
+  "experiment_name": "Post-hoc decision-critical audit of 021's TEST predictions: segment analysis and a final A/B call",
+  "experiment_type": "benchmark",
+  "date": "2026-08-11",
+  "code_commit_sha": "9369835733fa3cce5170c5a8cdd9fe21d4283ba0",
+  "reference_submodule_sha": "afd9205761317e196d77f679921c35fb04c7ab96",
+  "exact_commands": [
+    "PYTHONHASHSEED=0 PYTHONIOENCODING=utf-8 python scripts/monopolyzero_value_decision_audit.py"
+  ],
+  "seeds": [42100, 42101, 42102, 42103, 42104, 42105, 42106, 42107, 42108, 42109, 42110, 42111, 42112, 42113, 42114, 42115, 42116, 42117, 42118, 42119, 42120, 42121, 42122, 42123, 42124, 42125, 42126, 42127, 42128, 42129, 42130, 42131, 42132, 42133, 42134, 42135, 42136, 42137, 42138, 42139, 42140, 42141, 42142, 42143, 42144, 42145, 42146, 42147, 42148, 42149, 42150, 42151, 42152, 42153, 42154, 42155, 42156, 42157, 42158, 42159, 42160, 42161, 42162, 42163, 42164, 42165, 42166, 42167, 42168, 42169, 42170, 42171, 42172, 42173, 42174, 42175, 42176, 42177, 42178, 42179, 42180, 42181, 42182, 42183, 42184, 42185, 42186, 42187, 42188, 42189, 42190, 42191, 42192, 42193, 42194, 42195],
+  "algorithm_config": {
+    "prior_experiment": "021-monopolyzero-value-generalization-probe",
+    "no_new_self_play": true,
+    "no_new_or_different_model": true,
+    "no_puct": true,
+    "no_new_hyperparameter_or_temperature_selection_against_test": true,
+    "method": "021's exact deterministic pipeline (same seeds/split/quantile-sampling/ValueProbe training, imported directly from probe_v1/probe_v2, not redefined) re-derived once to recover per-state fields 021 never persisted (legal-action count, decision phase). Reconciled against 021's own logged TEST metrics before drawing any conclusion.",
+    "reconciliation_tolerance": 1e-06,
+    "segment_axes": ["round_bucket", "margin_quartile (probabilistic-leader top1-top2 margin)", "current_player_rank", "decision_type (env.phase)", "legal_action_count"],
+    "outcome_adjacent_axes": ["margin_quartile", "current_player_rank"],
+    "diagnostic_only": "all segment-level breakdowns - no CI/p-value computed per segment; 021's game-block bootstrap remains the one confirmatory statistic",
+    "decision_rule": "Recommend B (propose new value hypothesis) only if >=1 segment has >=20 states AND learned ValueProbe top-1 accuracy exceeds the probabilistic leader's by >=5 percentage points; otherwise A (drop learned-value path). Rule fixed in source before running.",
+    "asu_involved": false
+  },
+  "model_checkpoint": {
+    "sha256": "22ae2abea60478355f61ce0404a31de3b52fb97769d4f99f7e04f4c673629370",
+    "path": "artifacts/monopolyzero_strength_pilot/baseline_pretraining.pt",
+    "format_version": 1
+  },
+  "counts": {
+    "test_states": 759,
+    "leader_wrong_states": 26,
+    "legal_action_count_distinct_values": 186
+  },
+  "runtime": {"wall_time_s": 456.72248359999503, "peak_rss_gib": 0.4942474365234375},
+  "metrics": {
+    "reconciliation_against_021": {
+      "uniform": {"matches_021": true, "max_delta": 0.0},
+      "hard_net_worth_leader": {"matches_021": true, "max_delta": 0.0},
+      "probabilistic_net_worth_leader": {"matches_021": true, "max_delta": 0.0},
+      "learned_value_probe": {"matches_021": true, "max_delta": 0.0}
+    },
+    "margin_summary": {"min": 0.0, "q25": 0.9999548527651712, "median": 0.999999668182999, "q75": 0.9999999999542558, "max": 1.0},
+    "leader_wrong_distribution": {
+      "count": 26, "fraction_of_test": 0.034255599472990776,
+      "by_round_bucket": {"1-25": {"count": 26, "fraction": 1.0}},
+      "by_margin_quartile": {"Q1(low margin)": {"count": 26, "fraction": 1.0}},
+      "by_current_player_rank": {"1": {"count": 12, "fraction": 0.4615}, "2": {"count": 4, "fraction": 0.1538}, "3": {"count": 6, "fraction": 0.2308}, "4": {"count": 4, "fraction": 0.1538}},
+      "by_decision_type": {"auction": {"count": 12, "fraction": 0.4615}, "pre_roll": {"count": 8, "fraction": 0.3077}, "out_of_turn": {"count": 4, "fraction": 0.1538}, "post_roll": {"count": 2, "fraction": 0.0769}}
+    },
+    "segment_round_bucket": {
+      "1-25": {"count": 189, "unique_games": 16, "leader_accuracy": 0.8624338624338624, "learned_accuracy": 0.5873015873015873},
+      "26-50": {"count": 153, "unique_games": 16, "leader_accuracy": 1.0, "learned_accuracy": 0.43137254901960786},
+      "51-100": {"count": 150, "unique_games": 16, "leader_accuracy": 1.0, "learned_accuracy": 0.5533333333333333},
+      "101-150": {"count": 135, "unique_games": 14, "leader_accuracy": 1.0, "learned_accuracy": 0.5777777777777777},
+      "151-terminal": {"count": 132, "unique_games": 14, "leader_accuracy": 1.0, "learned_accuracy": 0.6287878787878788}
+    },
+    "segment_margin_quartile_outcome_adjacent": {
+      "Q1(low margin)": {"count": 190, "unique_games": 16, "leader_accuracy": 0.8631578947368421, "learned_accuracy": 0.4789473684210526},
+      "Q2": {"count": 190, "unique_games": 11, "leader_accuracy": 1.0, "learned_accuracy": 0.43157894736842106},
+      "Q3": {"count": 189, "unique_games": 13, "leader_accuracy": 1.0, "learned_accuracy": 0.5343915343915344},
+      "Q4(high margin)": {"count": 190, "unique_games": 9, "leader_accuracy": 1.0, "learned_accuracy": 0.7736842105263158}
+    },
+    "segment_current_player_rank_outcome_adjacent": {
+      "1": {"count": 235, "unique_games": 16, "leader_accuracy": 0.948936170212766, "learned_accuracy": 0.7319148936170212},
+      "2": {"count": 229, "unique_games": 16, "leader_accuracy": 0.982532751091703, "learned_accuracy": 0.5589519650655022},
+      "3": {"count": 187, "unique_games": 16, "leader_accuracy": 0.9679144385026738, "learned_accuracy": 0.34759358288770054},
+      "4": {"count": 108, "unique_games": 14, "leader_accuracy": 0.9629629629629629, "learned_accuracy": 0.5185185185185185}
+    },
+    "segment_decision_type": {
+      "auction": {"count": 100, "unique_games": 16, "leader_accuracy": 0.88, "learned_accuracy": 0.62},
+      "pre_roll": {"count": 175, "unique_games": 16, "leader_accuracy": 0.9542857142857143, "learned_accuracy": 0.56},
+      "post_roll": {"count": 161, "unique_games": 16, "leader_accuracy": 0.9875776397515528, "learned_accuracy": 0.515527950310559},
+      "out_of_turn": {"count": 323, "unique_games": 16, "leader_accuracy": 0.9876160990712074, "learned_accuracy": 0.5510835913312694}
+    },
+    "segment_legal_action_count_condensed": {
+      "note": "186 distinct raw legal_action_count values in the full audit (mostly distinct auction bid amounts) - condensed here into 3 ranges for readability; full per-value breakdown is in raw_logs",
+      "2-3 (few choices)": {"count": 162, "leader_accuracy": 0.9877, "learned_accuracy": 0.6667},
+      "4-9 (moderate)": {"count": 174, "leader_accuracy": 0.8793, "learned_accuracy": 0.4885},
+      "10+ (auction-heavy)": {"count": 423, "leader_accuracy": 0.9929, "learned_accuracy": 0.539}
+    },
+    "value_probe_advantage_segments_found": []
+  },
+  "loss": null,
+  "integrity": {"illegal_actions": 0, "fallbacks": 0, "crashes": 0},
+  "result": "021's 96-game POLICY_ONLY pipeline was re-derived deterministically (same seeds/config, same ValueProbe training recipe, zero new randomness) and its four TEST-set predictor summaries (uniform, hard leader, probabilistic leader, learned ValueProbe) reconciled EXACTLY against 021's own logged values (all deltas 0.0) - confirming this audit genuinely analyzes 021's data, not new data, before any conclusion was drawn. Segment analysis across round bucket, probabilistic-leader margin quartile, current-player rank, decision type, and legal-action count found NO segment where the learned ValueProbe meaningfully beat the probabilistic net-worth-leader baseline: value_probe_advantage_segments_found is empty against the pre-stated bar (>=20 states, >=5-point accuracy margin, fixed before running). The leader dominates almost everywhere - 100.0% accuracy in every round bucket from round 26 onward, every margin quartile except Q1, every current-player-rank group (94.9%-98.3%), and every decision-type/legal-action-count regime (87.9%-99.3%) - while the learned ValueProbe stays in the 35-77% range across every one of the same segments, never approaching the leader. The 26 TEST states (3.4% of 759) where the leader itself was wrong concentrate ENTIRELY in round bucket 1-25 and margin quartile Q1(low margin) (100% of wrong-leader states in both, by construction/definition of margin correlating with correctness) - i.e. the leader is only ever fallible in the earliest, most net-worth-undifferentiated part of the game, and even there is right 86.2% of the time. Per the pre-stated decision rule, the final call is A: drop the learned-value path for now and move to the decision/policy win-rate phase. No claim is made about POLICY_ONLY/PUCT/MonopolyZeroNet strength; no win-rate evaluation, no PUCT, and no new/different model were run.",
+  "raw_logs": ["docs/baseline_runs/monopolyzero_value_decision_audit_stdout.txt"],
+  "notes": "The raw stdout log's segment_reports.legal_action_count has 186 distinct raw values (mostly individual auction bid-dollar-amounts, an artifact of ppo-plus-v2's action space rather than a meaningful small-cardinality decision-type signal) - condensed into 3 ranges in this log's metrics for readability; the full per-value breakdown (mostly count=1 or count=2 per value) is preserved in the raw stdout, not lost. margin_quartile and current_player_rank are explicitly OUTCOME-ADJACENT axes (both derived from the same net-worth signal the probabilistic leader baseline is itself scored on) - their clean-looking accuracy-vs-segment relationships are partly definitional (of course a low-margin/behind-in-net-worth state is harder to call correctly), not fresh generalization evidence; round_bucket, decision_type, and legal_action_count are comparatively less circular (game-time/state-structure features, not derived from the prediction being scored) but still diagnostic/exploratory only, not a confirmatory test. All segment-level accuracy/CE/Brier numbers in this log are point estimates with no per-segment CI - 021's game_block_bootstrap_learned_vs_probabilistic_leader result remains the only confirmatory statistic this project stands behind for the overall learned-vs-leader comparison."
+}

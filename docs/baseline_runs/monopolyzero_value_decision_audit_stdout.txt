@@ -1,0 +1,3015 @@
+{
+  "asu_modules_loaded": [],
+  "asu_modules_loaded_count": 0,
+  "checkpoint_sha256": "22ae2abea60478355f61ce0404a31de3b52fb97769d4f99f7e04f4c673629370",
+  "config": {
+    "asu_involved": false,
+    "no_new_hyperparameter_or_temperature_selection_against_test": true,
+    "no_new_or_different_model": true,
+    "no_new_self_play": true,
+    "no_puct": true,
+    "outcome_adjacent_axes": [
+      "current_player_rank",
+      "margin_quartile"
+    ],
+    "prior_experiment": "021-monopolyzero-value-generalization-probe",
+    "reconciliation_tolerance": 1e-06,
+    "value_probe_win_min_accuracy_margin": 0.05,
+    "value_probe_win_min_segment_states": 20
+  },
+  "dataset": {
+    "leader_wrong_states": 26,
+    "test_states": 759
+  },
+  "decision": {
+    "final_decision": "A",
+    "option_a": "Drop the learned-value path for now; move to the decision/policy win-rate phase.",
+    "option_b": "Propose a new value hypothesis - only warranted if a segment below clears the bar.",
+    "qualifying_segments": [],
+    "rule": "Recommend B only if at least one segment (across round_bucket, margin_quartile, current_player_rank, decision_type, legal_action_count) has >= 20 states AND the learned ValueProbe's top-1 accuracy exceeds the probabilistic leader's by >= 5%; otherwise A. Rule fixed in source before this audit ran."
+  },
+  "elapsed_s": 456.72248359999503,
+  "git_head_sha": "9369835733fa3cce5170c5a8cdd9fe21d4283ba0",
+  "leader_wrong_distribution": {
+    "by_current_player_rank": {
+      "1": {
+        "count": 12,
+        "fraction": 0.46153846153846156
+      },
+      "2": {
+        "count": 4,
+        "fraction": 0.15384615384615385
+      },
+      "3": {
+        "count": 6,
+        "fraction": 0.23076923076923078
+      },
+      "4": {
+        "count": 4,
+        "fraction": 0.15384615384615385
+      }
+    },
+    "by_decision_type": {
+      "auction": {
+        "count": 12,
+        "fraction": 0.46153846153846156
+      },
+      "out_of_turn": {
+        "count": 4,
+        "fraction": 0.15384615384615385
+      },
+      "post_roll": {
+        "count": 2,
+        "fraction": 0.07692307692307693
+      },
+      "pre_roll": {
+        "count": 8,
+        "fraction": 0.3076923076923077
+      }
+    },
+    "by_legal_action_count": {
+      "10": {
+        "count": 2,
+        "fraction": 0.07692307692307693
+      },
+      "2": {
+        "count": 1,
+        "fraction": 0.038461538461538464
+      },
+      "3": {
+        "count": 1,
+        "fraction": 0.038461538461538464
+      },
+      "4": {
+        "count": 5,
+        "fraction": 0.19230769230769232
+      },
+      "5": {
+        "count": 12,
+        "fraction": 0.46153846153846156
+      },
+      "7": {
+        "count": 2,
+        "fraction": 0.07692307692307693
+      },
+      "89": {
+        "count": 1,
+        "fraction": 0.038461538461538464
+      },
+      "9": {
+        "count": 2,
+        "fraction": 0.07692307692307693
+      }
+    },
+    "by_margin_quartile": {
+      "Q1(low margin)": {
+        "count": 26,
+        "fraction": 1.0
+      }
+    },
+    "by_round_bucket": {
+      "1-25": {
+        "count": 26,
+        "fraction": 1.0
+      }
+    },
+    "count": 26,
+    "fraction_of_test": 0.034255599472990776
+  },
+  "margin_summary": {
+    "max": 1.0,
+    "median": 0.999999668182999,
+    "min": 0.0,
+    "q25": 0.9999548527651712,
+    "q75": 0.9999999999542558
+  },
+  "peak_rss_gib": 0.4942474365234375,
+  "reconciliation_against_021": {
+    "hard_net_worth_leader": {
+      "deltas": {
+        "brier_score": 0.0,
+        "cross_entropy": 0.0,
+        "top1_accuracy": 0.0
+      },
+      "matches_021": true
+    },
+    "learned_value_probe": {
+      "deltas": {
+        "brier_score": 0.0,
+        "cross_entropy": 0.0,
+        "top1_accuracy": 0.0
+      },
+      "matches_021": true
+    },
+    "probabilistic_net_worth_leader": {
+      "deltas": {
+        "brier_score": 0.0,
+        "cross_entropy": 0.0,
+        "top1_accuracy": 0.0
+      },
+      "matches_021": true
+    },
+    "uniform": {
+      "deltas": {
+        "brier_score": 0.0,
+        "cross_entropy": 0.0,
+        "top1_accuracy": 0.0
+      },
+      "matches_021": true
+    }
+  },
+  "segment_reports": {
+    "current_player_rank": {
+      "1": {
+        "count": 235,
+        "leader": {
+          "brier_score": 0.04830729699626119,
+          "cross_entropy": 0.08911444238208517,
+          "top1_accuracy": 0.948936170212766
+        },
+        "learned_value_probe": {
+          "brier_score": 0.38444728738682893,
+          "cross_entropy": 0.6290493550374334,
+          "top1_accuracy": 0.7319148936170212
+        },
+        "unique_games": 16
+      },
+      "2": {
+        "count": 229,
+        "leader": {
+          "brier_score": 0.015856632853476552,
+          "cross_entropy": 0.03525121141457307,
+          "top1_accuracy": 0.982532751091703
+        },
+        "learned_value_probe": {
+          "brier_score": 0.5816775600464125,
+          "cross_entropy": 1.0231833459435222,
+          "top1_accuracy": 0.5589519650655022
+        },
+        "unique_games": 16
+      },
+      "3": {
+        "count": 187,
+        "leader": {
+          "brier_score": 0.027687518752202607,
+          "cross_entropy": 0.05752875551466303,
+          "top1_accuracy": 0.9679144385026738
+        },
+        "learned_value_probe": {
+          "brier_score": 0.9902572564638268,
+          "cross_entropy": 1.9114547551927654,
+          "top1_accuracy": 0.34759358288770054
+        },
+        "unique_games": 16
+      },
+      "4": {
+        "count": 108,
+        "leader": {
+          "brier_score": 0.03532989756830028,
+          "cross_entropy": 0.07722634318269295,
+          "top1_accuracy": 0.9629629629629629
+        },
+        "learned_value_probe": {
+          "brier_score": 0.7376870718760055,
+          "cross_entropy": 1.4612939399334204,
+          "top1_accuracy": 0.5185185185185185
+        },
+        "unique_games": 14
+      }
+    },
+    "decision_type": {
+      "auction": {
+        "count": 100,
+        "leader": {
+          "brier_score": 0.10886430275682706,
+          "cross_entropy": 0.20276888881659588,
+          "top1_accuracy": 0.88
+        },
+        "learned_value_probe": {
+          "brier_score": 0.5408227950433406,
+          "cross_entropy": 0.9972130905066459,
+          "top1_accuracy": 0.62
+        },
+        "unique_games": 16
+      },
+      "out_of_turn": {
+        "count": 323,
+        "leader": {
+          "brier_score": 0.01307821778136212,
+          "cross_entropy": 0.033033676905100964,
+          "top1_accuracy": 0.9876160990712074
+        },
+        "learned_value_probe": {
+          "brier_score": 0.6539370710992299,
+          "cross_entropy": 1.1874225095768827,
+          "top1_accuracy": 0.5510835913312694
+        },
+        "unique_games": 16
+      },
+      "post_roll": {
+        "count": 161,
+        "leader": {
+          "brier_score": 0.012230983087871614,
+          "cross_entropy": 0.02328883906076401,
+          "top1_accuracy": 0.9875776397515528
+        },
+        "learned_value_probe": {
+          "brier_score": 0.7009289066268043,
+          "cross_entropy": 1.2951569707991868,
+          "top1_accuracy": 0.515527950310559
+        },
+        "unique_games": 16
+      },
+      "pre_roll": {
+        "count": 175,
+        "leader": {
+          "brier_score": 0.03940969008797615,
+          "cross_entropy": 0.0766655663309135,
+          "top1_accuracy": 0.9542857142857143
+        },
+        "learned_value_probe": {
+          "brier_score": 0.6299661546947236,
+          "cross_entropy": 1.174961813977447,
+          "top1_accuracy": 0.56
+        },
+        "unique_games": 16
+      }
+    },
+    "legal_action_count": {
+      "10": {
+        "count": 16,
+        "leader": {
+          "brier_score": 0.06679583377735862,
+          "cross_entropy": 0.11463019490635011,
+          "top1_accuracy": 0.875
+        },
+        "learned_value_probe": {
+          "brier_score": 0.3946172473735028,
+          "cross_entropy": 1.0375526577835306,
+          "top1_accuracy": 0.75
+        },
+        "unique_games": 6
+      },
+      "100": {
+        "count": 4,
+        "leader": {
+          "brier_score": 2.4781372196804116e-08,
+          "cross_entropy": 6.610553683743386e-05,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.5090011561925094,
+          "cross_entropy": 2.437950882822714,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 3
+      },
+      "101": {
+        "count": 2,
+        "leader": {
+          "brier_score": 0.00030922973939826983,
+          "cross_entropy": 0.010857686011070037,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.5539507646306947,
+          "cross_entropy": 3.648281481631023,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 2
+      },
+      "106": {
+        "count": 1,
+        "leader": {
+          "brier_score": 1.4384599677487544e-14,
+          "cross_entropy": 8.720032365571219e-08,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.9583660852582851,
+          "cross_entropy": 4.5848182844735454,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 1
+      },
+      "107": {
+        "count": 3,
+        "leader": {
+          "brier_score": 0.0002061528715923456,
+          "cross_entropy": 0.007230124710681633,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.1637016510948441,
+          "cross_entropy": 2.8287912752591793,
+          "top1_accuracy": 0.3333333333333333
+        },
+        "unique_games": 3
+      },
+      "109": {
+        "count": 2,
+        "leader": {
+          "brier_score": 4.3206303720780165e-10,
+          "cross_entropy": 1.2651179020305329e-05,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.3994115530483193,
+          "cross_entropy": 2.3688666145659374,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 1
+      },
+      "11": {
+        "count": 5,
+        "leader": {
+          "brier_score": 5.635503771989794e-11,
+          "cross_entropy": 3.1244468132668683e-06,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.3248573558276341,
+          "cross_entropy": 0.5253645616248901,
+          "top1_accuracy": 0.8
+        },
+        "unique_games": 4
+      },
+      "110": {
+        "count": 5,
+        "leader": {
+          "brier_score": 1.6823002811620735e-14,
+          "cross_entropy": 4.5036159480253845e-08,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.250768567929819,
+          "cross_entropy": 0.3512889186076106,
+          "top1_accuracy": 0.8
+        },
+        "unique_games": 4
+      },
+      "111": {
+        "count": 1,
+        "leader": {
+          "brier_score": 1.1838236720437095e-09,
+          "cross_entropy": 2.9070405717237778e-05,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.0702394619466302,
+          "cross_entropy": 1.3752771547511922,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 1
+      },
+      "112": {
+        "count": 4,
+        "leader": {
+          "brier_score": 9.549584175796084e-13,
+          "cross_entropy": 4.462429950445115e-07,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.9297591423610252,
+          "cross_entropy": 2.1503178171251083,
+          "top1_accuracy": 0.5
+        },
+        "unique_games": 4
+      },
+      "113": {
+        "count": 2,
+        "leader": {
+          "brier_score": 1.7754875912933903e-10,
+          "cross_entropy": 7.344477597106433e-06,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.8799931686576964,
+          "cross_entropy": 1.4963915207248557,
+          "top1_accuracy": 0.5
+        },
+        "unique_games": 2
+      },
+      "114": {
+        "count": 1,
+        "leader": {
+          "brier_score": 2.3474448933942776e-14,
+          "cross_entropy": 1.1906594974921748e-07,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.54319486310937,
+          "cross_entropy": 2.3583772047649623,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 1
+      },
+      "115": {
+        "count": 1,
+        "leader": {
+          "brier_score": 1.1592953667275468e-15,
+          "cross_entropy": 2.4692601712889603e-08,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.9550764327252501,
+          "cross_entropy": 4.499228194944389,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 1
+      },
+      "117": {
+        "count": 1,
+        "leader": {
+          "brier_score": 3.4084855471051416e-19,
+          "cross_entropy": 4.3496029010237504e-10,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.0016348364994396754,
+          "cross_entropy": 0.029869450291578475,
+          "top1_accuracy": 1.0
+        },
+        "unique_games": 1
+      },
+      "118": {
+        "count": 3,
+        "leader": {
+          "brier_score": 1.6438532709891094e-15,
+          "cross_entropy": 1.7194921404878798e-08,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.5705676610574683,
+          "cross_entropy": 0.8723362318518652,
+          "top1_accuracy": 0.6666666666666666
+        },
+        "unique_games": 3
+      },
+      "119": {
+        "count": 2,
+        "leader": {
+          "brier_score": 3.6181526449994246e-19,
+          "cross_entropy": 4.775790875043251e-10,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.042033774568625046,
+          "cross_entropy": 0.1584344674240647,
+          "top1_accuracy": 1.0
+        },
+        "unique_games": 2
+      },
+      "12": {
+        "count": 13,
+        "leader": {
+          "brier_score": 0.00045093703814103964,
+          "cross_entropy": 0.011295261358417184,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.915404298054752,
+          "cross_entropy": 2.2981528470520862,
+          "top1_accuracy": 0.3076923076923077
+        },
+        "unique_games": 3
+      },
+      "120": {
+        "count": 3,
+        "leader": {
+          "brier_score": 0.0006508176871508644,
+          "cross_entropy": 0.012998319732596129,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.46861567488231676,
+          "cross_entropy": 0.6600648594195839,
+          "top1_accuracy": 0.6666666666666666
+        },
+        "unique_games": 3
+      },
+      "121": {
+        "count": 2,
+        "leader": {
+          "brier_score": 4.1049084798731624e-22,
+          "cross_entropy": 1.1325052007422091e-11,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.049371853360108096,
+          "cross_entropy": 0.127271056054803,
+          "top1_accuracy": 1.0
+        },
+        "unique_games": 2
+      },
+      "122": {
+        "count": 4,
+        "leader": {
+          "brier_score": 0.00014503622493133395,
+          "cross_entropy": 0.008658071288832335,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.3655641807775761,
+          "cross_entropy": 0.5650963319371766,
+          "top1_accuracy": 0.75
+        },
+        "unique_games": 2
+      },
+      "123": {
+        "count": 2,
+        "leader": {
+          "brier_score": 4.9562744393555995e-08,
+          "cross_entropy": 0.00013221107363201308,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.7426335897438112,
+          "cross_entropy": 3.1765473712294026,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 2
+      },
+      "124": {
+        "count": 1,
+        "leader": {
+          "brier_score": 8.640263657425534e-10,
+          "cross_entropy": 2.5056764708868262e-05,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.8324891001156902,
+          "cross_entropy": 3.724035291115969,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 1
+      },
+      "125": {
+        "count": 4,
+        "leader": {
+          "brier_score": 6.854865738242055e-25,
+          "cross_entropy": 3.402833570478365e-13,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.2366060521121549,
+          "cross_entropy": 0.29335229513856953,
+          "top1_accuracy": 0.75
+        },
+        "unique_games": 2
+      },
+      "126": {
+        "count": 1,
+        "leader": {
+          "brier_score": 9.244251002672188e-39,
+          "cross_entropy": -0.0,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.838996127964834,
+          "cross_entropy": 3.2227220530016116,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 1
+      },
+      "127": {
+        "count": 3,
+        "leader": {
+          "brier_score": 3.264724974330443e-08,
+          "cross_entropy": 7.85255337466451e-05,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.9291779481179007,
+          "cross_entropy": 1.6221618117091383,
+          "top1_accuracy": 0.3333333333333333
+        },
+        "unique_games": 3
+      },
+      "128": {
+        "count": 2,
+        "leader": {
+          "brier_score": 4.206236786725148e-14,
+          "cross_entropy": 1.1368653954704217e-07,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.6226576669945832,
+          "cross_entropy": 0.8426864733845505,
+          "top1_accuracy": 0.5
+        },
+        "unique_games": 2
+      },
+      "129": {
+        "count": 1,
+        "leader": {
+          "brier_score": 4.2894131359916514e-36,
+          "cross_entropy": -0.0,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.00016874692955502342,
+          "cross_entropy": 0.009231489044967399,
+          "top1_accuracy": 1.0
+        },
+        "unique_games": 1
+      },
+      "130": {
+        "count": 1,
+        "leader": {
+          "brier_score": 3.520051619715921e-26,
+          "cross_entropy": 1.4810375148500684e-13,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.652609227623861,
+          "cross_entropy": 2.4154894355926357,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 1
+      },
+      "131": {
+        "count": 3,
+        "leader": {
+          "brier_score": 8.59353411993643e-11,
+          "cross_entropy": 4.2859812923698066e-06,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.4912839118106929,
+          "cross_entropy": 2.235717654701179,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 2
+      },
+      "132": {
+        "count": 1,
+        "leader": {
+          "brier_score": 2.3474448933942776e-14,
+          "cross_entropy": 1.1906594974921748e-07,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.9530853962504873,
+          "cross_entropy": 1.2067090797185724,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 1
+      },
+      "133": {
+        "count": 1,
+        "leader": {
+          "brier_score": 5.543134084462761e-10,
+          "cross_entropy": 1.8410388689943555e-05,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.3447955112945307,
+          "cross_entropy": 1.7535716899570646,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 1
+      },
+      "134": {
+        "count": 1,
+        "leader": {
+          "brier_score": 2.500788706958639e-07,
+          "cross_entropy": 0.00036990914548455547,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.9313286611083615,
+          "cross_entropy": 4.725304043848344,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 1
+      },
+      "138": {
+        "count": 1,
+        "leader": {
+          "brier_score": 2.144793421680453e-07,
+          "cross_entropy": 0.0003463075789378477,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.8351246977307514,
+          "cross_entropy": 3.4354102007493754,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 1
+      },
+      "139": {
+        "count": 2,
+        "leader": {
+          "brier_score": 2.659682301059539e-10,
+          "cross_entropy": 9.74337437006646e-06,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.70197829693092,
+          "cross_entropy": 1.0008119068558385,
+          "top1_accuracy": 0.5
+        },
+        "unique_games": 2
+      },
+      "14": {
+        "count": 2,
+        "leader": {
+          "brier_score": 9.92404867391494e-08,
+          "cross_entropy": 0.00017850034364639577,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.8078325476526431,
+          "cross_entropy": 1.1059762923236311,
+          "top1_accuracy": 0.5
+        },
+        "unique_games": 2
+      },
+      "140": {
+        "count": 2,
+        "leader": {
+          "brier_score": 0.0009762773695182391,
+          "cross_entropy": 0.01961510743372296,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.8416498030237523,
+          "cross_entropy": 4.503053373694339,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 2
+      },
+      "142": {
+        "count": 1,
+        "leader": {
+          "brier_score": 3.5605478823077304e-14,
+          "cross_entropy": 1.354885403507506e-07,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.4443884106259146,
+          "cross_entropy": 3.8285903128880214,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 1
+      },
+      "143": {
+        "count": 1,
+        "leader": {
+          "brier_score": 0.0010169397347418252,
+          "cross_entropy": 0.02795770237567134,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.9201305216851625,
+          "cross_entropy": 5.51926536108838,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 1
+      },
+      "144": {
+        "count": 3,
+        "leader": {
+          "brier_score": 6.910366492339147e-05,
+          "cross_entropy": 0.004174772604909242,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.2510611995798737,
+          "cross_entropy": 2.4704507848294313,
+          "top1_accuracy": 0.3333333333333333
+        },
+        "unique_games": 3
+      },
+      "145": {
+        "count": 1,
+        "leader": {
+          "brier_score": 8.640263657425534e-10,
+          "cross_entropy": 2.5056764708868262e-05,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.877112675615554,
+          "cross_entropy": 1.147534606557043,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 1
+      },
+      "146": {
+        "count": 2,
+        "leader": {
+          "brier_score": 1.9540201657778145e-12,
+          "cross_entropy": 9.56928094740688e-07,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.2163056914548624,
+          "cross_entropy": 1.8540889672176162,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 1
+      },
+      "149": {
+        "count": 3,
+        "leader": {
+          "brier_score": 0.0002167546390962462,
+          "cross_entropy": 0.007259157402496739,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.8344968280797579,
+          "cross_entropy": 1.6396460792121703,
+          "top1_accuracy": 0.3333333333333333
+        },
+        "unique_games": 3
+      },
+      "15": {
+        "count": 4,
+        "leader": {
+          "brier_score": 0.00486089647496646,
+          "cross_entropy": 0.04429177888630168,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.2711530020698843,
+          "cross_entropy": 0.42736169014707864,
+          "top1_accuracy": 0.75
+        },
+        "unique_games": 3
+      },
+      "151": {
+        "count": 3,
+        "leader": {
+          "brier_score": 2.20051863736925e-11,
+          "cross_entropy": 2.495408023209462e-06,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.0207996331369291,
+          "cross_entropy": 2.127180123469875,
+          "top1_accuracy": 0.3333333333333333
+        },
+        "unique_games": 2
+      },
+      "152": {
+        "count": 2,
+        "leader": {
+          "brier_score": 4.058401282844748e-14,
+          "cross_entropy": 1.0790302899681133e-07,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.014268033606888834,
+          "cross_entropy": 0.06704906493091393,
+          "top1_accuracy": 1.0
+        },
+        "unique_games": 1
+      },
+      "153": {
+        "count": 1,
+        "leader": {
+          "brier_score": 0.00037345091384109676,
+          "cross_entropy": 0.016745241367521525,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.3799940846920697,
+          "cross_entropy": 4.046679638563581,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 1
+      },
+      "154": {
+        "count": 3,
+        "leader": {
+          "brier_score": 8.786063275546708e-09,
+          "cross_entropy": 4.343386730023877e-05,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.029457126179816,
+          "cross_entropy": 1.6383139686110442,
+          "top1_accuracy": 0.3333333333333333
+        },
+        "unique_games": 1
+      },
+      "155": {
+        "count": 1,
+        "leader": {
+          "brier_score": 1.40419982742396e-29,
+          "cross_entropy": 2.6645352591003792e-15,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.7265652431936168e-07,
+          "cross_entropy": 0.00033264923947053777,
+          "top1_accuracy": 1.0
+        },
+        "unique_games": 1
+      },
+      "156": {
+        "count": 1,
+        "leader": {
+          "brier_score": 3.4288657451471846e-19,
+          "cross_entropy": 4.4310888301749134e-10,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.8617771517809508,
+          "cross_entropy": 1.0683427355163253,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 1
+      },
+      "157": {
+        "count": 1,
+        "leader": {
+          "brier_score": 2.3474448933942776e-14,
+          "cross_entropy": 1.1906594974921748e-07,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.6998061092935265,
+          "cross_entropy": 0.922106981532949,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 1
+      },
+      "159": {
+        "count": 1,
+        "leader": {
+          "brier_score": 3.152251500065656e-13,
+          "cross_entropy": 4.470436636467192e-07,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.0298155133302254,
+          "cross_entropy": 1.2998848045380946,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 1
+      },
+      "16": {
+        "count": 2,
+        "leader": {
+          "brier_score": 1.0404828908482146e-08,
+          "cross_entropy": 6.539830718579306e-05,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.049041366502658834,
+          "cross_entropy": 0.13997616619768596,
+          "top1_accuracy": 1.0
+        },
+        "unique_games": 2
+      },
+      "161": {
+        "count": 1,
+        "leader": {
+          "brier_score": 4.492903227617888e-10,
+          "cross_entropy": 1.5952128278616752e-05,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.149056084481764,
+          "cross_entropy": 1.4669939737149869,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 1
+      },
+      "162": {
+        "count": 2,
+        "leader": {
+          "brier_score": 0.0010085000359582189,
+          "cross_entropy": 0.02288699107071196,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.5740389210223613,
+          "cross_entropy": 3.5070329554946347,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 1
+      },
+      "163": {
+        "count": 2,
+        "leader": {
+          "brier_score": 7.625153272298213e-05,
+          "cross_entropy": 0.0051972990964897995,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.688043992466934,
+          "cross_entropy": 3.087795684405009,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 2
+      },
+      "165": {
+        "count": 2,
+        "leader": {
+          "brier_score": 9.291747501876883e-15,
+          "cross_entropy": 4.935160608281759e-08,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.0940795793855786,
+          "cross_entropy": 0.2328952334439075,
+          "top1_accuracy": 1.0
+        },
+        "unique_games": 2
+      },
+      "166": {
+        "count": 1,
+        "leader": {
+          "brier_score": 2.561547704727036e-14,
+          "cross_entropy": 1.1485298738821652e-07,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.9721375621896913,
+          "cross_entropy": 5.042852856309617,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 1
+      },
+      "167": {
+        "count": 1,
+        "leader": {
+          "brier_score": 0.0006184586147701739,
+          "cross_entropy": 0.021690315257431207,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.428687767947621,
+          "cross_entropy": 4.732655647464144,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 1
+      },
+      "17": {
+        "count": 3,
+        "leader": {
+          "brier_score": 0.00020615667486876882,
+          "cross_entropy": 0.0072599397497885194,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.46220675111144255,
+          "cross_entropy": 0.6355796594179541,
+          "top1_accuracy": 0.6666666666666666
+        },
+        "unique_games": 3
+      },
+      "170": {
+        "count": 1,
+        "leader": {
+          "brier_score": 4.795710246804122e-33,
+          "cross_entropy": -0.0,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 8.361291104861618e-05,
+          "cross_entropy": 0.006652259563120267,
+          "top1_accuracy": 1.0
+        },
+        "unique_games": 1
+      },
+      "172": {
+        "count": 5,
+        "leader": {
+          "brier_score": 5.86590594246316e-09,
+          "cross_entropy": 3.423666259615614e-05,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.9929139754074218,
+          "cross_entropy": 1.885048666284424,
+          "top1_accuracy": 0.4
+        },
+        "unique_games": 3
+      },
+      "173": {
+        "count": 1,
+        "leader": {
+          "brier_score": 3.982357584159521e-12,
+          "cross_entropy": 1.59344496652275e-06,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.7989267715075,
+          "cross_entropy": 3.4428768622356767,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 1
+      },
+      "175": {
+        "count": 1,
+        "leader": {
+          "brier_score": 2.2645925839858593e-19,
+          "cross_entropy": 3.631703827215995e-10,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.2150005000924783,
+          "cross_entropy": 0.3973334960122429,
+          "top1_accuracy": 1.0
+        },
+        "unique_games": 1
+      },
+      "176": {
+        "count": 1,
+        "leader": {
+          "brier_score": 2.2823031808184283e-12,
+          "cross_entropy": 1.2497118514062764e-06,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.9231574110141249,
+          "cross_entropy": 1.2565834046215185,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 1
+      },
+      "177": {
+        "count": 1,
+        "leader": {
+          "brier_score": 2.1238363516711957e-20,
+          "cross_entropy": 1.1662248945013028e-10,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.014585214169991801,
+          "cross_entropy": 0.09124329719072374,
+          "top1_accuracy": 1.0
+        },
+        "unique_games": 1
+      },
+      "179": {
+        "count": 1,
+        "leader": {
+          "brier_score": 9.012307215844703e-12,
+          "cross_entropy": 2.1576871777069465e-06,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.8819791766700282,
+          "cross_entropy": 3.543600779873384,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 1
+      },
+      "18": {
+        "count": 2,
+        "leader": {
+          "brier_score": 2.6104233657534778e-08,
+          "cross_entropy": 0.00011096553811914879,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.818987724202352,
+          "cross_entropy": 1.2051591637947627,
+          "top1_accuracy": 0.5
+        },
+        "unique_games": 2
+      },
+      "180": {
+        "count": 1,
+        "leader": {
+          "brier_score": 2.2518885228718913e-33,
+          "cross_entropy": -0.0,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 2.4377597088111376e-05,
+          "cross_entropy": 0.0036740958152661147,
+          "top1_accuracy": 1.0
+        },
+        "unique_games": 1
+      },
+      "181": {
+        "count": 4,
+        "leader": {
+          "brier_score": 6.031646691906369e-16,
+          "cross_entropy": 1.0766537260264647e-08,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.2997895927446332,
+          "cross_entropy": 0.4435394290714585,
+          "top1_accuracy": 0.75
+        },
+        "unique_games": 1
+      },
+      "184": {
+        "count": 3,
+        "leader": {
+          "brier_score": 8.671254068525043e-10,
+          "cross_entropy": 1.4633310918868443e-05,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.8899805165219309,
+          "cross_entropy": 1.3053211762171912,
+          "top1_accuracy": 0.3333333333333333
+        },
+        "unique_games": 1
+      },
+      "185": {
+        "count": 2,
+        "leader": {
+          "brier_score": 1.2051411063965487e-08,
+          "cross_entropy": 5.9012146387188473e-05,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.1651561183113415,
+          "cross_entropy": 2.2148254214833996,
+          "top1_accuracy": 0.5
+        },
+        "unique_games": 2
+      },
+      "189": {
+        "count": 1,
+        "leader": {
+          "brier_score": 3.7421190374445576e-12,
+          "cross_entropy": 1.5858373603191693e-06,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.647319269775854,
+          "cross_entropy": 2.6302711121237605,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 1
+      },
+      "19": {
+        "count": 3,
+        "leader": {
+          "brier_score": 2.868285236864372e-09,
+          "cross_entropy": 3.348536764094719e-05,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.8897540146169596,
+          "cross_entropy": 1.7057781058997177,
+          "top1_accuracy": 0.3333333333333333
+        },
+        "unique_games": 3
+      },
+      "190": {
+        "count": 1,
+        "leader": {
+          "brier_score": 0.00019196784682190933,
+          "cross_entropy": 0.012051022058293647,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.6215795257925931,
+          "cross_entropy": 3.276639694417352,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 1
+      },
+      "191": {
+        "count": 1,
+        "leader": {
+          "brier_score": 2.798000593382921e-10,
+          "cross_entropy": 1.3771294864603333e-05,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.9627583342984505,
+          "cross_entropy": 1.2263879929923074,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 1
+      },
+      "192": {
+        "count": 1,
+        "leader": {
+          "brier_score": 7.742760637107597e-14,
+          "cross_entropy": 1.984239959358461e-07,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.0645462815829099,
+          "cross_entropy": 1.418976249729943,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 1
+      },
+      "195": {
+        "count": 2,
+        "leader": {
+          "brier_score": 5.165933261016698e-08,
+          "cross_entropy": 0.0001228348935375441,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.3246389474187257,
+          "cross_entropy": 1.7234791388131918,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 2
+      },
+      "199": {
+        "count": 2,
+        "leader": {
+          "brier_score": 7.021089872952916e-30,
+          "cross_entropy": 1.3322676295501896e-15,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 3.5139004100711827e-07,
+          "cross_entropy": 0.0003446916047608901,
+          "top1_accuracy": 1.0
+        },
+        "unique_games": 1
+      },
+      "2": {
+        "count": 20,
+        "leader": {
+          "brier_score": 0.05100613985893328,
+          "cross_entropy": 0.1250456372354503,
+          "top1_accuracy": 0.95
+        },
+        "learned_value_probe": {
+          "brier_score": 0.23995535822849198,
+          "cross_entropy": 0.41400989978529623,
+          "top1_accuracy": 0.8
+        },
+        "unique_games": 10
+      },
+      "20": {
+        "count": 1,
+        "leader": {
+          "brier_score": 7.766664580789993e-11,
+          "cross_entropy": 7.2332278319037e-06,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.6221146479159338,
+          "cross_entropy": 1.0243464000912983,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 1
+      },
+      "200": {
+        "count": 1,
+        "leader": {
+          "brier_score": 3.1325280517407767e-14,
+          "cross_entropy": 1.266211402623861e-07,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.7447023779020858,
+          "cross_entropy": 5.571272346507133,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 1
+      },
+      "206": {
+        "count": 1,
+        "leader": {
+          "brier_score": 0.00024354096807757277,
+          "cross_entropy": 0.0132999104527459,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.6415682636669786,
+          "cross_entropy": 4.126303160131966,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 1
+      },
+      "208": {
+        "count": 1,
+        "leader": {
+          "brier_score": 0.00011223303573178702,
+          "cross_entropy": 0.008267426527733053,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.1576124653327309,
+          "cross_entropy": 2.3689397070904055,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 1
+      },
+      "211": {
+        "count": 1,
+        "leader": {
+          "brier_score": 1.2561420764063874e-27,
+          "cross_entropy": 2.8865798640254487e-14,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 4.087452063520891e-07,
+          "cross_entropy": 0.0004522034591956398,
+          "top1_accuracy": 1.0
+        },
+        "unique_games": 1
+      },
+      "213": {
+        "count": 5,
+        "leader": {
+          "brier_score": 5.272138700510473e-09,
+          "cross_entropy": 2.6338088496183886e-05,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.103903396483633,
+          "cross_entropy": 2.137238230388223,
+          "top1_accuracy": 0.4
+        },
+        "unique_games": 3
+      },
+      "215": {
+        "count": 1,
+        "leader": {
+          "brier_score": 1.952301153723267e-15,
+          "cross_entropy": 3.255007072451252e-08,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.6749460750271522,
+          "cross_entropy": 1.0101837132632545,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 1
+      },
+      "216": {
+        "count": 2,
+        "leader": {
+          "brier_score": 3.9467515948152926e-31,
+          "cross_entropy": 3.3306690738754706e-16,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 2.8690587409720495e-09,
+          "cross_entropy": 4.214138344699597e-05,
+          "top1_accuracy": 1.0
+        },
+        "unique_games": 1
+      },
+      "218": {
+        "count": 1,
+        "leader": {
+          "brier_score": 2.1330009373188067e-14,
+          "cross_entropy": 1.0592657390477582e-07,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.7217373329013983,
+          "cross_entropy": 1.06310542174382,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 1
+      },
+      "22": {
+        "count": 1,
+        "leader": {
+          "brier_score": 1.297036919204801e-27,
+          "cross_entropy": 3.0864200084579825e-14,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.011849195294310387,
+          "cross_entropy": 0.08009565290083198,
+          "top1_accuracy": 1.0
+        },
+        "unique_games": 1
+      },
+      "223": {
+        "count": 1,
+        "leader": {
+          "brier_score": 4.657621488923132e-11,
+          "cross_entropy": 5.032984297013124e-06,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.2670018932080893,
+          "cross_entropy": 1.629605978497018,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 1
+      },
+      "226": {
+        "count": 2,
+        "leader": {
+          "brier_score": 2.30516848961408e-15,
+          "cross_entropy": 2.4661411186703707e-08,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.0010291618969524836,
+          "cross_entropy": 0.02102145788901373,
+          "top1_accuracy": 1.0
+        },
+        "unique_games": 2
+      },
+      "227": {
+        "count": 1,
+        "leader": {
+          "brier_score": 8.374175652603483e-15,
+          "cross_entropy": 6.500194438583921e-08,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.0372786198961756,
+          "cross_entropy": 1.3147170210986112,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 1
+      },
+      "234": {
+        "count": 2,
+        "leader": {
+          "brier_score": 7.99804686206296e-13,
+          "cross_entropy": 5.264884330188127e-07,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.6702192783249444,
+          "cross_entropy": 0.9234855490480525,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 2
+      },
+      "235": {
+        "count": 4,
+        "leader": {
+          "brier_score": 1.7176947038060046e-14,
+          "cross_entropy": 5.142406440658338e-08,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.3638087044029862,
+          "cross_entropy": 0.5323135889322839,
+          "top1_accuracy": 0.75
+        },
+        "unique_games": 1
+      },
+      "236": {
+        "count": 1,
+        "leader": {
+          "brier_score": 1.406505526383589e-14,
+          "cross_entropy": 8.450466994607061e-08,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.2810285641413561,
+          "cross_entropy": 1.7522942143651037,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 1
+      },
+      "241": {
+        "count": 1,
+        "leader": {
+          "brier_score": 1.814716662319785e-34,
+          "cross_entropy": -0.0,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 5.820306088254355e-10,
+          "cross_entropy": 1.8477610590366218e-05,
+          "top1_accuracy": 1.0
+        },
+        "unique_games": 1
+      },
+      "242": {
+        "count": 1,
+        "leader": {
+          "brier_score": 3.0179046002012134e-12,
+          "cross_entropy": 1.2886345776652696e-06,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.4409962262255436,
+          "cross_entropy": 0.6939348680617908,
+          "top1_accuracy": 1.0
+        },
+        "unique_games": 1
+      },
+      "25": {
+        "count": 5,
+        "leader": {
+          "brier_score": 3.655157507348604e-12,
+          "cross_entropy": 1.2206883342434814e-06,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.2349540330720175,
+          "cross_entropy": 0.43987085698756434,
+          "top1_accuracy": 0.8
+        },
+        "unique_games": 2
+      },
+      "253": {
+        "count": 5,
+        "leader": {
+          "brier_score": 4.841397011533969e-09,
+          "cross_entropy": 2.531982552840451e-05,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.7208203001935336,
+          "cross_entropy": 1.1013320749795625,
+          "top1_accuracy": 0.4
+        },
+        "unique_games": 2
+      },
+      "254": {
+        "count": 1,
+        "leader": {
+          "brier_score": 0.0019524530613528844,
+          "cross_entropy": 0.03899471353398946,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.4552200248880074,
+          "cross_entropy": 4.527586878639988,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 1
+      },
+      "255": {
+        "count": 1,
+        "leader": {
+          "brier_score": 0.00015250305643365705,
+          "cross_entropy": 0.010392440505801893,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.4670813524714499,
+          "cross_entropy": 2.833482528781947,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 1
+      },
+      "26": {
+        "count": 3,
+        "leader": {
+          "brier_score": 2.02758658247768e-08,
+          "cross_entropy": 7.016707259135546e-05,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.0569527303987816,
+          "cross_entropy": 1.4566361330439044,
+          "top1_accuracy": 0.3333333333333333
+        },
+        "unique_games": 3
+      },
+      "260": {
+        "count": 1,
+        "leader": {
+          "brier_score": 2.8495650978622087e-19,
+          "cross_entropy": 4.082432170927165e-10,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.031639604830905485,
+          "cross_entropy": 0.13444508931538815,
+          "top1_accuracy": 1.0
+        },
+        "unique_games": 1
+      },
+      "261": {
+        "count": 1,
+        "leader": {
+          "brier_score": 3.053672318639641e-24,
+          "cross_entropy": 1.4168666240276285e-12,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 5.338823895642697e-07,
+          "cross_entropy": 0.0005170251139446306,
+          "top1_accuracy": 1.0
+        },
+        "unique_games": 1
+      },
+      "262": {
+        "count": 4,
+        "leader": {
+          "brier_score": 7.011038494812649e-10,
+          "cross_entropy": 1.0697208267275348e-05,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.0009021681976699733,
+          "cross_entropy": 0.015701473235117936,
+          "top1_accuracy": 1.0
+        },
+        "unique_games": 2
+      },
+      "267": {
+        "count": 1,
+        "leader": {
+          "brier_score": 3.4084855471051416e-19,
+          "cross_entropy": 4.3496029010237504e-10,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.0010650993027093816,
+          "cross_entropy": 0.024179341219004693,
+          "top1_accuracy": 1.0
+        },
+        "unique_games": 1
+      },
+      "27": {
+        "count": 12,
+        "leader": {
+          "brier_score": 3.929511628326205e-12,
+          "cross_entropy": 4.7324252863321317e-07,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.30370773458750305,
+          "cross_entropy": 0.39709202931087173,
+          "top1_accuracy": 0.75
+        },
+        "unique_games": 4
+      },
+      "277": {
+        "count": 2,
+        "leader": {
+          "brier_score": 6.631745898410828e-13,
+          "cross_entropy": 4.1180927530145537e-07,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.7181931499446945,
+          "cross_entropy": 0.9506012736925795,
+          "top1_accuracy": 0.5
+        },
+        "unique_games": 2
+      },
+      "28": {
+        "count": 7,
+        "leader": {
+          "brier_score": 3.214750232874534e-10,
+          "cross_entropy": 5.492334722590567e-06,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.9329921619611085,
+          "cross_entropy": 1.561251323513412,
+          "top1_accuracy": 0.42857142857142855
+        },
+        "unique_games": 5
+      },
+      "284": {
+        "count": 1,
+        "leader": {
+          "brier_score": 1.8581813881147035e-14,
+          "cross_entropy": 9.777589682957483e-08,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.14120620280383334,
+          "cross_entropy": 0.3097039908072133,
+          "top1_accuracy": 1.0
+        },
+        "unique_games": 1
+      },
+      "287": {
+        "count": 1,
+        "leader": {
+          "brier_score": 2.198209164616297e-17,
+          "cross_entropy": 3.539574861702172e-09,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.640390903141872,
+          "cross_entropy": 0.8514449671259193,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 1
+      },
+      "29": {
+        "count": 6,
+        "leader": {
+          "brier_score": 7.883433190743357e-10,
+          "cross_entropy": 1.2119480793924193e-05,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.4928396901746151,
+          "cross_entropy": 0.6991060696032081,
+          "top1_accuracy": 0.6666666666666666
+        },
+        "unique_games": 5
+      },
+      "291": {
+        "count": 1,
+        "leader": {
+          "brier_score": 2.1323828962261364e-13,
+          "cross_entropy": 3.306700979072985e-07,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.5187546587121699,
+          "cross_entropy": 2.0527337304445616,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 1
+      },
+      "294": {
+        "count": 1,
+        "leader": {
+          "brier_score": 1.2167007008467539e-20,
+          "cross_entropy": 7.857936524000669e-11,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.11535517682221817,
+          "cross_entropy": 0.2749247942388215,
+          "top1_accuracy": 1.0
+        },
+        "unique_games": 1
+      },
+      "3": {
+        "count": 142,
+        "leader": {
+          "brier_score": 0.0067653566327782935,
+          "cross_entropy": 0.015882411383892597,
+          "top1_accuracy": 0.9929577464788732
+        },
+        "learned_value_probe": {
+          "brier_score": 0.5284971863542771,
+          "cross_entropy": 0.9394189929408154,
+          "top1_accuracy": 0.647887323943662
+        },
+        "unique_games": 16
+      },
+      "30": {
+        "count": 2,
+        "leader": {
+          "brier_score": 1.2502254705594572e-09,
+          "cross_entropy": 1.81738919959808e-05,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.468135387397869,
+          "cross_entropy": 2.0522752334254073,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 2
+      },
+      "308": {
+        "count": 2,
+        "leader": {
+          "brier_score": 1.9451533729836776e-17,
+          "cross_entropy": 2.318416353113529e-09,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.3634216870593163,
+          "cross_entropy": 0.4695716107892027,
+          "top1_accuracy": 0.5
+        },
+        "unique_games": 2
+      },
+      "31": {
+        "count": 6,
+        "leader": {
+          "brier_score": 7.762702529031815e-12,
+          "cross_entropy": 8.388989935156072e-07,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.1337672413577299,
+          "cross_entropy": 0.20263709567467084,
+          "top1_accuracy": 0.8333333333333334
+        },
+        "unique_games": 2
+      },
+      "317": {
+        "count": 1,
+        "leader": {
+          "brier_score": 3.7046375847057854e-10,
+          "cross_entropy": 1.5012458546158085e-05,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.0020196941804596566,
+          "cross_entropy": 0.03614747560647516,
+          "top1_accuracy": 1.0
+        },
+        "unique_games": 1
+      },
+      "32": {
+        "count": 3,
+        "leader": {
+          "brier_score": 3.4453500475886514e-08,
+          "cross_entropy": 8.382723758025637e-05,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.7024409864609487,
+          "cross_entropy": 1.360337347326367,
+          "top1_accuracy": 0.6666666666666666
+        },
+        "unique_games": 2
+      },
+      "323": {
+        "count": 1,
+        "leader": {
+          "brier_score": 4.931251580543754e-15,
+          "cross_entropy": 5.116388221862617e-08,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.4245509476022729,
+          "cross_entropy": 1.8596769339959298,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 1
+      },
+      "33": {
+        "count": 3,
+        "leader": {
+          "brier_score": 7.110003382525311e-15,
+          "cross_entropy": 3.5316565802629443e-08,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.3389133440794266,
+          "cross_entropy": 0.43216327776198743,
+          "top1_accuracy": 0.6666666666666666
+        },
+        "unique_games": 3
+      },
+      "339": {
+        "count": 1,
+        "leader": {
+          "brier_score": 5.506726350643076e-14,
+          "cross_entropy": 1.675873788060637e-07,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.18698752632705823,
+          "cross_entropy": 0.36829400751637853,
+          "top1_accuracy": 1.0
+        },
+        "unique_games": 1
+      },
+      "34": {
+        "count": 3,
+        "leader": {
+          "brier_score": 5.556476110485578e-14,
+          "cross_entropy": 1.729388903923882e-07,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.5811334092303532,
+          "cross_entropy": 0.7970700269755335,
+          "top1_accuracy": 0.3333333333333333
+        },
+        "unique_games": 2
+      },
+      "347": {
+        "count": 1,
+        "leader": {
+          "brier_score": 4.657621488923132e-11,
+          "cross_entropy": 5.032984297013124e-06,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.2003496499972104,
+          "cross_entropy": 1.531186037912214,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 1
+      },
+      "35": {
+        "count": 5,
+        "leader": {
+          "brier_score": 4.2011211926636376e-11,
+          "cross_entropy": 2.4232410714514037e-06,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.7188731830124905,
+          "cross_entropy": 1.1777406622441482,
+          "top1_accuracy": 0.6
+        },
+        "unique_games": 4
+      },
+      "36": {
+        "count": 2,
+        "leader": {
+          "brier_score": 4.451347262137367e-24,
+          "cross_entropy": 1.2210232824840202e-12,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.16667893392773334,
+          "cross_entropy": 0.2837361339103453,
+          "top1_accuracy": 1.0
+        },
+        "unique_games": 2
+      },
+      "361": {
+        "count": 2,
+        "leader": {
+          "brier_score": 1.1483972444711981e-15,
+          "cross_entropy": 1.7694779435253227e-08,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.24328022704208238,
+          "cross_entropy": 0.3661615191987688,
+          "top1_accuracy": 1.0
+        },
+        "unique_games": 1
+      },
+      "366": {
+        "count": 1,
+        "leader": {
+          "brier_score": 2.798000593382921e-10,
+          "cross_entropy": 1.3771294864603333e-05,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.9290146483305076,
+          "cross_entropy": 1.1909659586867185,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 1
+      },
+      "37": {
+        "count": 2,
+        "leader": {
+          "brier_score": 1.4251259635391446e-14,
+          "cross_entropy": 7.336767640086857e-08,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.03519547437868166,
+          "cross_entropy": 0.12462121134807247,
+          "top1_accuracy": 1.0
+        },
+        "unique_games": 1
+      },
+      "38": {
+        "count": 1,
+        "leader": {
+          "brier_score": 2.1823649157090194e-26,
+          "cross_entropy": 1.1235457009207215e-13,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 7.194005123069149e-06,
+          "cross_entropy": 0.0021942472029033676,
+          "top1_accuracy": 1.0
+        },
+        "unique_games": 1
+      },
+      "39": {
+        "count": 3,
+        "leader": {
+          "brier_score": 9.784489233988598e-11,
+          "cross_entropy": 4.74628431051492e-06,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.34940545347755986,
+          "cross_entropy": 0.5340945876013229,
+          "top1_accuracy": 0.6666666666666666
+        },
+        "unique_games": 3
+      },
+      "4": {
+        "count": 34,
+        "leader": {
+          "brier_score": 0.12757387168411216,
+          "cross_entropy": 0.24410006566669223,
+          "top1_accuracy": 0.8529411764705882
+        },
+        "learned_value_probe": {
+          "brier_score": 0.7413258888383885,
+          "cross_entropy": 1.3999878380783817,
+          "top1_accuracy": 0.5588235294117647
+        },
+        "unique_games": 14
+      },
+      "40": {
+        "count": 3,
+        "leader": {
+          "brier_score": 9.90446628558558e-10,
+          "cross_entropy": 1.362723702898258e-05,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.3745015947038361,
+          "cross_entropy": 0.654144456587104,
+          "top1_accuracy": 0.6666666666666666
+        },
+        "unique_games": 3
+      },
+      "405": {
+        "count": 1,
+        "leader": {
+          "brier_score": 3.246872300663233e-10,
+          "cross_entropy": 1.4831663269876494e-05,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.3250941917917631,
+          "cross_entropy": 1.7953610609344242,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 1
+      },
+      "41": {
+        "count": 7,
+        "leader": {
+          "brier_score": 2.7518857759950522e-14,
+          "cross_entropy": 6.508821924988558e-08,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.029886961657727945,
+          "cross_entropy": 0.11076004913644821,
+          "top1_accuracy": 1.0
+        },
+        "unique_games": 3
+      },
+      "414": {
+        "count": 2,
+        "leader": {
+          "brier_score": 4.065272650928696e-17,
+          "cross_entropy": 3.3889626774283726e-09,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.015599875846769803,
+          "cross_entropy": 0.08098835004172134,
+          "top1_accuracy": 1.0
+        },
+        "unique_games": 1
+      },
+      "42": {
+        "count": 7,
+        "leader": {
+          "brier_score": 2.9311012470288793e-23,
+          "cross_entropy": 1.5382298609553528e-12,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 8.577741269197811e-05,
+          "cross_entropy": 0.002835176473657926,
+          "top1_accuracy": 1.0
+        },
+        "unique_games": 3
+      },
+      "43": {
+        "count": 2,
+        "leader": {
+          "brier_score": 4.065272650928695e-17,
+          "cross_entropy": 3.3889626774283726e-09,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.0007106243317016548,
+          "cross_entropy": 0.015702939897360484,
+          "top1_accuracy": 1.0
+        },
+        "unique_games": 1
+      },
+      "44": {
+        "count": 7,
+        "leader": {
+          "brier_score": 1.8996827627419059e-13,
+          "cross_entropy": 1.2450770133553195e-07,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.0458860684044022,
+          "cross_entropy": 0.08777099279041996,
+          "top1_accuracy": 1.0
+        },
+        "unique_games": 4
+      },
+      "45": {
+        "count": 3,
+        "leader": {
+          "brier_score": 3.27350521205458e-15,
+          "cross_entropy": 3.1039743421718176e-08,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.5286301751618638,
+          "cross_entropy": 0.763814169450529,
+          "top1_accuracy": 0.3333333333333333
+        },
+        "unique_games": 2
+      },
+      "46": {
+        "count": 5,
+        "leader": {
+          "brier_score": 4.840587909235345e-09,
+          "cross_entropy": 2.500945165594633e-05,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.1399053629542868,
+          "cross_entropy": 0.23620463404404432,
+          "top1_accuracy": 0.8
+        },
+        "unique_games": 3
+      },
+      "47": {
+        "count": 3,
+        "leader": {
+          "brier_score": 1.1336007256054878e-10,
+          "cross_entropy": 6.395837363011018e-06,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.30904062076502575,
+          "cross_entropy": 0.4317401737499216,
+          "top1_accuracy": 0.6666666666666666
+        },
+        "unique_games": 2
+      },
+      "49": {
+        "count": 7,
+        "leader": {
+          "brier_score": 3.6110535258619117e-07,
+          "cross_entropy": 0.00018568875256669173,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.8363805991612902,
+          "cross_entropy": 1.2302441266468238,
+          "top1_accuracy": 0.42857142857142855
+        },
+        "unique_games": 4
+      },
+      "5": {
+        "count": 74,
+        "leader": {
+          "brier_score": 0.15168044922764606,
+          "cross_entropy": 0.2867963741402575,
+          "top1_accuracy": 0.8378378378378378
+        },
+        "learned_value_probe": {
+          "brier_score": 0.6125018207226512,
+          "cross_entropy": 1.1472579001653522,
+          "top1_accuracy": 0.5675675675675675
+        },
+        "unique_games": 16
+      },
+      "50": {
+        "count": 2,
+        "leader": {
+          "brier_score": 1.8787238534489078e-10,
+          "cross_entropy": 8.718523086379953e-06,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.113374852358712,
+          "cross_entropy": 1.5322414481776652,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 2
+      },
+      "51": {
+        "count": 3,
+        "leader": {
+          "brier_score": 0.00012448363794703224,
+          "cross_entropy": 0.005581747122507175,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.6467632610033015,
+          "cross_entropy": 1.6617942133002135,
+          "top1_accuracy": 0.6666666666666666
+        },
+        "unique_games": 3
+      },
+      "52": {
+        "count": 2,
+        "leader": {
+          "brier_score": 1.6773420858582228e-13,
+          "cross_entropy": 2.742144675398234e-07,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.0718388931904825,
+          "cross_entropy": 1.3737045518709379,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 2
+      },
+      "53": {
+        "count": 3,
+        "leader": {
+          "brier_score": 2.710181767285797e-17,
+          "cross_entropy": 2.259308451618915e-09,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 5.5522404761789035e-05,
+          "cross_entropy": 0.004256388627437833,
+          "top1_accuracy": 1.0
+        },
+        "unique_games": 2
+      },
+      "54": {
+        "count": 2,
+        "leader": {
+          "brier_score": 2.7078107571518734e-10,
+          "cross_entropy": 9.366217071582815e-06,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.033168129949337,
+          "cross_entropy": 2.001697033533106,
+          "top1_accuracy": 0.5
+        },
+        "unique_games": 1
+      },
+      "55": {
+        "count": 4,
+        "leader": {
+          "brier_score": 4.4513502562085906e-10,
+          "cross_entropy": 7.681341838481095e-06,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.5894142734498358,
+          "cross_entropy": 0.9602104136959404,
+          "top1_accuracy": 0.5
+        },
+        "unique_games": 2
+      },
+      "57": {
+        "count": 2,
+        "leader": {
+          "brier_score": 1.8959937552483496e-10,
+          "cross_entropy": 8.0656565932189e-06,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.03755656365754361,
+          "cross_entropy": 0.11645876726414839,
+          "top1_accuracy": 1.0
+        },
+        "unique_games": 2
+      },
+      "58": {
+        "count": 2,
+        "leader": {
+          "brier_score": 5.167644960471001e-13,
+          "cross_entropy": 4.1349340821195026e-07,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.5453669949738535,
+          "cross_entropy": 0.7452820636378724,
+          "top1_accuracy": 0.5
+        },
+        "unique_games": 2
+      },
+      "6": {
+        "count": 15,
+        "leader": {
+          "brier_score": 0.002144691096793233,
+          "cross_entropy": 0.01513027730397029,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.1208499091541795,
+          "cross_entropy": 1.8772293599105672,
+          "top1_accuracy": 0.2
+        },
+        "unique_games": 9
+      },
+      "60": {
+        "count": 2,
+        "leader": {
+          "brier_score": 0.00030922930738508695,
+          "cross_entropy": 0.010845157628789655,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.5604116455174717,
+          "cross_entropy": 3.685855662247733,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 2
+      },
+      "63": {
+        "count": 1,
+        "leader": {
+          "brier_score": 1.0006632910238306e-17,
+          "cross_entropy": 2.600553109572666e-09,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.8998080140394422,
+          "cross_entropy": 3.679324047186039,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 1
+      },
+      "64": {
+        "count": 1,
+        "leader": {
+          "brier_score": 7.25445716049874e-14,
+          "cross_entropy": 2.2133780182378797e-07,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.5497643954396405,
+          "cross_entropy": 0.7862896078500623,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 1
+      },
+      "67": {
+        "count": 1,
+        "leader": {
+          "brier_score": 1.6592129411107159e-13,
+          "cross_entropy": 3.280188291622065e-07,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.365556329039278,
+          "cross_entropy": 1.8617432968332692,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 1
+      },
+      "68": {
+        "count": 1,
+        "leader": {
+          "brier_score": 4.492903227688728e-10,
+          "cross_entropy": 1.59521282788388e-05,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.00015582797918441162,
+          "cross_entropy": 0.010235418779578842,
+          "top1_accuracy": 1.0
+        },
+        "unique_games": 1
+      },
+      "69": {
+        "count": 2,
+        "leader": {
+          "brier_score": 5.003316455119153e-18,
+          "cross_entropy": 1.300276554786333e-09,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.13881395925550902,
+          "cross_entropy": 0.26100554777742035,
+          "top1_accuracy": 1.0
+        },
+        "unique_games": 2
+      },
+      "7": {
+        "count": 21,
+        "leader": {
+          "brier_score": 0.12076836646693084,
+          "cross_entropy": 0.2591931167890814,
+          "top1_accuracy": 0.9047619047619048
+        },
+        "learned_value_probe": {
+          "brier_score": 0.8107842164220693,
+          "cross_entropy": 1.5613796228138248,
+          "top1_accuracy": 0.42857142857142855
+        },
+        "unique_games": 9
+      },
+      "70": {
+        "count": 1,
+        "leader": {
+          "brier_score": 7.864062955478803e-29,
+          "cross_entropy": 6.883382752675994e-15,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.017087673380306225,
+          "cross_entropy": 0.09709590120682873,
+          "top1_accuracy": 1.0
+        },
+        "unique_games": 1
+      },
+      "73": {
+        "count": 3,
+        "leader": {
+          "brier_score": 7.403241363199383e-22,
+          "cross_entropy": 1.4001318623285341e-11,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.04801289263735244,
+          "cross_entropy": 0.15955078075355586,
+          "top1_accuracy": 1.0
+        },
+        "unique_games": 3
+      },
+      "74": {
+        "count": 2,
+        "leader": {
+          "brier_score": 0.00018672545842950068,
+          "cross_entropy": 0.008373265001049596,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.145717394418005,
+          "cross_entropy": 0.28105704891553007,
+          "top1_accuracy": 1.0
+        },
+        "unique_games": 2
+      },
+      "76": {
+        "count": 1,
+        "leader": {
+          "brier_score": 8.010951988057115e-21,
+          "cross_entropy": 7.351874664877544e-11,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.0002859112470203135,
+          "cross_entropy": 0.012869501979033474,
+          "top1_accuracy": 1.0
+        },
+        "unique_games": 1
+      },
+      "78": {
+        "count": 1,
+        "leader": {
+          "brier_score": 5.543134084462761e-10,
+          "cross_entropy": 1.8410388689943555e-05,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.4970656564941796,
+          "cross_entropy": 2.1672029612891457,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 1
+      },
+      "79": {
+        "count": 1,
+        "leader": {
+          "brier_score": 6.454701056355324e-05,
+          "cross_entropy": 0.0067792686074344645,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.4415096944481331,
+          "cross_entropy": 2.7974172560681585,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 1
+      },
+      "8": {
+        "count": 13,
+        "leader": {
+          "brier_score": 0.02217037920302676,
+          "cross_entropy": 0.08719401904877241,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.8756141335899345,
+          "cross_entropy": 1.5465227311511969,
+          "top1_accuracy": 0.46153846153846156
+        },
+        "unique_games": 8
+      },
+      "80": {
+        "count": 1,
+        "leader": {
+          "brier_score": 5.655836576798755e-08,
+          "cross_entropy": 0.00019809708582175706,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.6183854619181928,
+          "cross_entropy": 0.848451398495781,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 1
+      },
+      "81": {
+        "count": 2,
+        "leader": {
+          "brier_score": 0.0009762265306764422,
+          "cross_entropy": 0.019497356877838063,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.5509278417764873,
+          "cross_entropy": 3.5429711709093654,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 2
+      },
+      "83": {
+        "count": 3,
+        "leader": {
+          "brier_score": 5.08355713772118e-05,
+          "cross_entropy": 0.0034863314095927383,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.4594598808416182,
+          "cross_entropy": 2.4153571881101032,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 3
+      },
+      "84": {
+        "count": 2,
+        "leader": {
+          "brier_score": 5.919118360283096e-10,
+          "cross_entropy": 1.4535202858729915e-05,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.016066932265464663,
+          "cross_entropy": 0.0710583616616988,
+          "top1_accuracy": 1.0
+        },
+        "unique_games": 2
+      },
+      "85": {
+        "count": 2,
+        "leader": {
+          "brier_score": 1.5193277619882286e-13,
+          "cross_entropy": 2.203066129151504e-07,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.34559558999147416,
+          "cross_entropy": 0.46001215027144476,
+          "top1_accuracy": 0.5
+        },
+        "unique_games": 2
+      },
+      "87": {
+        "count": 2,
+        "leader": {
+          "brier_score": 8.213813803774103e-28,
+          "cross_entropy": 1.676436767184014e-14,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.9318774103811382e-06,
+          "cross_entropy": 0.0009779699647934326,
+          "top1_accuracy": 1.0
+        },
+        "unique_games": 1
+      },
+      "88": {
+        "count": 2,
+        "leader": {
+          "brier_score": 7.251492127962245e-28,
+          "cross_entropy": 2.087219286295319e-14,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.0202932268459464,
+          "cross_entropy": 1.2631667955129489,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 1
+      },
+      "89": {
+        "count": 2,
+        "leader": {
+          "brier_score": 0.451741079700114,
+          "cross_entropy": 0.7623413088158952,
+          "top1_accuracy": 0.5
+        },
+        "learned_value_probe": {
+          "brier_score": 0.7717927123517117,
+          "cross_entropy": 3.4651443165822386,
+          "top1_accuracy": 0.5
+        },
+        "unique_games": 2
+      },
+      "9": {
+        "count": 17,
+        "leader": {
+          "brier_score": 0.09180187233693828,
+          "cross_entropy": 0.16130582592926826,
+          "top1_accuracy": 0.8823529411764706
+        },
+        "learned_value_probe": {
+          "brier_score": 0.9283805744437857,
+          "cross_entropy": 1.8937756652383793,
+          "top1_accuracy": 0.35294117647058826
+        },
+        "unique_games": 8
+      },
+      "90": {
+        "count": 2,
+        "leader": {
+          "brier_score": 0.00018672545692054851,
+          "cross_entropy": 0.00837262088788237,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.9253569719707814,
+          "cross_entropy": 2.354937923546742,
+          "top1_accuracy": 0.5
+        },
+        "unique_games": 2
+      },
+      "91": {
+        "count": 8,
+        "leader": {
+          "brier_score": 7.730732686701205e-05,
+          "cross_entropy": 0.0027113305245235904,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.3760991529907564,
+          "cross_entropy": 0.5824331962505367,
+          "top1_accuracy": 0.75
+        },
+        "unique_games": 6
+      },
+      "92": {
+        "count": 3,
+        "leader": {
+          "brier_score": 0.0001244838227181684,
+          "cross_entropy": 0.00558788391889762,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.1677542237439607,
+          "cross_entropy": 2.417308552380751,
+          "top1_accuracy": 0.3333333333333333
+        },
+        "unique_games": 3
+      },
+      "93": {
+        "count": 2,
+        "leader": {
+          "brier_score": 9.065406157324256e-28,
+          "cross_entropy": 2.031708135064067e-14,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.023681807816667212,
+          "cross_entropy": 0.08379702267261968,
+          "top1_accuracy": 1.0
+        },
+        "unique_games": 2
+      },
+      "94": {
+        "count": 3,
+        "leader": {
+          "brier_score": 7.338604719110818e-10,
+          "cross_entropy": 1.375182165158814e-05,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.1439335685707657,
+          "cross_entropy": 1.8547412389932278,
+          "top1_accuracy": 0.3333333333333333
+        },
+        "unique_games": 3
+      },
+      "95": {
+        "count": 2,
+        "leader": {
+          "brier_score": 4.320131828657131e-10,
+          "cross_entropy": 1.2528382427708847e-05,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.003856044372791094,
+          "cross_entropy": 0.03604627977789975,
+          "top1_accuracy": 1.0
+        },
+        "unique_games": 2
+      },
+      "97": {
+        "count": 1,
+        "leader": {
+          "brier_score": 0.00030277718144810215,
+          "cross_entropy": 0.015010066039729134,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.01275689796363391,
+          "cross_entropy": 0.0982895351439089,
+          "top1_accuracy": 1.0
+        },
+        "unique_games": 1
+      },
+      "98": {
+        "count": 1,
+        "leader": {
+          "brier_score": 1.326348716495208e-12,
+          "cross_entropy": 8.231028411276537e-07,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 1.683464639277776,
+          "cross_entropy": 2.50259193198633,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 1
+      },
+      "99": {
+        "count": 2,
+        "leader": {
+          "brier_score": 5.353133289065189e-15,
+          "cross_entropy": 4.019401506645906e-08,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.7849636797782195,
+          "cross_entropy": 1.019762861668167,
+          "top1_accuracy": 0.0
+        },
+        "unique_games": 2
+      }
+    },
+    "margin_quartile": {
+      "Q1(low margin)": {
+        "count": 190,
+        "leader": {
+          "brier_score": 0.12619251911416837,
+          "cross_entropy": 0.25321888703934187,
+          "top1_accuracy": 0.8631578947368421
+        },
+        "learned_value_probe": {
+          "brier_score": 0.815048769240138,
+          "cross_entropy": 1.8644651180174188,
+          "top1_accuracy": 0.4789473684210526
+        },
+        "unique_games": 16
+      },
+      "Q2": {
+        "count": 190,
+        "leader": {
+          "brier_score": 1.57436671324802e-10,
+          "cross_entropy": 6.0515926436176694e-06,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.7999216026131447,
+          "cross_entropy": 1.276789870238624,
+          "top1_accuracy": 0.43157894736842106
+        },
+        "unique_games": 11
+      },
+      "Q3": {
+        "count": 189,
+        "leader": {
+          "brier_score": 4.6385050127916555e-15,
+          "cross_entropy": 2.845654331329249e-08,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.647168076643459,
+          "cross_entropy": 1.1253013444839457,
+          "top1_accuracy": 0.5343915343915344
+        },
+        "unique_games": 13
+      },
+      "Q4(high margin)": {
+        "count": 190,
+        "leader": {
+          "brier_score": 4.7965817299515497e-23,
+          "cross_entropy": 1.7691333778199115e-12,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.31178130194810555,
+          "cross_entropy": 0.46251035532950524,
+          "top1_accuracy": 0.7736842105263158
+        },
+        "unique_games": 9
+      }
+    },
+    "round_bucket": {
+      "1-25": {
+        "count": 189,
+        "leader": {
+          "brier_score": 0.12669009527809386,
+          "cross_entropy": 0.24950125715655458,
+          "top1_accuracy": 0.8624338624338624
+        },
+        "learned_value_probe": {
+          "brier_score": 0.6010846982270687,
+          "cross_entropy": 1.1416423788477101,
+          "top1_accuracy": 0.5873015873015873
+        },
+        "unique_games": 16
+      },
+      "101-150": {
+        "count": 135,
+        "leader": {
+          "brier_score": 6.703274690811936e-05,
+          "cross_entropy": 0.001756122279979349,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.5577523585088172,
+          "cross_entropy": 0.9592048884901823,
+          "top1_accuracy": 0.5777777777777777
+        },
+        "unique_games": 14
+      },
+      "151-terminal": {
+        "count": 132,
+        "leader": {
+          "brier_score": 1.4531559550342626e-05,
+          "cross_entropy": 0.0009504539974378307,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.5737670890842639,
+          "cross_entropy": 1.0236293052975802,
+          "top1_accuracy": 0.6287878787878788
+        },
+        "unique_games": 14
+      },
+      "26-50": {
+        "count": 153,
+        "leader": {
+          "brier_score": 3.867918629437394e-05,
+          "cross_entropy": 0.0015123663640687049,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.8300158710952698,
+          "cross_entropy": 1.497094204838233,
+          "top1_accuracy": 0.43137254901960786
+        },
+        "unique_games": 16
+      },
+      "51-100": {
+        "count": 150,
+        "leader": {
+          "brier_score": 0.00010176767899875092,
+          "cross_entropy": 0.0024205175129982264,
+          "top1_accuracy": 1.0
+        },
+        "learned_value_probe": {
+          "brier_score": 0.6451088273838138,
+          "cross_entropy": 1.2530654546719857,
+          "top1_accuracy": 0.5533333333333333
+        },
+        "unique_games": 16
+      }
+    }
+  }
+}
