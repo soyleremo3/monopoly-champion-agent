@@ -668,3 +668,68 @@ see whether the resulting MonopolyZero checkpoint shows any measurable skill
 signal yet — mirroring exactly how the DDQN checkpoint went from a 20-game
 smoke to a 500-game milestone with a paired held-out evaluation. Needs its
 own `docs/DECISIONS.md` entry first, per this project's standing practice.
+
+## 2026-08-11 — Self-play smoke reproducibility fix and check (before any strength experiment)
+
+- Hypothesis: the prior self-play smoke entry (above) attributed run-to-run
+  variation entirely to `self_play=True`'s intentional exploration
+  randomness. That explanation was incomplete: `MonopolyZeroNet`'s
+  `value_head` is never overwritten by `load_ppo_actor` (only the
+  PPO-compatible trunk/policy_head are), so it was left at an **unseeded**
+  random init every run — a real, fixable reproducibility gap, not just
+  designed exploration noise.
+- Fix (`scripts/selfplay_train_smoke.py`, no submodule changes): seed
+  Python's `random`, NumPy's global RNG, and `torch.manual_seed` once, right
+  before `MonopolyZeroNet()` is constructed (`GLOBAL_SEED = 42`). The
+  existing per-game/per-decision seeding (`SEEDS = {501, 502, 503}`, and the
+  `decision_seed` `arena.play_game` derives internally) was left untouched,
+  per the task's explicit instruction.
+- Also added: a `_require_clean_git_tree()` guard (refuses to run on a dirty
+  tree, returns `git rev-parse HEAD` otherwise) so the script's own output
+  carries an unambiguous `git_head_sha` — this is what closed the
+  `code_commit_sha` provenance gap described in the standard-fix entry
+  above. And: `FixedAdapter.compatibility_fallbacks` is now read directly
+  from each fixed-agent instance after the `vs_fixed` game and reported as
+  `fixed_adapter_fallbacks`/`fixed_adapter_fallbacks_total`, instead of
+  being left `null` (it was never actually zero-by-assumption; it just
+  wasn't measured before).
+
+### Reproducibility check
+
+Ran the fixed script twice, independently, same seed, immediately after
+committing the fix (clean tree both times, both runs against commit
+`3b7db1f06bc60ca7f31497034efb42dd705e770e`):
+
+```bash
+PYTHONHASHSEED=0 PYTHONIOENCODING=utf-8 python scripts/selfplay_train_smoke.py
+PYTHONHASHSEED=0 PYTHONIOENCODING=utf-8 python scripts/selfplay_train_smoke.py
+```
+
+**Result: PASSED.** `diff` between the two outputs, excluding `elapsed_s` and
+`peak_rss_gib`, was empty (exit code 0):
+
+| | Run 1 | Run 2 |
+|---|---|---|
+| Positions collected | 709 | 709 |
+| Winners (self_play_1 / self_play_2 / vs_fixed) | seat 1 / seat 3 / seat 3 | seat 1 / seat 3 / seat 3 |
+| Batch size sampled | 8 | 8 |
+| `loss` | 2.804666519165039 | 2.804666519165039 |
+| `policy_loss` | 1.4619874954223633 | 1.4619874954223633 |
+| `value_loss` | 1.3426790237426758 | 1.3426790237426758 |
+| `gradient_norm` | 9.985905647277832 | 9.985905647277832 |
+| Parameters changed | 16/16 | 16/16 |
+| `fixed_adapter_fallbacks` (a/b/c) | 0/0/0 | 0/0/0 |
+
+Every deterministic field matched exactly, including all four loss figures
+bit-for-bit. `FixedAdapter` had zero compatibility fallbacks in either run
+(now a real measurement, not an unmeasured `null`).
+
+### Conclusion / next step
+
+The RNG-seeding fix closes the previously-documented non-determinism gap;
+this self-play training-plumbing path is now verified bit-exact
+reproducible, clearing the way to consider a strength experiment (per the
+recommendation already on record in the prior entry: more games, more
+`train_step` updates, then the existing paired-seed evaluation protocol).
+See [logs/experiments/011-selfplay-smoke-reproducibility-check.json](../logs/experiments/011-selfplay-smoke-reproducibility-check.json)
+for the full structured record.

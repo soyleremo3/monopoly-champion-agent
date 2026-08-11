@@ -1,0 +1,57 @@
+{
+  "experiment_id": "011-selfplay-smoke-reproducibility-check",
+  "experiment_name": "Self-play training-plumbing smoke bit-exact reproducibility check (two independent runs, same seed)",
+  "experiment_type": "reproducibility_check",
+  "date": "2026-08-11",
+  "code_commit_sha": "3b7db1f06bc60ca7f31497034efb42dd705e770e",
+  "reference_submodule_sha": "afd9205761317e196d77f679921c35fb04c7ab96",
+  "exact_commands": [
+    "PYTHONHASHSEED=0 PYTHONIOENCODING=utf-8 python scripts/selfplay_train_smoke.py",
+    "PYTHONHASHSEED=0 PYTHONIOENCODING=utf-8 python scripts/selfplay_train_smoke.py"
+  ],
+  "seeds": [42, 501, 502, 503],
+  "algorithm_config": {
+    "fix_under_test": "scripts/selfplay_train_smoke.py now seeds Python random, NumPy, and torch RNGs (GLOBAL_SEED=42) before MonopolyZeroNet() is constructed, since its value_head is never overwritten by load_ppo_actor and was previously left at an unseeded random init",
+    "game_decision_seed_logic": "unchanged (SEEDS 501/502/503 per game, decision_seed derived internally by arena.play_game as before)",
+    "reference_submodule_modified": false,
+    "working_tree_clean_before_run": true
+  },
+  "model_checkpoint": {
+    "sha256": "1c825dcdd2c8d83651bd21100024ab2d0b8ce2ba276d701dceb3599536f615cb",
+    "path": "references/DeepRL_Monopoly/artifacts/ppo_plus/ppo_hybrid_2000_v2.pt",
+    "format_version": 3
+  },
+  "counts": {"independent_runs_compared": 2, "games_per_run": 3},
+  "runtime": {"wall_time_s": 17.86, "peak_rss_gib": 0.2833137512207031},
+  "metrics": {
+    "run1": {
+      "positions_collected_total": 709,
+      "winners": {"self_play_1": 1, "self_play_2": 3, "vs_fixed": 3},
+      "batch_size_sampled": 8,
+      "loss": 2.804666519165039,
+      "parameters_changed_count": 16
+    },
+    "run2": {
+      "positions_collected_total": 709,
+      "winners": {"self_play_1": 1, "self_play_2": 3, "vs_fixed": 3},
+      "batch_size_sampled": 8,
+      "loss": 2.804666519165039,
+      "parameters_changed_count": 16
+    },
+    "diff_excluding_elapsed_s_and_peak_rss_gib": "empty (diff exit code 0)"
+  },
+  "loss": {
+    "loss": 2.804666519165039,
+    "policy_loss": 1.4619874954223633,
+    "value_loss": 1.3426790237426758,
+    "gradient_norm": 9.985905647277832,
+    "identical_across_both_runs": true
+  },
+  "integrity": {"illegal_actions": 0, "fallbacks": 0, "crashes": 0},
+  "result": "REPRODUCIBILITY PASSED. Two independent process launches of scripts/selfplay_train_smoke.py, same seed, same clean git HEAD (3b7db1f06bc60ca7f31497034efb42dd705e770e): every deterministic field matched exactly - positions_collected_total (709=709), per-game winners, batch_size_sampled, all four loss/train_step_stats values (bit-identical), and parameters_changed_count (16/16 both runs). Only elapsed_s and peak_rss_gib differed (timing/memory noise, expected). This confirms the RNG-seeding fix (Python/NumPy/torch seeded before MonopolyZeroNet construction) closed the previously-documented non-determinism gap. FixedAdapter.compatibility_fallbacks was read directly this time (0/0/0 for fixed-a/b/c in both runs) instead of left null.",
+  "raw_logs": [
+    "docs/baseline_runs/selfplay_repro_run1.json",
+    "docs/baseline_runs/selfplay_repro_run2.json"
+  ],
+  "notes": "This entry corrects/supersedes the reproducibility caveat in 010-selfplay-training-plumbing-smoke.json's notes field, which reported non-byte-identical results (721 vs 697 positions) between two runs and attributed it to expected self_play=True exploration randomness. That attribution undercounted the actual cause: the model's value_head was also unseeded at construction time. Both are now fixed by explicit RNG seeding; 010's own numbers are left as originally recorded (historical record), not edited."
+}
