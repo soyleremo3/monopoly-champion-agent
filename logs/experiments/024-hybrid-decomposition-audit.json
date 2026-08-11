@@ -1,0 +1,123 @@
+{
+  "experiment_id": "024-hybrid-decomposition-audit",
+  "experiment_name": "Decomposing 023's HYBRID_COMPAT improvement into BUY_PROPERTY/ACCEPT_TRADE, crippled vs. repaired peers",
+  "experiment_type": "paired_evaluation",
+  "date": "2026-08-11",
+  "code_commit_sha": "8eab03b94911373da59d79018986b73ee0b629eb",
+  "reference_submodule_sha": "afd9205761317e196d77f679921c35fb04c7ab96",
+  "exact_commands": [
+    "PYTHONHASHSEED=0 PYTHONIOENCODING=utf-8 python scripts/monopolyzero_hybrid_decomposition_audit.py"
+  ],
+  "seeds": [43000, 43001, 43002, 43003, 43004, 43005, 43006, 43007, 43008, 43009, 43010, 43011, 43012, 43013, 43014, 43015, 43016, 43017, 43018, 43019],
+  "algorithm_config": {
+    "reused_from_023": "SEEDS/MAX_ROUNDS/NUM_SEATS/CHECKPOINT_PATH/BASELINE_CHECKPOINT_SHA256/verify_baseline_checkpoint/_arm_summary/intervention_audit all imported directly from monopolyzero_hybrid_bootstrap_isolation_audit (023's own module, as audit_v1) - not redefined",
+    "no_new_dev_seed_registration": "reuses 023's 43000-43019 range as-is",
+    "context_1_crippled_peers": "other 3 seats POLICY_ONLY (023's exact setup). POLICY_ONLY and BOTH arms deterministically regenerated (same seeds/checkpoint/game-loop as 023) and reconciled bit-for-bit against 023's own logged aggregate values before anything was reported - not a new/different measurement of those two arms, just mechanically reproduced to recover the per-game records 023's log never persisted. BUY_ONLY and TRADE_ONLY run fresh.",
+    "context_2_repaired_peers": "other 3 seats HYBRID_COMPAT(BOTH) instead of POLICY_ONLY. All 4 arms (POLICY_ONLY, BUY_ONLY, TRADE_ONLY, BOTH) fresh. BOTH arm's focus seat uses the identical policy config as its 3 peers, so one self-play game per seed (20 games, not 80) yields all 4 seats' paired records - decision-seed mixing depends only on (seed, turn_index, seat), never on which seat is labeled focus, so this is mathematically identical to 80 separately-focused games.",
+    "games_played": {
+      "context_1": {"policy_only": 80, "buy_only": 80, "trade_only": 80, "both": 80, "total": 320},
+      "context_2": {"policy_only": 80, "buy_only": 80, "trade_only": 80, "both_self_play": 20, "total": 260}
+    },
+    "arms": {
+      "policy_only": "build_local_policy_only - no carve-out",
+      "buy_only": "build_local_hybrid_compat_policy(enable_buy=True, enable_trade=False)",
+      "trade_only": "build_local_hybrid_compat_policy(enable_buy=False, enable_trade=True)",
+      "both": "build_local_hybrid_compat_policy(enable_buy=True, enable_trade=True) - 023's only configuration"
+    },
+    "primary_stats": "seed_block_paired_randomization_test (exact enumeration, 2^20 sign patterns) + paired_seed_block_bootstrap (win-rate and net-worth diff, n_resamples=2000, bootstrap_seed=0), both from evaluation_protocol.py, each arm vs. that context's own POLICY_ONLY reference arm",
+    "secondary_stats": "seat_level_mcnemar_secondary (clustered seats, diagnostic only)",
+    "no_training": true,
+    "no_automatic_go_kill": true,
+    "asu_involved": false
+  },
+  "model_checkpoint": {
+    "sha256": "22ae2abea60478355f61ce0404a31de3b52fb97769d4f99f7e04f4c673629370",
+    "path": "artifacts/monopolyzero_strength_pilot/baseline_pretraining.pt",
+    "format_version": 1
+  },
+  "counts": {
+    "total_physical_games_played": 580,
+    "total_paired_records_per_context": 320,
+    "context_1_total_non_forced_decisions": {"policy_only": null, "buy_only": 88340, "trade_only": 82463, "both": 96629},
+    "context_2_total_non_forced_decisions": {"policy_only": null, "buy_only": 82951, "trade_only": 81198, "both": 85404}
+  },
+  "runtime": {
+    "wall_time_s": 7379.455760000012,
+    "peak_rss_gib": 0.39017486572265625
+  },
+  "metrics": {
+    "reconciliation_against_023": {
+      "ctx1_policy_only_vs_023_baseline": {"matches_023": true, "max_delta": 0.0, "wins_by_seat_match": true},
+      "ctx1_both_vs_023_candidate": {"matches_023": true, "max_delta": 0.0, "wins_by_seat_match": true}
+    },
+    "context_1_crippled_peers": {
+      "results": {
+        "policy_only": {"win_rate": 0.25, "wins": 20, "bankruptcy_rate": 0.4125, "mean_net_worth": 6386.575, "median_net_worth": 2017.0, "round_cap_rate": 0.75, "wins_by_seat": {"0": 4, "1": 6, "2": 4, "3": 6}},
+        "buy_only": {"win_rate": 0.4125, "wins": 33, "bankruptcy_rate": 0.2625, "mean_net_worth": 8328.59375, "median_net_worth": 5917.0, "round_cap_rate": 0.825, "wins_by_seat": {"0": 7, "1": 9, "2": 8, "3": 9}},
+        "trade_only": {"win_rate": 0.3125, "wins": 25, "bankruptcy_rate": 0.3125, "mean_net_worth": 6935.8875, "median_net_worth": 3694.0, "round_cap_rate": 0.7375, "wins_by_seat": {"0": 6, "1": 7, "2": 6, "3": 6}},
+        "both": {"win_rate": 0.4625, "wins": 37, "bankruptcy_rate": 0.1625, "mean_net_worth": 8479.6625, "median_net_worth": 7074.5, "round_cap_rate": 0.85, "wins_by_seat": {"0": 10, "1": 9, "2": 10, "3": 8}}
+      },
+      "paired_primary": {
+        "buy_only_vs_baseline": {"win_rate_diff_point": 0.1625, "win_rate_diff_ci95": [0.10, 0.225], "randomization_p_value": 0.0009765625, "net_worth_diff_point": 1942.01875, "net_worth_diff_ci95": [503.22, 3281.96]},
+        "trade_only_vs_baseline": {"win_rate_diff_point": 0.0625, "win_rate_diff_ci95": [0.0125, 0.1125], "randomization_p_value": 0.0625, "net_worth_diff_point": 549.3125, "net_worth_diff_ci95": [-478.66, 1599.32]},
+        "both_vs_baseline": {"win_rate_diff_point": 0.2125, "win_rate_diff_ci95": [0.1375, 0.2875], "randomization_p_value": 0.0001220703125, "net_worth_diff_point": 2093.0875, "net_worth_diff_ci95": [1020.47, 3272.17]}
+      },
+      "paired_secondary_mcnemar": {
+        "buy_only_vs_baseline": {"b": 18, "c": 5, "p_value": 0.010622024536132812},
+        "trade_only_vs_baseline": {"b": 6, "c": 1, "p_value": 0.125},
+        "both_vs_baseline": {"b": 21, "c": 4, "p_value": 0.0009105205535888672}
+      },
+      "decomposition_win_rate": {
+        "buy_only_effect_pp": 0.1625, "trade_only_effect_pp": 0.0625, "both_effect_pp": 0.2125,
+        "sum_of_individual_pp": 0.225, "both_minus_sum_pp": -0.0125, "interaction_read": "approximately additive",
+        "buy_only_recovers_fraction_of_both": 0.7647058823529411, "trade_only_recovers_fraction_of_both": 0.29411764705882354
+      },
+      "decomposition_mean_net_worth": {
+        "buy_only_effect": 1942.01875, "trade_only_effect": 549.3125, "both_effect": 2093.0875,
+        "sum_of_individual": 2491.33125, "both_minus_sum": -398.24375,
+        "buy_only_recovers_fraction_of_both": 0.9278249237072027, "trade_only_recovers_fraction_of_both": 0.2624412500671854
+      },
+      "intervention_rate_of_non_forced_decisions": {"buy_only": 0.025526375367896762, "trade_only": 0.051404872488267465, "both": 0.0845812333771435}
+    },
+    "context_2_repaired_peers": {
+      "results": {
+        "policy_only": {"win_rate": 0.075, "wins": 6, "bankruptcy_rate": 0.275, "mean_net_worth": 2771.0625, "median_net_worth": 2336.75, "round_cap_rate": 0.9125, "wins_by_seat": {"0": 1, "1": 3, "2": 2, "3": 0}},
+        "buy_only": {"win_rate": 0.1125, "wins": 9, "bankruptcy_rate": 0.15, "mean_net_worth": 4912.18125, "median_net_worth": 4118.0, "round_cap_rate": 0.975, "wins_by_seat": {"0": 0, "1": 3, "2": 4, "3": 2}},
+        "trade_only": {"win_rate": 0.10, "wins": 8, "bankruptcy_rate": 0.3125, "mean_net_worth": 3661.1125, "median_net_worth": 3104.0, "round_cap_rate": 0.9375, "wins_by_seat": {"0": 2, "1": 2, "2": 4, "3": 0}},
+        "both": {"win_rate": 0.25, "wins": 20, "bankruptcy_rate": 0.1375, "mean_net_worth": 6668.18125, "median_net_worth": 4931.5, "round_cap_rate": 0.95, "wins_by_seat": {"0": 3, "1": 6, "2": 8, "3": 3}}
+      },
+      "paired_primary": {
+        "buy_only_vs_policy_only": {"win_rate_diff_point": 0.0375, "win_rate_diff_ci95": [-0.05, 0.125], "randomization_p_value": 0.58984375, "net_worth_diff_point": 2141.11875, "net_worth_diff_ci95": [1136.59, 3158.55]},
+        "trade_only_vs_policy_only": {"win_rate_diff_point": 0.025, "win_rate_diff_ci95": [-0.025, 0.075], "randomization_p_value": 0.625, "net_worth_diff_point": 890.05, "net_worth_diff_ci95": [207.20, 1632.65]},
+        "both_vs_policy_only": {"win_rate_diff_point": 0.175, "win_rate_diff_ci95": [0.1125, 0.225], "randomization_p_value": 0.000518798828125, "net_worth_diff_point": 3897.11875, "net_worth_diff_ci95": [2742.22, 4947.12]}
+      },
+      "paired_secondary_mcnemar": {
+        "buy_only_vs_policy_only": {"b": 7, "c": 4, "p_value": 0.548828125},
+        "trade_only_vs_policy_only": {"b": 3, "c": 1, "p_value": 0.625},
+        "both_vs_policy_only": {"b": 15, "c": 1, "p_value": 0.000518798828125}
+      },
+      "decomposition_win_rate": {
+        "buy_only_effect_pp": 0.0375, "trade_only_effect_pp": 0.025, "both_effect_pp": 0.175,
+        "sum_of_individual_pp": 0.0625, "both_minus_sum_pp": 0.1125, "interaction_read": "super-additive (positive synergy)",
+        "buy_only_recovers_fraction_of_both": 0.21428571428571433, "trade_only_recovers_fraction_of_both": 0.1428571428571429
+      },
+      "decomposition_mean_net_worth": {
+        "buy_only_effect": 2141.11875, "trade_only_effect": 890.05, "both_effect": 3897.11875,
+        "sum_of_individual": 3031.16875, "both_minus_sum": 865.95,
+        "buy_only_recovers_fraction_of_both": 0.5494107024580659, "trade_only_recovers_fraction_of_both": 0.22838667669544332
+      },
+      "intervention_rate_of_non_forced_decisions": {"buy_only": 0.019095610661715952, "trade_only": 0.061836498435922066, "both": 0.10287574352489345}
+    }
+  },
+  "loss": null,
+  "integrity": {
+    "illegal_actions": 0,
+    "fallbacks": 0,
+    "crashes": 0
+  },
+  "result": "Reconciliation against 023 was EXACT: context 1's regenerated POLICY_ONLY and BOTH arms matched 023's own logged aggregate values with zero delta on every deterministic field (win rate, wins, bankruptcy, mean/median net worth, round-cap rate, wins-by-seat) - confirming these are genuinely 023's own result, mechanically reproduced, not a new/different measurement. Context 1 (crippled POLICY_ONLY peers, 023's exact setup): BUY_ONLY alone recovers 76.5% of BOTH's win-rate improvement (+16.25pp vs. +21.25pp) and 92.8% of its net-worth improvement, with both PRIMARY stats excluding zero (randomization p=0.00098, bootstrap CI [10.0,22.5]pp); TRADE_ONLY alone recovers 29.4% of the win-rate improvement (+6.25pp) but the two PRIMARY stats disagree on significance here - the randomization test's p=0.0625 exceeds the conventional 0.05 threshold while the bootstrap's win-rate-diff 95% CI [1.25,11.25]pp barely excludes zero; both figures are reported as-is, no cherry-pick. BUY_ONLY's effect (+16.25pp) plus TRADE_ONLY's effect (+6.25pp) sum to +22.5pp, close to BOTH's actual +21.25pp (both_minus_sum=-1.25pp) - read as approximately additive, i.e. the two fixes are largely independent contributions against crippled peers, with BUY_PROPERTY clearly the dominant one. Context 2 (repaired HYBRID_COMPAT(BOTH) peers): against tougher, non-crippled opponents, the overall win rate for every arm drops sharply (POLICY_ONLY 7.5% vs. its own 25.0% in context 1), and neither BUY_ONLY (+3.75pp, p=0.590, CI crosses zero [-5.0,12.5]pp) nor TRADE_ONLY (+2.5pp, p=0.625, CI crosses zero [-2.5,7.5]pp) individually clears statistical significance at this sample size (n=20 seed blocks) - only the full BOTH combination does (+17.5pp, p=0.00052, CI [11.25,22.5]pp excluding zero). BOTH's effect (+17.5pp) substantially exceeds the sum of the two individual effects (+6.25pp, both_minus_sum=+11.25pp) - read as super-additive/positive synergy: against competent opponents, having BOTH fixes together appears to matter far more than either alone, though neither alone is individually confirmed at this n. Intervention rates ranged 1.9%-10.3% of non-forced decisions across arms/contexts (highest for BOTH, as expected - it is the only arm where both carve-outs can fire on the same trajectory). Zero illegal actions, zero crashes, zero incomplete games across all 580 physical games (320 context 1 + 260 context 2, the context-2 BOTH arm's self-play optimization confirmed via a decision-count cross-check: its 85,404 recorded per-decision latencies match 20 self-play games x ~4,270 decisions/game x 4 seats, not 80 separately-run games). No promotion/GO-KILL verdict is computed - these numbers are for a human to read.",
+  "raw_logs": [
+    "docs/baseline_runs/monopolyzero_hybrid_decomposition_audit_stdout.txt"
+  ],
+  "notes": "The raw stdout's config.games_run field reports {context_1: 320, context_2: 320} - a bug present in the script AT RUN TIME that summed paired-record counts (4 per physical game for the self-play-optimized context_2 BOTH arm) rather than physical games executed. This is a purely descriptive/reporting field; it does not affect any deterministic game outcome, the exact-match reconciliation against 023, or any statistic in this log - confirmed via the decision-count cross-check described in the result field. Fixed in the script (commit a453cf7) for future runs, with a regression test, but this experiment was NOT re-run for that cosmetic fix given ~2 hours of compute already produced fully valid, reconciled results; this log's counts/algorithm_config fields report the corrected {context_1: 320, context_2: 260} physical-game figures by hand. context_1's policy_only total_non_forced_decisions is null because build_local_policy_only carries no .log (it never intervenes by construction, so an intervention count is trivially zero/not applicable, not unmeasured)."
+}
