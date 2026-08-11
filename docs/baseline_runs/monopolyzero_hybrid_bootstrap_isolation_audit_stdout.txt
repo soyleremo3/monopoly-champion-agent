@@ -1,0 +1,213 @@
+{
+  "asu_modules_loaded": [],
+  "asu_modules_loaded_count": 0,
+  "baseline_checkpoint_sha256": "22ae2abea60478355f61ce0404a31de3b52fb97769d4f99f7e04f4c673629370",
+  "bootstrap_provenance_audit": {
+    "experiment_007_exact_commands": [
+      "PYTHONHASHSEED=0 PYTHONIOENCODING=utf-8 python references/DeepRL_Monopoly/tools/train_and_save.py --algo ppo --games 1 --device cpu --seed 42 --checkpoint-every 1 --out references/DeepRL_Monopoly/artifacts/ppo_plus/ppo_hybrid_2000_v2.pt"
+    ],
+    "fixed_action_mask_lines_verified_present_in_reference": {
+      "self.fixed_action_mask[int(ActionType.ACCEPT_TRADE)] = True": true,
+      "self.fixed_action_mask[int(ActionType.BUY_PROPERTY)] = True": true
+    },
+    "interpretation": "Local checkpoint SHA does NOT match TRAINING_RESULTS.md's documented SHA for this filename (expected, per experiment 007: this project generated its OWN 1-game stand-in checkpoint at this exact path purely to satisfy MonopolyZeroNet.load_ppo_actor's format/metadata check, never downloaded or reproduced upstream's full training run). It DOES match experiment 007's own logged SHA, confirming this is that exact, previously-documented artifact, not a silently-changed one. The payload's own hybrid/games_trained/step_count fields above are the only source of truth this audit uses for 'how trained' it is - no broader 'untrained weights' claim is made. Independent of that: the statically-verified fixed_action_mask lines mean BUY_PROPERTY's and ACCEPT_TRADE's actor output rows never received a gradient update under the reference's own PPOAgent in hybrid mode (hybrid=True here), regardless of how many games were trained - so those two rows are at whatever random initialization ActorNetwork's final nn.Linear started at, both in this checkpoint and after load_ppo_actor's full (ungated) copy into baseline_pretraining.pt.",
+    "load_ppo_actor_full_copy_line_verified_present_in_reference": true,
+    "matches_experiment_007_log": true,
+    "matches_upstream_training_results_md": false,
+    "payload_format_version": 3,
+    "payload_games_trained": 1,
+    "payload_hidden_dim": 256,
+    "payload_hybrid_flag": true,
+    "payload_ruleset": "ppo-plus-v2",
+    "payload_step_count": 598,
+    "ppo_checkpoint_path": "references\\DeepRL_Monopoly\\artifacts\\ppo_plus\\ppo_hybrid_2000_v2.pt",
+    "ppo_checkpoint_sha256_experiment_007_log": "1c825dcdd2c8d83651bd21100024ab2d0b8ce2ba276d701dceb3599536f615cb",
+    "ppo_checkpoint_sha256_local": "1c825dcdd2c8d83651bd21100024ab2d0b8ce2ba276d701dceb3599536f615cb",
+    "ppo_checkpoint_sha256_upstream_training_results_md": "4c364204eb59df74dffab911f8fbde523e59037558fafbe49daaf79e5c9180db"
+  },
+  "config": {
+    "asu_involved": false,
+    "baseline_arm": "focus seat POLICY_ONLY (build_local_policy_only)",
+    "candidate_arm": "focus seat HYBRID_COMPAT (build_local_hybrid_compat_policy), diagnostic-only",
+    "max_rounds": 200,
+    "opponents": "none - all non-focus seats POLICY_ONLY, zero fixed agents, zero fallback-contamination risk",
+    "seat_rotation": "20 seeds x 4 focus seats = 80 games per arm",
+    "seeds": [
+      43000,
+      43001,
+      43002,
+      43003,
+      43004,
+      43005,
+      43006,
+      43007,
+      43008,
+      43009,
+      43010,
+      43011,
+      43012,
+      43013,
+      43014,
+      43015,
+      43016,
+      43017,
+      43018,
+      43019
+    ]
+  },
+  "elapsed_s": 436.8428986000072,
+  "git_head_sha": "700d7365aeda334ede82c112a8e9d926764c701c",
+  "incomplete_games": 0,
+  "intervention_audit": {
+    "both_buy_and_trade_opportunity_simultaneously": 0,
+    "buy_property_opportunities": 2616,
+    "decision_kind_breakdown": {
+      "buy_property_rule_bought": 2316,
+      "candidate_set_narrowed_neural_pick": 300,
+      "no_opportunity": 88456,
+      "trade_response_rule_accept": 536,
+      "trade_response_rule_decline": 5021
+    },
+    "disagreement_rate_within_interventions": 0.9632937721766793,
+    "disagreement_with_policy_only_count_at_opportunity_states": 7873,
+    "hybrid_compat_intervention_count": 8173,
+    "incoming_trade_opportunities": 5557,
+    "intervention_rate_of_non_forced_decisions": 0.0845812333771435,
+    "policy_only_at_buy_opportunities": {
+      "chosen_action_frequency_buy": 0.0,
+      "mean_prob_buy": 0.07878500210058616,
+      "median_prob_buy": 0.04049168340861797
+    },
+    "policy_only_at_trade_opportunities": {
+      "chosen_action_frequency_accept": 0.0,
+      "mean_prob_accept": 0.10679522736479198,
+      "median_prob_accept": 0.02723984234035015
+    },
+    "total_non_forced_focus_seat_decisions": 96629,
+    "trade_opportunity_but_no_pending_found": 0
+  },
+  "isolation_integrity": {
+    "result": "PASS - 100% HYBRID_COMPAT/POLICY_ONLY agreement on every decision not flagged as a BUY/TRADE opportunity, across all 80 candidate games, verified via play_local_game's shadow_policy hook (both policies queried on the identical pre-step state).",
+    "violation_count": 0
+  },
+  "paired_evaluation": {
+    "descriptive": {
+      "baseline_wilson_95": [
+        0.16806231857542378,
+        0.35484674619233975
+      ],
+      "candidate_wilson_95": [
+        0.35747993562785246,
+        0.5709564240873121
+      ]
+    },
+    "fallback_contamination": {
+      "baseline_fallbacks": 0,
+      "candidate_fallbacks": 0,
+      "contaminated": false,
+      "total_fallbacks": 0
+    },
+    "primary": {
+      "seed_block_bootstrap": {
+        "bootstrap_seed": 0,
+        "n_records": 80,
+        "n_resamples": 2000,
+        "n_seed_blocks": 20,
+        "net_worth_diff": {
+          "ci_95": [
+            1020.4743750000004,
+            3272.1696874999984
+          ],
+          "point": 2093.0875000000005
+        },
+        "win_rate_diff": {
+          "ci_95": [
+            0.1375,
+            0.2875
+          ],
+          "point": 0.21250000000000002
+        }
+      },
+      "seed_block_paired_randomization": {
+        "method": "exact_enumeration",
+        "n_null_samples": 1048576,
+        "n_seed_blocks": 20,
+        "observed_mean_win_rate_diff": 0.2125,
+        "p_value": 0.0001220703125,
+        "randomization_seed": null
+      }
+    },
+    "secondary": {
+      "seat_level_mcnemar_secondary": {
+        "b": 21,
+        "c": 4,
+        "n_discordant": 25,
+        "p_value": 0.0009105205535888672
+      }
+    }
+  },
+  "peak_rss_gib": 0.2807350158691406,
+  "results": {
+    "baseline": {
+      "bankruptcy_rate": 0.4125,
+      "games": 80,
+      "games_by_seat": {
+        "0": 20,
+        "1": 20,
+        "2": 20,
+        "3": 20
+      },
+      "label": "baseline_policy_only",
+      "mean_net_worth": 6386.575,
+      "median_net_worth": 2017.0,
+      "n_latency_samples": 291412,
+      "p50_latency_s": 0.000321899977279827,
+      "p95_latency_s": 0.0008325999951921403,
+      "round_cap_rate": 0.75,
+      "wilson_95": [
+        0.16806231857542378,
+        0.35484674619233975
+      ],
+      "win_rate": 0.25,
+      "wins": 20,
+      "wins_by_seat": {
+        "0": 4,
+        "1": 6,
+        "2": 4,
+        "3": 6
+      }
+    },
+    "candidate": {
+      "bankruptcy_rate": 0.1625,
+      "games": 80,
+      "games_by_seat": {
+        "0": 20,
+        "1": 20,
+        "2": 20,
+        "3": 20
+      },
+      "label": "candidate_hybrid_compat",
+      "mean_net_worth": 8479.6625,
+      "median_net_worth": 7074.5,
+      "n_latency_samples": 338775,
+      "p50_latency_s": 0.0003307000151835382,
+      "p95_latency_s": 0.0008888999873306602,
+      "round_cap_rate": 0.85,
+      "wilson_95": [
+        0.35747993562785246,
+        0.5709564240873121
+      ],
+      "win_rate": 0.4625,
+      "wins": 37,
+      "wins_by_seat": {
+        "0": 10,
+        "1": 9,
+        "2": 10,
+        "3": 8
+      }
+    }
+  },
+  "status": "OK",
+  "total_crashed": 0,
+  "total_illegal_actions": 0
+}
