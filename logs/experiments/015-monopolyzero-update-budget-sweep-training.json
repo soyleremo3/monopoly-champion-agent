@@ -1,0 +1,73 @@
+{
+  "experiment_id": "015-monopolyzero-update-budget-sweep-training",
+  "experiment_name": "Update-budget sweep: 100/500/1000 updates, same baseline + same replay, zero new games",
+  "experiment_type": "training_run",
+  "date": "2026-08-11",
+  "code_commit_sha": "04695d19f21a23b5b8062d9b1fc1ab2e6cd26ca8",
+  "reference_submodule_sha": "afd9205761317e196d77f679921c35fb04c7ab96",
+  "exact_commands": [
+    "PYTHONHASHSEED=0 PYTHONIOENCODING=utf-8 python scripts/monopolyzero_update_budget_sweep.py"
+  ],
+  "seeds": [42],
+  "algorithm_config": {
+    "update_budgets": [100, 500, 1000],
+    "each_budget_starts_fresh_from": "013's pre-training baseline checkpoint (never resumes from another budget's checkpoint)",
+    "sampling_seed": 42,
+    "single_variable": "update budget only - same baseline, same replay buffer, same sampling seed each run, so the first 100 updates are byte-identical across all three runs and the first 500 identical between the 500- and 1000-update runs (verified: interval_log entries at update 25/50/75/100 are bit-identical across all three, and at 125-500 identical between the 500 and 1000 runs)",
+    "new_self_play_games": 0,
+    "batch_size": 64,
+    "learning_rate": 0.0003,
+    "weight_decay": 0.0001,
+    "gradient_clip": 1.0,
+    "log_interval": 25,
+    "asu_involved": false
+  },
+  "model_checkpoint": {"sha256": null, "path": null, "format_version": null},
+  "counts": {
+    "positions_reused": 37772,
+    "new_positions_generated": 0,
+    "new_games_generated": 0,
+    "total_updates_across_all_budgets": 1600
+  },
+  "runtime": {"wall_time_s": 12.98, "peak_rss_gib": 0.40663909912109375},
+  "metrics": {
+    "reused_baseline_sha256": "22ae2abea60478355f61ce0404a31de3b52fb97769d4f99f7e04f4c673629370",
+    "budget_100": {
+      "checkpoint_sha256": "1a428b96629e29fa83a413e5ca30a181e8b79fd29ac98f3ef97cd800f9809884",
+      "elapsed_s": 1.3982138000137638,
+      "peak_rss_gib": 0.36270904541015625,
+      "final_loss": 2.468712329864502,
+      "final_policy_loss": 1.6582667827606201,
+      "final_value_loss": 0.8104456067085266,
+      "final_gradient_norm": 3.1286780834198,
+      "matches_013_original_training_final_loss": true
+    },
+    "budget_500": {
+      "checkpoint_sha256": "152c0a0f6136d1fc91e74973ac245b2f72774694c424d2a48854514ed2848383",
+      "elapsed_s": 3.3018552999710664,
+      "peak_rss_gib": 0.40422821044921875,
+      "final_loss": 1.9708212614059448,
+      "final_policy_loss": 1.6572372913360596,
+      "final_value_loss": 0.31358397006988525,
+      "final_gradient_norm": 4.083135604858398
+    },
+    "budget_1000": {
+      "checkpoint_sha256": "06f6569a30eec3511137c08223dc905059d9c1c837799391eef2f0ed581a19c7",
+      "elapsed_s": 6.850750099983998,
+      "peak_rss_gib": 0.40663909912109375,
+      "final_loss": 1.6481797695159912,
+      "final_policy_loss": 1.5405550003051758,
+      "final_value_loss": 0.10762478411197662,
+      "final_gradient_norm": 4.586960315704346
+    },
+    "trend": "total loss decreases monotonically at the sampled checkpoints (100: 2.469, 500: 1.971, 1000: 1.648). value_loss drops sharply and close to monotonically (0.810 -> 0.314 -> 0.108) - consistent with the value head increasingly fitting the fixed 37,772-position replay buffer, which raises an overfitting concern since no new data is introduced between budgets. policy_loss is noisier and shows much less improvement (1.658 -> 1.657 -> 1.541) - it does not track value_loss's clean downward trend over the same fixed dataset."
+  },
+  "loss": {
+    "note": "full per-25-update interval log (4/20/40 entries for the 100/500/1000 budgets respectively) is in the raw stdout, not duplicated here in full - see metrics.trend for the summary and raw_logs for every value",
+    "all_updates_finite_all_budgets": true
+  },
+  "integrity": {"illegal_actions": 0, "fallbacks": 0, "crashes": 0},
+  "result": "All three budgets (100/500/1000 updates) completed with every update producing a finite loss - no divergence, no stop condition triggered. Zero new self-play games generated (reused 013's 37,772-position replay buffer and pre-training baseline checkpoint, both integrity-checked before any training started). asu_modules_loaded count 0 for all three. Total wall time for all three budgets combined: 12.98s (no new game generation is why this is dramatically faster than 013's 301.55s). Whether more updates on this same fixed dataset produce a measurably stronger policy - as opposed to just fitting the value head to the same 32 games' outcomes - is evaluated separately in 016-monopolyzero-update-budget-sweep-paired-eval.json, not claimed here.",
+  "raw_logs": ["docs/baseline_runs/monopolyzero_update_budget_sweep_stdout.txt"],
+  "notes": "Checkpoints (trained_updates_{100,500,1000}.pt) are not committed, per CLAUDE.md - referenced by SHA-256 and local path only. integrity.illegal_actions/fallbacks/crashes are 0/0/0 because this run plays no games at all (pure replay-buffer training), unlike 013."
+}

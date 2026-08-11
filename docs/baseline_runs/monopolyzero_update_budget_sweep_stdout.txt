@@ -1,0 +1,599 @@
+{
+  "config": {
+    "batch_size": 64,
+    "gradient_clip": 1.0,
+    "learning_rate": 0.0003,
+    "log_interval": 25,
+    "new_self_play_games": 0,
+    "reused_baseline_checkpoint_sha256": "22ae2abea60478355f61ce0404a31de3b52fb97769d4f99f7e04f4c673629370",
+    "reused_replay_positions": 37772,
+    "sampling_seed": 42,
+    "weight_decay": 0.0001
+  },
+  "git_head_sha": "04695d19f21a23b5b8062d9b1fc1ab2e6cd26ca8",
+  "integrity": {
+    "baseline_sha256": "22ae2abea60478355f61ce0404a31de3b52fb97769d4f99f7e04f4c673629370",
+    "replay_size": 37772
+  },
+  "results": [
+    {
+      "all_finite": true,
+      "asu_modules_loaded": [],
+      "asu_modules_loaded_count": 0,
+      "budget": 100,
+      "checkpoint_path": "C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\monopolyzero_strength_pilot\\trained_updates_100.pt",
+      "checkpoint_sha256": "1a428b96629e29fa83a413e5ca30a181e8b79fd29ac98f3ef97cd800f9809884",
+      "completed_updates": 100,
+      "elapsed_s": 1.3982138000137638,
+      "final_stats": {
+        "finite": true,
+        "gradient_norm": 3.1286780834198,
+        "loss": 2.468712329864502,
+        "policy_loss": 1.6582667827606201,
+        "update": 100,
+        "value_loss": 0.8104456067085266
+      },
+      "interval_log": [
+        {
+          "finite": true,
+          "gradient_norm": 2.954596519470215,
+          "loss": 2.8435616493225098,
+          "policy_loss": 1.6661975383758545,
+          "update": 25,
+          "value_loss": 1.1773641109466553
+        },
+        {
+          "finite": true,
+          "gradient_norm": 3.734227418899536,
+          "loss": 2.75317120552063,
+          "policy_loss": 1.7821146249771118,
+          "update": 50,
+          "value_loss": 0.9710565805435181
+        },
+        {
+          "finite": true,
+          "gradient_norm": 3.9477169513702393,
+          "loss": 2.499393939971924,
+          "policy_loss": 1.6622732877731323,
+          "update": 75,
+          "value_loss": 0.837120532989502
+        },
+        {
+          "finite": true,
+          "gradient_norm": 3.1286780834198,
+          "loss": 2.468712329864502,
+          "policy_loss": 1.6582667827606201,
+          "update": 100,
+          "value_loss": 0.8104456067085266
+        }
+      ],
+      "peak_rss_gib": 0.36270904541015625
+    },
+    {
+      "all_finite": true,
+      "asu_modules_loaded": [],
+      "asu_modules_loaded_count": 0,
+      "budget": 500,
+      "checkpoint_path": "C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\monopolyzero_strength_pilot\\trained_updates_500.pt",
+      "checkpoint_sha256": "152c0a0f6136d1fc91e74973ac245b2f72774694c424d2a48854514ed2848383",
+      "completed_updates": 500,
+      "elapsed_s": 3.3018552999710664,
+      "final_stats": {
+        "finite": true,
+        "gradient_norm": 4.083135604858398,
+        "loss": 1.9708212614059448,
+        "policy_loss": 1.6572372913360596,
+        "update": 500,
+        "value_loss": 0.31358397006988525
+      },
+      "interval_log": [
+        {
+          "finite": true,
+          "gradient_norm": 2.954596519470215,
+          "loss": 2.8435616493225098,
+          "policy_loss": 1.6661975383758545,
+          "update": 25,
+          "value_loss": 1.1773641109466553
+        },
+        {
+          "finite": true,
+          "gradient_norm": 3.734227418899536,
+          "loss": 2.75317120552063,
+          "policy_loss": 1.7821146249771118,
+          "update": 50,
+          "value_loss": 0.9710565805435181
+        },
+        {
+          "finite": true,
+          "gradient_norm": 3.9477169513702393,
+          "loss": 2.499393939971924,
+          "policy_loss": 1.6622732877731323,
+          "update": 75,
+          "value_loss": 0.837120532989502
+        },
+        {
+          "finite": true,
+          "gradient_norm": 3.1286780834198,
+          "loss": 2.468712329864502,
+          "policy_loss": 1.6582667827606201,
+          "update": 100,
+          "value_loss": 0.8104456067085266
+        },
+        {
+          "finite": true,
+          "gradient_norm": 3.01660418510437,
+          "loss": 2.5876739025115967,
+          "policy_loss": 1.937548279762268,
+          "update": 125,
+          "value_loss": 0.6501256227493286
+        },
+        {
+          "finite": true,
+          "gradient_norm": 3.994445562362671,
+          "loss": 2.708822011947632,
+          "policy_loss": 2.015996217727661,
+          "update": 150,
+          "value_loss": 0.6928257942199707
+        },
+        {
+          "finite": true,
+          "gradient_norm": 3.8206565380096436,
+          "loss": 2.640047550201416,
+          "policy_loss": 1.963313341140747,
+          "update": 175,
+          "value_loss": 0.6767341494560242
+        },
+        {
+          "finite": true,
+          "gradient_norm": 3.7456297874450684,
+          "loss": 2.617238998413086,
+          "policy_loss": 1.8885219097137451,
+          "update": 200,
+          "value_loss": 0.728717029094696
+        },
+        {
+          "finite": true,
+          "gradient_norm": 3.8160245418548584,
+          "loss": 2.3692266941070557,
+          "policy_loss": 1.6250278949737549,
+          "update": 225,
+          "value_loss": 0.7441987991333008
+        },
+        {
+          "finite": true,
+          "gradient_norm": 5.58888053894043,
+          "loss": 2.4082186222076416,
+          "policy_loss": 1.7077631950378418,
+          "update": 250,
+          "value_loss": 0.700455367565155
+        },
+        {
+          "finite": true,
+          "gradient_norm": 3.5197219848632812,
+          "loss": 2.022845983505249,
+          "policy_loss": 1.4263473749160767,
+          "update": 275,
+          "value_loss": 0.5964986085891724
+        },
+        {
+          "finite": true,
+          "gradient_norm": 3.561861276626587,
+          "loss": 2.3040530681610107,
+          "policy_loss": 1.6861109733581543,
+          "update": 300,
+          "value_loss": 0.6179420948028564
+        },
+        {
+          "finite": true,
+          "gradient_norm": 4.065641403198242,
+          "loss": 2.3013031482696533,
+          "policy_loss": 1.7773327827453613,
+          "update": 325,
+          "value_loss": 0.5239704251289368
+        },
+        {
+          "finite": true,
+          "gradient_norm": 4.3851847648620605,
+          "loss": 2.354235887527466,
+          "policy_loss": 1.857216715812683,
+          "update": 350,
+          "value_loss": 0.49701908230781555
+        },
+        {
+          "finite": true,
+          "gradient_norm": 3.3276045322418213,
+          "loss": 2.0392980575561523,
+          "policy_loss": 1.5757776498794556,
+          "update": 375,
+          "value_loss": 0.46352052688598633
+        },
+        {
+          "finite": true,
+          "gradient_norm": 3.836090326309204,
+          "loss": 1.8902051448822021,
+          "policy_loss": 1.4601513147354126,
+          "update": 400,
+          "value_loss": 0.43005383014678955
+        },
+        {
+          "finite": true,
+          "gradient_norm": 3.985814332962036,
+          "loss": 2.027998447418213,
+          "policy_loss": 1.5520364046096802,
+          "update": 425,
+          "value_loss": 0.47596195340156555
+        },
+        {
+          "finite": true,
+          "gradient_norm": 4.388023853302002,
+          "loss": 2.199448823928833,
+          "policy_loss": 1.8519011735916138,
+          "update": 450,
+          "value_loss": 0.347547709941864
+        },
+        {
+          "finite": true,
+          "gradient_norm": 4.643412113189697,
+          "loss": 1.8916287422180176,
+          "policy_loss": 1.491504430770874,
+          "update": 475,
+          "value_loss": 0.40012434124946594
+        },
+        {
+          "finite": true,
+          "gradient_norm": 4.083135604858398,
+          "loss": 1.9708212614059448,
+          "policy_loss": 1.6572372913360596,
+          "update": 500,
+          "value_loss": 0.31358397006988525
+        }
+      ],
+      "peak_rss_gib": 0.40422821044921875
+    },
+    {
+      "all_finite": true,
+      "asu_modules_loaded": [],
+      "asu_modules_loaded_count": 0,
+      "budget": 1000,
+      "checkpoint_path": "C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\monopolyzero_strength_pilot\\trained_updates_1000.pt",
+      "checkpoint_sha256": "06f6569a30eec3511137c08223dc905059d9c1c837799391eef2f0ed581a19c7",
+      "completed_updates": 1000,
+      "elapsed_s": 6.850750099983998,
+      "final_stats": {
+        "finite": true,
+        "gradient_norm": 4.586960315704346,
+        "loss": 1.6481797695159912,
+        "policy_loss": 1.5405550003051758,
+        "update": 1000,
+        "value_loss": 0.10762478411197662
+      },
+      "interval_log": [
+        {
+          "finite": true,
+          "gradient_norm": 2.954596519470215,
+          "loss": 2.8435616493225098,
+          "policy_loss": 1.6661975383758545,
+          "update": 25,
+          "value_loss": 1.1773641109466553
+        },
+        {
+          "finite": true,
+          "gradient_norm": 3.734227418899536,
+          "loss": 2.75317120552063,
+          "policy_loss": 1.7821146249771118,
+          "update": 50,
+          "value_loss": 0.9710565805435181
+        },
+        {
+          "finite": true,
+          "gradient_norm": 3.9477169513702393,
+          "loss": 2.499393939971924,
+          "policy_loss": 1.6622732877731323,
+          "update": 75,
+          "value_loss": 0.837120532989502
+        },
+        {
+          "finite": true,
+          "gradient_norm": 3.1286780834198,
+          "loss": 2.468712329864502,
+          "policy_loss": 1.6582667827606201,
+          "update": 100,
+          "value_loss": 0.8104456067085266
+        },
+        {
+          "finite": true,
+          "gradient_norm": 3.01660418510437,
+          "loss": 2.5876739025115967,
+          "policy_loss": 1.937548279762268,
+          "update": 125,
+          "value_loss": 0.6501256227493286
+        },
+        {
+          "finite": true,
+          "gradient_norm": 3.994445562362671,
+          "loss": 2.708822011947632,
+          "policy_loss": 2.015996217727661,
+          "update": 150,
+          "value_loss": 0.6928257942199707
+        },
+        {
+          "finite": true,
+          "gradient_norm": 3.8206565380096436,
+          "loss": 2.640047550201416,
+          "policy_loss": 1.963313341140747,
+          "update": 175,
+          "value_loss": 0.6767341494560242
+        },
+        {
+          "finite": true,
+          "gradient_norm": 3.7456297874450684,
+          "loss": 2.617238998413086,
+          "policy_loss": 1.8885219097137451,
+          "update": 200,
+          "value_loss": 0.728717029094696
+        },
+        {
+          "finite": true,
+          "gradient_norm": 3.8160245418548584,
+          "loss": 2.3692266941070557,
+          "policy_loss": 1.6250278949737549,
+          "update": 225,
+          "value_loss": 0.7441987991333008
+        },
+        {
+          "finite": true,
+          "gradient_norm": 5.58888053894043,
+          "loss": 2.4082186222076416,
+          "policy_loss": 1.7077631950378418,
+          "update": 250,
+          "value_loss": 0.700455367565155
+        },
+        {
+          "finite": true,
+          "gradient_norm": 3.5197219848632812,
+          "loss": 2.022845983505249,
+          "policy_loss": 1.4263473749160767,
+          "update": 275,
+          "value_loss": 0.5964986085891724
+        },
+        {
+          "finite": true,
+          "gradient_norm": 3.561861276626587,
+          "loss": 2.3040530681610107,
+          "policy_loss": 1.6861109733581543,
+          "update": 300,
+          "value_loss": 0.6179420948028564
+        },
+        {
+          "finite": true,
+          "gradient_norm": 4.065641403198242,
+          "loss": 2.3013031482696533,
+          "policy_loss": 1.7773327827453613,
+          "update": 325,
+          "value_loss": 0.5239704251289368
+        },
+        {
+          "finite": true,
+          "gradient_norm": 4.3851847648620605,
+          "loss": 2.354235887527466,
+          "policy_loss": 1.857216715812683,
+          "update": 350,
+          "value_loss": 0.49701908230781555
+        },
+        {
+          "finite": true,
+          "gradient_norm": 3.3276045322418213,
+          "loss": 2.0392980575561523,
+          "policy_loss": 1.5757776498794556,
+          "update": 375,
+          "value_loss": 0.46352052688598633
+        },
+        {
+          "finite": true,
+          "gradient_norm": 3.836090326309204,
+          "loss": 1.8902051448822021,
+          "policy_loss": 1.4601513147354126,
+          "update": 400,
+          "value_loss": 0.43005383014678955
+        },
+        {
+          "finite": true,
+          "gradient_norm": 3.985814332962036,
+          "loss": 2.027998447418213,
+          "policy_loss": 1.5520364046096802,
+          "update": 425,
+          "value_loss": 0.47596195340156555
+        },
+        {
+          "finite": true,
+          "gradient_norm": 4.388023853302002,
+          "loss": 2.199448823928833,
+          "policy_loss": 1.8519011735916138,
+          "update": 450,
+          "value_loss": 0.347547709941864
+        },
+        {
+          "finite": true,
+          "gradient_norm": 4.643412113189697,
+          "loss": 1.8916287422180176,
+          "policy_loss": 1.491504430770874,
+          "update": 475,
+          "value_loss": 0.40012434124946594
+        },
+        {
+          "finite": true,
+          "gradient_norm": 4.083135604858398,
+          "loss": 1.9708212614059448,
+          "policy_loss": 1.6572372913360596,
+          "update": 500,
+          "value_loss": 0.31358397006988525
+        },
+        {
+          "finite": true,
+          "gradient_norm": 3.856657028198242,
+          "loss": 1.828524112701416,
+          "policy_loss": 1.5669400691986084,
+          "update": 525,
+          "value_loss": 0.2615840435028076
+        },
+        {
+          "finite": true,
+          "gradient_norm": 3.8069465160369873,
+          "loss": 2.12496280670166,
+          "policy_loss": 1.878685712814331,
+          "update": 550,
+          "value_loss": 0.2462770938873291
+        },
+        {
+          "finite": true,
+          "gradient_norm": 4.660020351409912,
+          "loss": 1.8097803592681885,
+          "policy_loss": 1.4976770877838135,
+          "update": 575,
+          "value_loss": 0.3121033310890198
+        },
+        {
+          "finite": true,
+          "gradient_norm": 3.4286179542541504,
+          "loss": 1.7338471412658691,
+          "policy_loss": 1.537424087524414,
+          "update": 600,
+          "value_loss": 0.1964229941368103
+        },
+        {
+          "finite": true,
+          "gradient_norm": 4.901541233062744,
+          "loss": 1.804633617401123,
+          "policy_loss": 1.4860625267028809,
+          "update": 625,
+          "value_loss": 0.3185710310935974
+        },
+        {
+          "finite": true,
+          "gradient_norm": 4.872223377227783,
+          "loss": 1.9174213409423828,
+          "policy_loss": 1.6744089126586914,
+          "update": 650,
+          "value_loss": 0.243012472987175
+        },
+        {
+          "finite": true,
+          "gradient_norm": 5.071005821228027,
+          "loss": 1.7549684047698975,
+          "policy_loss": 1.4340580701828003,
+          "update": 675,
+          "value_loss": 0.32091036438941956
+        },
+        {
+          "finite": true,
+          "gradient_norm": 3.824213981628418,
+          "loss": 1.9899566173553467,
+          "policy_loss": 1.8027654886245728,
+          "update": 700,
+          "value_loss": 0.18719112873077393
+        },
+        {
+          "finite": true,
+          "gradient_norm": 4.280375957489014,
+          "loss": 1.8104610443115234,
+          "policy_loss": 1.5520985126495361,
+          "update": 725,
+          "value_loss": 0.2583625614643097
+        },
+        {
+          "finite": true,
+          "gradient_norm": 3.7198166847229004,
+          "loss": 1.8510710000991821,
+          "policy_loss": 1.6578946113586426,
+          "update": 750,
+          "value_loss": 0.19317643344402313
+        },
+        {
+          "finite": true,
+          "gradient_norm": 5.026442527770996,
+          "loss": 1.7561490535736084,
+          "policy_loss": 1.545413851737976,
+          "update": 775,
+          "value_loss": 0.2107352614402771
+        },
+        {
+          "finite": true,
+          "gradient_norm": 3.5441081523895264,
+          "loss": 1.591532826423645,
+          "policy_loss": 1.4294066429138184,
+          "update": 800,
+          "value_loss": 0.16212613880634308
+        },
+        {
+          "finite": true,
+          "gradient_norm": 3.1334962844848633,
+          "loss": 1.7700042724609375,
+          "policy_loss": 1.653866171836853,
+          "update": 825,
+          "value_loss": 0.11613807082176208
+        },
+        {
+          "finite": true,
+          "gradient_norm": 4.7935357093811035,
+          "loss": 2.0044240951538086,
+          "policy_loss": 1.8381104469299316,
+          "update": 850,
+          "value_loss": 0.1663137674331665
+        },
+        {
+          "finite": true,
+          "gradient_norm": 3.069366455078125,
+          "loss": 1.493066668510437,
+          "policy_loss": 1.4054501056671143,
+          "update": 875,
+          "value_loss": 0.08761660009622574
+        },
+        {
+          "finite": true,
+          "gradient_norm": 4.211456775665283,
+          "loss": 1.7089133262634277,
+          "policy_loss": 1.595730185508728,
+          "update": 900,
+          "value_loss": 0.11318308115005493
+        },
+        {
+          "finite": true,
+          "gradient_norm": 2.284357786178589,
+          "loss": 1.3631923198699951,
+          "policy_loss": 1.322397232055664,
+          "update": 925,
+          "value_loss": 0.040795087814331055
+        },
+        {
+          "finite": true,
+          "gradient_norm": 3.4595701694488525,
+          "loss": 1.333672285079956,
+          "policy_loss": 1.2308417558670044,
+          "update": 950,
+          "value_loss": 0.10283047705888748
+        },
+        {
+          "finite": true,
+          "gradient_norm": 4.454990863800049,
+          "loss": 1.7444677352905273,
+          "policy_loss": 1.555077314376831,
+          "update": 975,
+          "value_loss": 0.1893903613090515
+        },
+        {
+          "finite": true,
+          "gradient_norm": 4.586960315704346,
+          "loss": 1.6481797695159912,
+          "policy_loss": 1.5405550003051758,
+          "update": 1000,
+          "value_loss": 0.10762478411197662
+        }
+      ],
+      "peak_rss_gib": 0.40663909912109375
+    }
+  ],
+  "status": "OK"
+}
+real 12.98
+user 0.02
+sys 0.00
