@@ -1,0 +1,37 @@
+{
+  "experiment_id": "007-ppo-1-game-compatibility-checkpoint",
+  "experiment_name": "Minimal 1-game PPO checkpoint for MonopolyZero format/architecture compatibility",
+  "experiment_type": "compatibility_check",
+  "date": "2026-08-11",
+  "code_commit_sha": "b785ff2f924f60dc7f5824e76d81cf91d93f3289",
+  "reference_submodule_sha": "afd9205761317e196d77f679921c35fb04c7ab96",
+  "exact_commands": [
+    "PYTHONHASHSEED=0 PYTHONIOENCODING=utf-8 python references/DeepRL_Monopoly/tools/train_and_save.py --algo ppo --games 1 --device cpu --seed 42 --checkpoint-every 1 --out references/DeepRL_Monopoly/artifacts/ppo_plus/ppo_hybrid_2000_v2.pt"
+  ],
+  "seeds": [42],
+  "algorithm_config": {
+    "algo": "ppo",
+    "hybrid": true,
+    "device": "cpu",
+    "goal": "checkpoint format/architecture compatibility only, not policy strength",
+    "asu_involved": false
+  },
+  "model_checkpoint": {
+    "sha256": "1c825dcdd2c8d83651bd21100024ab2d0b8ce2ba276d701dceb3599536f615cb",
+    "path": "references/DeepRL_Monopoly/artifacts/ppo_plus/ppo_hybrid_2000_v2.pt",
+    "format_version": 3
+  },
+  "counts": {"games_trained": 1, "step_count": 598, "checkpoint_size_bytes": 14204371},
+  "runtime": {"wall_time_s": 12.88, "peak_rss_gib": 0.26},
+  "metrics": {
+    "win_rate_percent": 0.0,
+    "hidden_dim": 256,
+    "hybrid": true,
+    "hidden_dim_matches_monopolyzeronet_default": true
+  },
+  "loss": null,
+  "integrity": {"illegal_actions": 0, "fallbacks": null, "crashes": 0},
+  "result": "Trained the smallest possible PPO checkpoint (1 game) purely to satisfy MonopolyZeroNet.load_ppo_actor's format/metadata requirements (format_version=3, ruleset, state_dim, action_dim, hidden_dim=256) - not a strength claim. Saved directly to the submodule's own gitignored artifacts/ directory at the exact path monopoly_bench.cli.smoke() hardcodes as DEFAULT_PPO; git -C references/DeepRL_Monopoly status --short stayed empty before and after, confirming the submodule stayed read-only.",
+  "raw_logs": ["logs/experiments/raw/007-ppo-1-game-compatibility-checkpoint_stdout.txt"],
+  "notes": "integrity.fallbacks is null: PPO training's fixed opponents are substituted inline in monopoly_game_engine/train.py without an exposed fallback counter, same schema gap as the DDQN training entries (002, 004)."
+}
