@@ -85,3 +85,58 @@ def test_no_trainer_or_population_jobs_used():
 def test_opponent_pool_is_limited_to_self_and_fixed_a_b_c():
     source = SCRIPT.read_text(encoding="utf-8")
     assert "FP_AGENT_CLASSES[:3]" in source
+
+
+# ── Clean-git-tree guard (mocked subprocess, no real git calls) ───────────
+
+
+class _FakeCompletedProcess:
+    def __init__(self, stdout: str):
+        self.stdout = stdout
+
+
+def test_clean_tree_guard_returns_head_sha_when_clean(monkeypatch):
+    calls = []
+
+    def fake_run(args, **kwargs):
+        calls.append(args)
+        if args[:2] == ["git", "status"]:
+            return _FakeCompletedProcess(stdout="")
+        if args[:2] == ["git", "rev-parse"]:
+            return _FakeCompletedProcess(stdout="deadbeef1234567890deadbeef1234567890dead\n")
+        raise AssertionError(f"unexpected git call: {args}")
+
+    monkeypatch.setattr(selfplay_train_smoke.subprocess, "run", fake_run)
+    sha = selfplay_train_smoke._require_clean_git_tree()
+    assert sha == "deadbeef1234567890deadbeef1234567890dead"
+    assert calls == [
+        ["git", "status", "--porcelain"],
+        ["git", "rev-parse", "HEAD"],
+    ]
+
+
+def test_clean_tree_guard_raises_when_dirty(monkeypatch):
+    def fake_run(args, **kwargs):
+        if args[:2] == ["git", "status"]:
+            return _FakeCompletedProcess(stdout=" M scripts/selfplay_train_smoke.py\n")
+        raise AssertionError(f"unexpected git call: {args}")
+
+    monkeypatch.setattr(selfplay_train_smoke.subprocess, "run", fake_run)
+    with pytest.raises(SystemExit) as excinfo:
+        selfplay_train_smoke._require_clean_git_tree()
+    assert "not clean" in str(excinfo.value)
+
+
+def test_global_seed_is_used_before_model_construction():
+    source = SCRIPT.read_text(encoding="utf-8")
+    seed_block = source.split("model = MonopolyZeroNet()")[0]
+    assert "random.seed(GLOBAL_SEED)" in seed_block
+    assert "np.random.seed(GLOBAL_SEED)" in seed_block
+    assert "torch.manual_seed(GLOBAL_SEED)" in seed_block
+
+
+def test_fixed_adapter_fallbacks_are_read_directly_not_assumed_zero():
+    source = SCRIPT.read_text(encoding="utf-8")
+    assert "fixed_a.compatibility_fallbacks" in source
+    assert "fixed_b.compatibility_fallbacks" in source
+    assert "fixed_c.compatibility_fallbacks" in source

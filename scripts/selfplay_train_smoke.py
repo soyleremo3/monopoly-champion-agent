@@ -17,13 +17,29 @@ No self-play scaling, no ASU collection, no large training, no Modal, no
 LLM — this is a single small smoke, per docs/DECISIONS.md.
 
 Refuses to run unless PYTHONHASHSEED=0 is set, same reproducibility reason
-as every other script in this directory.
+as every other script in this directory. Also refuses to run on a dirty git
+working tree, so its output's git_head_sha is an unambiguous, verifiable
+"clean HEAD at run time" — see CLAUDE.md's experiment-logging rule and
+logs/experiments/README.md.
+
+Reproducibility note: MonopolyZeroNet's value_head is never overwritten by
+load_ppo_actor (that only loads the PPO-compatible trunk/policy_head), so
+its random initialization — plus any other torch/numpy/python random draws
+made before or during self-play search (e.g. MaxNPUCT's Dirichlet
+exploration noise) — must be seeded explicitly for two independent runs to
+produce identical results. GLOBAL_SEED below seeds Python's random,
+NumPy's global RNG, and torch's RNG once, before the model is constructed.
+This is separate from, and does not change, the existing per-game/
+per-decision seeding already used for engine dice/setup (SEEDS below, and
+the decision_seed arena.play_game derives internally) — those already were
+deterministic per game.
 """
 
 from __future__ import annotations
 
 import json
 import os
+import subprocess
 import sys
 import threading
 import time
@@ -40,6 +56,7 @@ MAX_ROUNDS = 5
 SIMULATIONS = 4
 SEEDS = {"self_play_1": 501, "self_play_2": 502, "vs_fixed": 503}
 BATCH_SIZE = 8
+GLOBAL_SEED = 42
 
 
 def _require_pinned_hash_seed() -> None:
@@ -52,6 +69,26 @@ def _require_pinned_hash_seed() -> None:
         f"'{REQUIRED_HASH_SEED}', got {shown}. Re-run as:\n"
         f"  PYTHONHASHSEED={REQUIRED_HASH_SEED} python {Path(__file__).name}"
     )
+
+
+def _require_clean_git_tree() -> str:
+    """Refuses to run on a dirty tree; returns the clean HEAD SHA otherwise."""
+    status = subprocess.run(
+        ["git", "status", "--porcelain"],
+        cwd=REPO_ROOT, capture_output=True, text=True, check=True,
+    )
+    if status.stdout.strip():
+        raise SystemExit(
+            "selfplay_train_smoke.py refuses to run: working tree is not "
+            "clean (git status --porcelain reported changes below). "
+            "code_commit_sha must be an unambiguous clean HEAD — commit or "
+            "stash first, then re-run.\n" + status.stdout
+        )
+    head = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=REPO_ROOT, capture_output=True, text=True, check=True,
+    )
+    return head.stdout.strip()
 
 
 class _RssMonitor:
@@ -89,9 +126,12 @@ class _RssMonitor:
 
 def main(argv: list[str] | None = None) -> int:
     _require_pinned_hash_seed()
+    git_head_sha = _require_clean_git_tree()
 
     if str(REFERENCE_ROOT) not in sys.path:
         sys.path.insert(0, str(REFERENCE_ROOT))
+    import random
+
     import numpy as np
     import torch
 
@@ -106,6 +146,14 @@ def main(argv: list[str] | None = None) -> int:
 
     started = time.perf_counter()
     with _RssMonitor() as rss:
+        # Seed every global RNG stream before the model exists, so its
+        # value_head init (never overwritten by load_ppo_actor) and any
+        # search-time exploration noise are reproducible. Does not touch
+        # the per-game/per-decision seeding below (SEEDS, decision_seed).
+        random.seed(GLOBAL_SEED)
+        np.random.seed(GLOBAL_SEED)
+        torch.manual_seed(GLOBAL_SEED)
+
         model = MonopolyZeroNet()
         if DEFAULT_PPO.is_file():
             model.load_ppo_actor(DEFAULT_PPO)
@@ -151,6 +199,17 @@ def main(argv: list[str] | None = None) -> int:
             record_seats={0},
         )
         games.append(("vs_fixed", result))
+
+        # FixedAdapter tracks its own compatibility-fallback substitutions
+        # (illegal action -> END_TURN/first-legal) on the instance, not via
+        # arena.play_game's GameResult.fallbacks (which FixedAdapter never
+        # sets True on its ActionDecision) -- read it directly so this is a
+        # real measurement, not an assumed zero.
+        fixed_adapter_fallbacks = {
+            "fixed_a": fixed_a.compatibility_fallbacks,
+            "fixed_b": fixed_b.compatibility_fallbacks,
+            "fixed_c": fixed_c.compatibility_fallbacks,
+        }
 
         game_reports = []
         total_illegal = 0
@@ -215,6 +274,8 @@ def main(argv: list[str] | None = None) -> int:
     elapsed_s = time.perf_counter() - started
 
     payload = {
+        "git_head_sha": git_head_sha,
+        "global_seed": GLOBAL_SEED,
         "bootstrap": bootstrap,
         "games": game_reports,
         "positions_collected_total": len(all_positions),
@@ -227,6 +288,8 @@ def main(argv: list[str] | None = None) -> int:
         "parameters_total_count": len(before),
         "total_illegal_actions": total_illegal,
         "total_crashes": total_crashes,
+        "fixed_adapter_fallbacks": fixed_adapter_fallbacks,
+        "fixed_adapter_fallbacks_total": sum(fixed_adapter_fallbacks.values()),
         "elapsed_s": elapsed_s,
         "peak_rss_gib": rss.peak_gib,
     }
