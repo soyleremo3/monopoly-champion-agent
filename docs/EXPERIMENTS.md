@@ -1456,3 +1456,70 @@ its own proposed experiment and decision log.
   architecture/objective, or accepting that a cheap net-worth-based
   heuristic already captures most of the accessible signal in this
   checkpoint's self-play dynamics, is for a human to decide from here.
+
+## 2026-08-11 (later still x5) — Value decision audit: post-hoc segmentation of 021, and a final A/B call
+
+- Hypothesis: none pre-registered for the segments themselves (explicitly
+  diagnostic/exploratory) - but this entry, unlike `013`-`021`, DOES end
+  with a real decision, not a "human decides" deferral: is there ANY
+  segment of `021`'s TEST set where the learned `ValueProbe` meaningfully
+  beats the probabilistic net-worth-leader baseline, that would justify
+  proposing a new value hypothesis instead of dropping the learned-value
+  path?
+- Setup: `021` never persisted per-state records (only aggregates), so
+  this re-derived `021`'s exact deterministic pipeline once - same seeds,
+  same split, same quantile sampling, same `ValueProbe` training recipe,
+  imported directly from `021`'s and `020`'s own modules rather than
+  redefined - to recover per-state fields `021` never captured (legal-action
+  count, decision phase/`env.phase`) plus two new derived fields (the
+  probabilistic leader's own top1-vs-top2 margin, and the deciding
+  player's current net-worth rank). Zero new self-play randomness, no
+  new/different model, no PUCT, no new temperature/hyperparameter fit
+  against TEST. Before drawing ANY conclusion, the four TEST predictor
+  summaries were reconciled against `021`'s own logged values - refusing to
+  proceed if they didn't match exactly.
+- Result: **Reconciliation: exact.** All four predictors (uniform, hard
+  leader, probabilistic leader, learned `ValueProbe`) matched `021`'s
+  logged cross-entropy/Brier/accuracy with **zero delta** - this is
+  genuinely `021`'s data, not a new experiment wearing its numbers.
+
+  **Segment search: nothing rescues the `ValueProbe`.** Across every axis
+  (round bucket, leader-margin quartile, current-player rank, decision
+  type, legal-action count), `value_probe_advantage_segments_found` is
+  **empty** against the pre-stated bar (≥20 states, ≥5-point accuracy
+  margin, fixed in source before running):
+
+  | Axis | Leader accuracy range | ValueProbe accuracy range |
+  |---|---|---|
+  | Round bucket | 86.2% – 100.0% | 43.1% – 62.9% |
+  | Margin quartile | 86.3% – 100.0% | 43.2% – 77.4% |
+  | Current-player rank | 94.9% – 98.3% | 34.8% – 73.2% |
+  | Decision type | 88.0% – 98.8% | 51.6% – 62.0% |
+  | Legal-action count (condensed) | 87.9% – 99.3% | 48.9% – 66.7% |
+
+  The leader hits **exactly 100.0% accuracy** in every round bucket from
+  26 onward and in 3 of 4 margin quartiles; the `ValueProbe` never breaks
+  78% anywhere. **Where the leader is wrong** (26/759 TEST states, 3.4%):
+  100% of those states fall in round bucket 1-25 AND 100% fall in margin
+  quartile Q1(low margin) - the leader only ever misses in the earliest,
+  least net-worth-differentiated part of the game, and is still right
+  86.2% of the time even there. (Margin-quartile and current-player-rank
+  are flagged **outcome-adjacent** - both derive from the same net-worth
+  signal the leader is scored on, so their clean accuracy gradient is
+  partly definitional, not fresh evidence.)
+
+  Zero illegal actions, zero crashes, zero ASU. Wall time 456.7s, peak RSS
+  0.49 GiB.
+
+  Full structured record:
+  [logs/experiments/022-monopolyzero-value-decision-audit.json](../logs/experiments/022-monopolyzero-value-decision-audit.json).
+
+- **Final decision: A.** Drop the learned-value path for now; move to the
+  decision/policy win-rate phase. Per the rule fixed before this audit ran
+  (B only if a segment clears the pre-stated bar), no segment came close -
+  the largest `ValueProbe`-vs-leader gap in the learned probe's favor
+  across all five axes was still a deficit, not an advantage. Combined
+  with `021`'s game-block-bootstrap-confirmed result (learned strictly
+  worse on CE/Brier/accuracy, 95% CIs excluding zero), this closes
+  `021`'s question with a **KILL** on the current learned-value-probe
+  direction for this checkpoint/representation - see `docs/DECISIONS.md`.
