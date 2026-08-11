@@ -1523,3 +1523,88 @@ its own proposed experiment and decision log.
   worse on CE/Brier/accuracy, 95% CIs excluding zero), this closes
   `021`'s question with a **KILL** on the current learned-value-probe
   direction for this checkpoint/representation - see `docs/DECISIONS.md`.
+
+## 2026-08-11 (later still x6) — Hybrid-PPO bootstrap isolation audit: does the BUY_PROPERTY/ACCEPT_TRADE carve-out cost POLICY_ONLY strength
+
+- Hypothesis: `baseline_pretraining.pt`'s actor is bootstrapped
+  (`MonopolyZeroNet.load_ppo_actor`) from a **hybrid** PPO checkpoint whose
+  training loop hands `BUY_PROPERTY`/`ACCEPT_TRADE` to fixed rules and never
+  gradient-updates those two action-head rows
+  (`references/DeepRL_Monopoly/monopoly_game_engine/agent_ppo.py`'s
+  `fixed_action_mask`). `load_ppo_actor` copies the policy head in full,
+  with no gating carried over, and `build_local_policy_only`'s flat
+  legal-masked argmax has no BUY/TRADE special case either - so does
+  POLICY_ONLY inference silently let the neural head pick those two action
+  types off untrained logits, and does that cost real strength?
+- Bootstrap provenance (no games played for this part): the local
+  `ppo_hybrid_2000_v2.pt` checkpoint's SHA-256 does **not** match
+  `TRAINING_RESULTS.md`'s documented SHA for that filename - expected,
+  since experiment `007` generated its own minimal 1-game/598-step PPO
+  checkpoint at that exact path purely to satisfy
+  `load_ppo_actor`'s format/metadata check, never reproducing upstream's
+  full training run. It **does** match `007`'s own logged SHA (confirmed:
+  same artifact, not silently changed). The checkpoint's own payload,
+  read at runtime, confirms `hybrid: true`, `games_trained: 1`,
+  `step_count: 598` - the only numbers used to characterize "how trained"
+  it is; no broader "untrained weights" claim is made. Independently, the
+  `fixed_action_mask` lines were grepped verbatim from the pinned
+  reference source (not inferred from a docstring): `BUY_PROPERTY`'s and
+  `ACCEPT_TRADE`'s actor rows never receive a PPO gradient update in
+  hybrid mode, regardless of games trained - they sit at random
+  initialization in this checkpoint and after `load_ppo_actor`'s
+  ungated full copy into `baseline_pretraining.pt`.
+- Setup: a diagnostic-only `HYBRID_COMPAT` policy
+  (`monopolyzero_common.build_local_hybrid_compat_policy`) restores the
+  original hybrid-PPO carve-out on top of otherwise-plain POLICY_ONLY
+  inference, by runtime-importing `fixed_buy_decision`/
+  `fixed_accept_trade_decision` straight from the reference's
+  `agent_ppo.py` (never copied). Registered new DEV seeds `43000`-`43019`.
+  Clean paired screen: BASELINE (focus seat POLICY_ONLY) vs. CANDIDATE
+  (focus seat `HYBRID_COMPAT`), other 3 seats POLICY_ONLY in both arms, 20
+  seeds x 4 focus-seat rotation = 80 games/arm, `max_rounds=200`, zero
+  fixed opponents (zero fallback-contamination risk), zero ASU. An
+  integrity gate ran first: `play_local_game`'s `shadow_policy` hook
+  queried a fresh POLICY_ONLY instance on the literal same pre-step state
+  as every `HYBRID_COMPAT` focus-seat decision, and the script would have
+  stopped before reporting anything on any disagreement outside a flagged
+  BUY/TRADE opportunity.
+- Result: **Isolation integrity: PASS**, 0 violations across all 80
+  candidate games' 96,629 non-forced focus-seat decisions - BASELINE and
+  CANDIDATE are isolated to exactly the fixed-action carve-out.
+
+  **Intervention audit:** 8,173 of 96,629 decisions (8.5%) were BUY/TRADE
+  opportunities (2,616 `BUY_PROPERTY`-legal, 5,557 genuine incoming-trade
+  responses). At every single one, plain POLICY_ONLY's own argmax
+  **never once** chose `BUY_PROPERTY` or `ACCEPT_TRADE`
+  (0/2616, 0/5557 - 0.0% chosen-action frequency for both), despite
+  assigning them non-trivial mean probability (7.9% buy, 10.7% accept).
+  The untrained logits are competitive but never win the legal-set argmax
+  against this checkpoint's heavily-trained alternatives at these
+  decisions - so POLICY_ONLY's actual failure mode here is **"never buy
+  property, never accept a trade,"** not random erratic picks.
+
+  **Paired strength screen** (80 games/arm):
+
+  | | BASELINE (POLICY_ONLY) | CANDIDATE (HYBRID_COMPAT) |
+  |---|---|---|
+  | Win rate | 25.0% (Wilson [16.8%, 35.5%]) | 46.25% (Wilson [35.7%, 57.1%]) |
+  | Bankruptcy rate | 41.25% | 16.25% |
+  | Mean net worth | 6,386.6 | 8,479.7 |
+  | Round-cap rate | 75% | 85% |
+
+  Both PRIMARY seed-block statistics agree and exclude zero: the paired
+  randomization test's observed mean win-rate diff is **+0.2125**
+  (p=0.000122, exact enumeration over 2^20 sign patterns), and the
+  seed-block bootstrap's win-rate-diff 95% CI is **[0.1375, 0.2875]**
+  (net-worth diff +2,093.09, 95% CI [1,020.47, 3,272.17]). Secondary
+  seat-level McNemar (b=21, c=4, p=0.00091) is directionally consistent
+  but not relied on alone (clustered seats).
+
+  Zero illegal actions, zero crashes, zero fallbacks (no fixed agents),
+  zero ASU. Wall time 436.8s, peak RSS 0.28 GiB.
+
+  Full structured record:
+  [logs/experiments/023-hybrid-bootstrap-isolation-audit.json](../logs/experiments/023-hybrid-bootstrap-isolation-audit.json).
+
+- No promotion/GO-KILL verdict computed by the script itself, per this
+  task's own instructions - the numbers above are for a human to read.
