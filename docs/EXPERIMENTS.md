@@ -1284,3 +1284,75 @@ its own proposed experiment and decision log.
   approved for new strength training until a horizon/label audit passes"
   gate was waiting on — the gate itself stays in place until that call is
   made and logged separately.
+
+## 2026-08-11 (later still x3) — Full-horizon value-learnability probe: does the 300-dim state carry the real winner
+
+- Hypothesis: none pre-registered, purely descriptive. Before proposing any
+  new policy/strength training, does the existing 300-dim state
+  representation carry the TRUE `max_rounds=200` final winner in a
+  learnable way at all — measured with the real full-horizon label this
+  time, not `013`'s round-50-truncated proxy (`019` already showed that
+  proxy is weak, 59.4% overall agreement with the real winner).
+- Setup: 64 fresh, clean `POLICY_ONLY` self-play games (`baseline_pretraining.pt`,
+  all 4 seats the same checkpoint, zero fixed agents, zero PUCT, seeds
+  `42000-42063` newly registered as DEV). Game-level split: first 48 seeds
+  TRAIN, last 16 VALIDATION, no state crosses the split. Round-stratified
+  deterministic sampling (5 buckets × 4 seats × up to 3 states/game/cell =
+  2088 TRAIN / 569 VALIDATION states), each labeled with that game's REAL
+  eventual winner (actor-relative one-hot). A small, separate, own-written
+  `ValueProbe` MLP (300 → 256 → 4, CPU) was trained purely as a
+  supervised final-winner classifier, early-stopped on validation
+  cross-entropy — `MonopolyZeroNet`'s own weights were never touched.
+  Compared against a uniform baseline and a current-net-worth-leader
+  baseline (ε-smoothed for finite cross-entropy) on both splits, overall
+  and per round-bucket, plus a 25%/50%/100%-of-TRAIN-games learning curve.
+- Result:
+
+  | Validation (569 states) | Cross-entropy | Brier | Top-1 accuracy |
+  |---|---|---|---|
+  | Uniform | 1.386 | 0.750 | 32.2% |
+  | Net-worth leader | 1.238 | 0.179 | 91.0% |
+  | Learned ValueProbe | 0.716 | 0.427 | 69.2% |
+
+  The ValueProbe clearly beats uniform (real signal exists), but
+  overfits hard (train accuracy 96.8% / CE 0.142 vs. validation 69.2% /
+  CE 0.716) and loses to the trivial net-worth-leader baseline on **every**
+  validation round-bucket:
+
+  | Bucket | Leader accuracy | ValueProbe accuracy |
+  |---|---|---|
+  | 1-25 | 73.4% | 70.3% |
+  | 26-50 | **100.0%** | 64.8% |
+  | 51-100 | **100.0%** | 60.0% |
+  | 101-150 | **100.0%** | 71.6% |
+  | 151-terminal | **100.0%** | 82.1% |
+
+  The leader baseline hitting exactly 100.0% accuracy in 4 of 5 validation
+  buckets is a striking snowball/monotonicity signature: in this 64-game
+  `POLICY_ONLY` self-play sample, whoever leads on net worth by round ~26
+  essentially always goes on to win — not a degenerate dataset artifact
+  (all 4 relative winner classes occur on both splits; validation class
+  balance ranges 16.7%-32.2%). Learning curve (25%/50%/100% of the 48
+  TRAIN games): validation CE 1.090 → 0.925 → 0.716, accuracy 44.1% →
+  55.9% → 69.2% — still improving at 48 games with no visible plateau, so
+  whether the ValueProbe's gap behind the leader baseline reflects a small
+  training set or a real information ceiling in the state representation
+  is not resolved by this experiment. Leakage guards held (0 seed overlap,
+  0 state overlap); integrity clean (0 illegal, 0 crashes, 0 fallbacks — no
+  fixed agents were even seated — 0 ASU modules loaded). Wall time 683.0s,
+  peak RSS 0.35 GiB.
+
+  Full structured record:
+  [logs/experiments/020-monopolyzero-value-learnability-probe.json](../logs/experiments/020-monopolyzero-value-learnability-probe.json).
+
+- Conclusion / next step: **No GO/KILL verdict is being called here** —
+  per the task instructions this experiment measures only. The numbers are
+  handed off as read results: the state representation carries a real but
+  apparently hard-to-learn-from-2000-samples signal, while a one-line
+  net-worth-leader heuristic already gets it almost exactly right from
+  round 26 onward in this sample. Whether that means (a) more training
+  data would close the gap, (b) the ValueProbe architecture/training
+  procedure needs work, or (c) the current state encoding isn't the
+  bottleneck at all and the leader-heuristic result says something more
+  fundamental about this checkpoint's self-play dynamics, is for a human
+  to decide from here — not pre-judged by this entry.

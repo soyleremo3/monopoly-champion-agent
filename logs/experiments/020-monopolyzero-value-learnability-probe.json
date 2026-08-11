@@ -1,0 +1,74 @@
+{
+  "experiment_id": "020-monopolyzero-value-learnability-probe",
+  "experiment_name": "Full-horizon value-learnability probe: does the 300-dim state representation carry the true max_rounds=200 final winner",
+  "experiment_type": "training_run",
+  "date": "2026-08-11",
+  "code_commit_sha": "75bdaddc0860f72d9c21659eed28fc88c75002e2",
+  "reference_submodule_sha": "afd9205761317e196d77f679921c35fb04c7ab96",
+  "exact_commands": [
+    "PYTHONHASHSEED=0 PYTHONIOENCODING=utf-8 python scripts/monopolyzero_value_learnability_probe.py"
+  ],
+  "seeds": [42000, 42001, 42002, 42003, 42004, 42005, 42006, 42007, 42008, 42009, 42010, 42011, 42012, 42013, 42014, 42015, 42016, 42017, 42018, 42019, 42020, 42021, 42022, 42023, 42024, 42025, 42026, 42027, 42028, 42029, 42030, 42031, 42032, 42033, 42034, 42035, 42036, 42037, 42038, 42039, 42040, 42041, 42042, 42043, 42044, 42045, 42046, 42047, 42048, 42049, 42050, 42051, 42052, 42053, 42054, 42055, 42056, 42057, 42058, 42059, 42060, 42061, 42062, 42063],
+  "algorithm_config": {
+    "seed_pool": "DEV (evaluation_protocol.require_seed_scope, 42000-42063, registered before this run)",
+    "games_total": 64,
+    "policy": "POLICY_ONLY (legal-masked policy-head argmax, no MCTS/PUCT)",
+    "opponents": "none - all 4 seats are baseline_pretraining.pt, clean self-play, zero fixed agents, zero ASU",
+    "max_rounds": 200,
+    "game_level_split": "first 48 seeds TRAIN, last 16 seeds VALIDATION - no state from the same game crosses the split",
+    "round_buckets": ["1-25", "26-50", "51-100", "101-150", "151-terminal"],
+    "samples_per_cell": 3,
+    "sampling_method": "deterministic, first N non-forced decisions per (game, seat, round-bucket) cell",
+    "label": "actor-relative one-hot of the REAL final winner (env.winner() after the game actually finished), not a truncated proxy",
+    "value_probe_architecture": "own-written MLP: 300 -> Linear(256) -> ReLU -> Linear(4), CPU, not reused/imported from monopoly_bench.training",
+    "value_probe_training": {"max_epochs": 300, "early_stopping_patience": 15, "lr": 0.001, "batch_size": 64, "training_seed": 0, "early_stopping_metric": "validation cross-entropy"},
+    "baselines_compared": ["uniform (25% each class)", "current-net-worth-leader at that state (epsilon=1e-6 smoothed for finite cross-entropy)"],
+    "learning_curve_fractions": [0.25, 0.5, 1.0],
+    "normalization": "none applied - build_state_vector's own [0,1]-scaled encoding used directly, so there is nothing TRAIN-fit for VALIDATION to leak from",
+    "no_policy_training": true,
+    "no_puct": true,
+    "no_win_rate_evaluation": true,
+    "no_arbitrary_go_kill_threshold": true,
+    "asu_involved": false
+  },
+  "model_checkpoint": {
+    "sha256": "22ae2abea60478355f61ce0404a31de3b52fb97769d4f99f7e04f4c673629370",
+    "path": "artifacts/monopolyzero_strength_pilot/baseline_pretraining.pt",
+    "format_version": 1
+  },
+  "counts": {
+    "games_total": 64,
+    "train_games": 48,
+    "validation_games": 16,
+    "train_states": 2088,
+    "validation_states": 569,
+    "train_bucket_counts": {"1-25": 573, "26-50": 441, "51-100": 384, "101-150": 348, "151-terminal": 342},
+    "validation_bucket_counts": {"1-25": 192, "26-50": 128, "51-100": 90, "101-150": 81, "151-terminal": 78}
+  },
+  "runtime": {"wall_time_s": 683.0278043000144, "peak_rss_gib": 0.3488044738769531},
+  "metrics": {
+    "validation_overall": {
+      "uniform": {"cross_entropy": 1.3862943611198906, "brier_score": 0.75, "top1_accuracy": 0.3216168717047452, "ece": 0.07161687170474518},
+      "net_worth_leader": {"cross_entropy": 1.2382998109991372, "brier_score": 0.1792611458819473, "top1_accuracy": 0.9103690685413005, "ece": 0.08962793145869963},
+      "learned_value_probe": {"cross_entropy": 0.7162154894031774, "brier_score": 0.42715178145725735, "top1_accuracy": 0.6924428822495606, "ece": 0.12798413749528895}
+    },
+    "train_overall": {
+      "uniform": {"cross_entropy": 1.3862943611198904, "brier_score": 0.75, "top1_accuracy": 0.2959770114942529},
+      "net_worth_leader": {"cross_entropy": 1.065279205383582, "brier_score": 0.15421394254073567, "top1_accuracy": 0.9228927203065134},
+      "learned_value_probe": {"cross_entropy": 0.1417384024878878, "brier_score": 0.06520252794862719, "top1_accuracy": 0.967911877394636}
+    },
+    "validation_net_worth_leader_by_bucket_top1_accuracy": {"1-25": 0.734375, "26-50": 1.0, "51-100": 1.0, "101-150": 1.0, "151-terminal": 1.0},
+    "validation_learned_by_bucket_top1_accuracy": {"1-25": 0.703125, "26-50": 0.6484375, "51-100": 0.6, "101-150": 0.7160493827160493, "151-terminal": 0.8205128205128205},
+    "learning_curve": [
+      {"fraction": 0.25, "train_games": 12, "train_states": 579, "epochs_run": 24, "validation_cross_entropy": 1.089606092106575, "validation_brier_score": 0.6402595827196145, "validation_top1_accuracy": 0.44112478031634444},
+      {"fraction": 0.5, "train_games": 24, "train_states": 1032, "epochs_run": 35, "validation_cross_entropy": 0.9250913765330818, "validation_brier_score": 0.5579610512904305, "validation_top1_accuracy": 0.5588752196836555},
+      {"fraction": 1.0, "train_games": 48, "train_states": 2088, "epochs_run": 38, "validation_cross_entropy": 0.7162154894031774, "validation_brier_score": 0.42715178145725735, "validation_top1_accuracy": 0.6924428822495606}
+    ],
+    "value_probe_training": {"best_val_loss": 0.7162154912948608, "epochs_run": 38}
+  },
+  "loss": {"train_final_cross_entropy": 0.1417384024878878, "validation_final_cross_entropy": 0.7162154894031774, "note": "value_probe_training.best_val_loss is the early-stopping checkpoint's validation loss; matches validation_overall.learned_value_probe.cross_entropy"},
+  "integrity": {"illegal_actions": 0, "fallbacks": 0, "crashes": 0},
+  "result": "Purely descriptive measurement, no GO/KILL threshold applied (none was pre-registered for this diagnostic, per the task's own instruction). 64/64 games completed cleanly (0 illegal actions, 0 crashes, 0 fixed-agent fallbacks since no fixed agents were seated, 0 ASU modules loaded). Leakage guards held: 0 seed overlap and 0 state overlap between the 48-game TRAIN split and 16-game VALIDATION split. The learned ValueProbe clearly beats the uniform baseline on validation (cross-entropy 0.716 vs 1.386, top-1 accuracy 69.2% vs 32.2%) - the 300-dim state representation does carry SOME learnable full-horizon-winner signal. However, the ValueProbe overfits substantially (train accuracy 96.8% / CE 0.142 vs validation accuracy 69.2% / CE 0.716) and, more strikingly, the trivial current-net-worth-leader baseline outperforms the learned ValueProbe on every single validation round-bucket - most dramatically from round 26 onward, where the net-worth leader predicts the eventual winner with 100.0% accuracy in buckets 26-50, 51-100, 101-150, and 151-terminal on validation (vs the ValueProbe's 64.8%/60.0%/71.6%/82.1% in those same buckets), and even in the hardest early bucket (rounds 1-25) the leader baseline (73.4%) edges out the ValueProbe (70.3%). The net-worth-leader baseline's near-perfect mid-to-late-game accuracy indicates a strong snowball/monotonicity property in this checkpoint's POLICY_ONLY self-play dynamics: whoever is ahead on net worth by round ~26 essentially always goes on to win, in this 64-game sample. The learning curve (25%/50%/100% of TRAIN games) shows validation metrics still improving with more data at every step (CE 1.090 -> 0.925 -> 0.716; accuracy 44.1% -> 55.9% -> 69.2%) with no sign of plateauing at 48 games, suggesting the ValueProbe's current gap behind the leader baseline may partly reflect a small training set rather than an information ceiling in the state representation itself - this experiment does not resolve which. No claim is made about POLICY_ONLY/PUCT/MonopolyZeroNet strength, no win-rate evaluation was run, no PUCT was run, and the policy network's own weights were never touched (only the separate ValueProbe was trained).",
+  "raw_logs": ["docs/baseline_runs/monopolyzero_value_learnability_probe_stdout.txt"],
+  "notes": "Full per-bucket breakdown for both baselines and the learned probe, plus full calibration bins and confusion matrices for train and validation, are in the raw stdout log (33.3KB), not duplicated here. class_balance in the raw log shows a real (not artificially uniform) seat-win distribution in this self-play sample - validation skews toward seats 0 and 2 (32.2% each) vs seats 1 and 3 (16.7%/19.0%), worth keeping in mind when reading the leader-baseline's near-100% accuracy claim (it is not an artifact of a degenerate single-winner-always dataset - all 4 relative classes occur on both splits). No normalization was fit anywhere (state vector is already unit-scaled by construction), so the leakage-guard requirement about TRAIN-only normalization statistics is satisfied trivially, not by omission."
+}
