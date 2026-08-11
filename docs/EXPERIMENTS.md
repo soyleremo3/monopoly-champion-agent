@@ -1608,3 +1608,77 @@ its own proposed experiment and decision log.
 
 - No promotion/GO-KILL verdict computed by the script itself, per this
   task's own instructions - the numbers above are for a human to read.
+
+## 2026-08-11 (later still x7) — Hybrid decomposition audit: BUY vs. TRADE contribution, crippled vs. repaired peers
+
+- Hypothesis: `023`'s +21.25-point `HYBRID_COMPAT` win-rate improvement
+  bundles two independent fixes (`BUY_PROPERTY` and `ACCEPT_TRADE`). How
+  much of that improvement does each contribute alone, do they combine
+  additively or with synergy, and does the effect survive when the
+  opponents are not also crippled `POLICY_ONLY` peers?
+- Setup: `build_local_hybrid_compat_policy` was made configurable
+  (`enable_buy`/`enable_trade`, both default `True` - unchanged `023`
+  behavior) so BUY_ONLY/TRADE_ONLY/BOTH/NEITHER differ in nothing but
+  which fixed-rule branch may fire. Reused `023`'s exact seeds
+  (`43000`-`43019`, no new DEV registration), checkpoint, and module
+  (imported as `audit_v1`, not redefined). **Context 1** (crippled peers,
+  `023`'s exact setup): `023`'s `POLICY_ONLY`/`BOTH` arms were
+  deterministically regenerated and reconciled bit-for-bit against `023`'s
+  own logged values before anything else ran - `023`'s log only persisted
+  aggregates, not the per-game records this decomposition's paired stats
+  need; `BUY_ONLY`/`TRADE_ONLY` ran fresh. **Context 2** (repaired peers):
+  all 4 arms fresh against 3 `HYBRID_COMPAT(BOTH)` peers instead of
+  crippled `POLICY_ONLY` ones; the `BOTH` arm used one self-play game per
+  seed (20, not 80) since its focus seat's policy config is identical to
+  its peers'.
+- Result: **Reconciliation: exact.** Context 1's regenerated
+  `POLICY_ONLY`/`BOTH` arms matched `023`'s logged values with **zero
+  delta** on every deterministic field.
+
+  **Context 1 (crippled peers) - win rate:**
+
+  | Arm | Win rate | vs. baseline | Randomization p | Bootstrap 95% CI |
+  |---|---|---|---|---|
+  | POLICY_ONLY (baseline) | 25.0% | — | — | — |
+  | BUY_ONLY | 41.25% | +16.25pp | 0.00098 | [10.0, 22.5]pp |
+  | TRADE_ONLY | 31.25% | +6.25pp | 0.0625 | [1.25, 11.25]pp |
+  | BOTH | 46.25% | +21.25pp | 0.000122 | [13.75, 28.75]pp |
+
+  `BUY_ONLY` alone recovers **76.5%** of `BOTH`'s win-rate improvement
+  (92.8% of its net-worth improvement); `TRADE_ONLY` alone recovers
+  **29.4%**. The two PRIMARY stats disagree on `TRADE_ONLY`'s
+  significance: randomization p=0.0625 exceeds the conventional 0.05, the
+  bootstrap CI barely excludes zero - reported as-is, no cherry-pick.
+  `BUY_ONLY`'s +16.25pp plus `TRADE_ONLY`'s +6.25pp sum to +22.5pp, close
+  to `BOTH`'s actual +21.25pp (delta −1.25pp) - **approximately additive**.
+
+  **Context 2 (repaired peers) - win rate:**
+
+  | Arm | Win rate | vs. baseline | Randomization p | Bootstrap 95% CI |
+  |---|---|---|---|---|
+  | POLICY_ONLY (baseline) | 7.5% | — | — | — |
+  | BUY_ONLY | 11.25% | +3.75pp | 0.590 | [−5.0, 12.5]pp |
+  | TRADE_ONLY | 10.0% | +2.5pp | 0.625 | [−2.5, 7.5]pp |
+  | BOTH | 25.0% | +17.5pp | 0.00052 | [11.25, 22.5]pp |
+
+  Against tougher, non-crippled opponents, every arm's win rate drops
+  sharply. **Neither `BUY_ONLY` nor `TRADE_ONLY` alone clears statistical
+  significance at this sample size (n=20 seed blocks)** - both CIs cross
+  zero. Only `BOTH` does. `BOTH`'s +17.5pp substantially exceeds the sum
+  of the two individual effects (+6.25pp, delta +11.25pp) - **super-additive
+  / positive synergy**: against competent opponents, having both fixes
+  together appears to matter far more than either alone, though neither
+  alone is individually confirmed at this n.
+
+  Intervention rates (share of non-forced focus-seat decisions where the
+  carve-out fired) ranged 1.9%-10.3% across arms/contexts, highest for
+  `BOTH` in both contexts (the only arm where either carve-out can fire on
+  a given trajectory). Zero illegal actions, zero crashes, zero incomplete
+  games across all 580 physical games (320 context 1 + 260 context 2).
+  Wall time 7,379.5s (~2.05h), peak RSS 0.39 GiB.
+
+  Full structured record:
+  [logs/experiments/024-hybrid-decomposition-audit.json](../logs/experiments/024-hybrid-decomposition-audit.json).
+
+- No promotion/GO-KILL verdict computed by the script itself, per this
+  task's own instructions - the numbers above are for a human to read.
