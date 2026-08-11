@@ -87,6 +87,46 @@ def test_opponent_pool_is_limited_to_self_and_fixed_a_b_c():
     assert "FP_AGENT_CLASSES[:3]" in source
 
 
+def test_does_not_import_adapters_arena_or_training_modules():
+    """adapters.py and training.py import ASU_FROZEN_TEACHER at module level;
+    arena.py imports adapters.py. Importing any of the three loads ASU as a
+    side effect even if it's never called — see docs/REFERENCE_AUDIT.md and
+    docs/DECISIONS.md's 2026-08-11 ASU-import-free correction. Only real
+    import statement lines are checked, not prose."""
+    source = SCRIPT.read_text(encoding="utf-8")
+    import_lines = [
+        line for line in source.splitlines()
+        if line.strip().startswith(("import ", "from "))
+    ]
+    forbidden = ("monopoly_bench.adapters", "monopoly_bench.arena", "monopoly_bench.training")
+    hits = [line for line in import_lines if any(name in line for name in forbidden)]
+    assert hits == [], f"found forbidden ASU-coupled module import(s): {hits}"
+    # also catch relative-import forms used from inside the monopoly_bench package
+    assert not any(
+        line.strip() in ("from .adapters import", "from .arena import", "from .training import")
+        or line.strip().startswith(("from .adapters import", "from .arena import", "from .training import"))
+        for line in import_lines
+    )
+
+
+def test_asu_module_guard_detects_loaded_modules(monkeypatch):
+    sentinel_names = ["ASU_FROZEN_TEACHER", "ASU_FROZEN_TEACHER.core"]
+    for name in sentinel_names:
+        monkeypatch.setitem(sys.modules, name, object())
+    try:
+        loaded = selfplay_train_smoke._loaded_asu_modules()
+    finally:
+        for name in sentinel_names:
+            sys.modules.pop(name, None)
+    assert loaded == sentinel_names
+
+
+def test_asu_module_guard_clean_when_absent():
+    for name in list(sys.modules):
+        assert not (name == "ASU_FROZEN_TEACHER" or name.startswith("ASU_FROZEN_TEACHER."))
+    assert selfplay_train_smoke._loaded_asu_modules() == []
+
+
 # ── Clean-git-tree guard (mocked subprocess, no real git calls) ───────────
 
 
@@ -137,6 +177,6 @@ def test_global_seed_is_used_before_model_construction():
 
 def test_fixed_adapter_fallbacks_are_read_directly_not_assumed_zero():
     source = SCRIPT.read_text(encoding="utf-8")
-    assert "fixed_a.compatibility_fallbacks" in source
-    assert "fixed_b.compatibility_fallbacks" in source
-    assert "fixed_c.compatibility_fallbacks" in source
+    assert "fixed_a.fallback_count" in source
+    assert "fixed_b.fallback_count" in source
+    assert "fixed_c.fallback_count" in source
