@@ -10,6 +10,7 @@ These rules govern how work proceeds in this repo. They override default behavio
 - Do not advance to the next phase/task until current tests pass.
 - LLM components may only be adopted if an A/B test demonstrates measurable benefit over the baseline. No LLM-in-the-loop by default.
 - Review game replays before making large agent-behavior changes.
+- Primary objective is overall/generalizable win-rate, not performance against any single opponent. A hybrid approach is allowed: our trained model should make the large majority of ordinary decisions; explicit deterministic algorithms may only be used for rare, well-defined edge cases, not as the primary decision-maker. See `docs/DECISIONS.md` for the full competition-strategy record.
 
 ## Git Workflow
 
@@ -29,25 +30,37 @@ These rules govern how work proceeds in this repo. They override default behavio
 
 ## ASU Restrictions
 
-*Corrected 2026-08-11 — the original version of this section banned using ASU
-as a teacher/data source outright. That was wrong; corrected below.*
+*Re-locked 2026-08-11 (later same day) per official competition guidance —
+supersedes the "Corrected 2026-08-11" version of this section, which allowed
+ASU as a teacher/expert signal. That is revoked; ASU-as-teacher is banned
+again below, this time on the record as a competition-rules requirement, not
+a project preference.*
 
-- ASU (`ASU_FROZEN_TEACHER`) may be used as a teacher/expert signal for
-  training our own student model(s) — e.g. bootstrap supervision, policy/value
-  targets, imitation data. This is permitted.
-- ASU may never be, or become, this project's final/core competition agent.
-  The competition entry must be our own trained model — not ASU itself
-  (frozen or otherwise), and not a thin wrapper that just calls ASU at
-  inference time.
+- ASU (`ASU_FROZEN_TEACHER`) may **only** be used as an evaluation opponent —
+  a fixed benchmark to play against for measuring our own model.
+- ASU output/action/value/rollout data may **never** be a training label for
+  any model we train. This includes value targets, policy targets, and
+  reward shaping derived from ASU.
+- ASU imitation, distillation, teacher-bootstrap, and output-cloning are
+  **banned outright** — no exceptions, regardless of fraction, decay
+  schedule, or "just for bootstrap" framing.
+- Do not use `monopoly_bench collect-asu`, or any ASU-guided training path
+  (`monopoly_bench train`'s default bootstrap, `bootstrap_asu_expert`,
+  `expert_train_step` — see `docs/REFERENCE_AUDIT.md`'s MonopolyZero section
+  for exactly which code paths these are). Self-play population generation
+  that structurally seats ASU as an opponent (`monopoly_bench`'s
+  `population_jobs`, which hardcodes ASU into part of every generation with
+  no disable flag) also counts as an ASU-guided path and must not be used
+  as-is; an ASU-independent self-play setup must exclude ASU from the
+  opponent pool entirely, built from the reference's lower-level
+  ASU-independent primitives instead (see `docs/REFERENCE_AUDIT.md`).
+- ASU may never be used as a runtime fallback or as the core/final
+  competition agent, under any circumstance.
 - ASU may never be used as our Modal training/deployment model. Modal-hosted
-  training and deployment run our own architecture; ASU stays a local,
-  reference-only component, never the thing we train or deploy on Modal.
-- ASU may always be used as a fixed evaluation opponent, independent of the
-  above.
+  training and deployment run our own architecture only.
 - `references/DeepRL_Monopoly` (the submodule) stays read-only research
-  reference material at all times, regardless of how ASU is used — consume it
-  via import/CLI at its pinned SHA, never edit it in place.
-- Running `monopoly_bench train`, `collect-asu`, or `export-teacher` (or
-  starting any MonopolyZero/teacher-bootstrap training) requires its own
-  explicit decision logged in `docs/DECISIONS.md` first — permitted in
-  principle now, but not assumed just because ASU-as-teacher is allowed.
+  reference material at all times — consume it via import/CLI at its pinned
+  SHA, never edit it in place.
+- ASU is, and remains, an important **evaluation opponent and anti-ASU
+  robustness benchmark** — see the competition-strategy decision in
+  `docs/DECISIONS.md` for how this fits the overall win-rate goal.
