@@ -145,15 +145,18 @@ as they are defined.
   GO; it is methodology, not an experiment result, so it has no
   `logs/experiments/` entry of its own. Any new paired evaluation should
   use that protocol rather than a from-scratch Wilson-non-overlap check.
-- **Current next milestone: a full-horizon value-learnability probe
-  (`020`).** Before any new strength/policy training, measure whether the
-  existing 300-dim state representation carries the true full-horizon
-  (`max_rounds=200`) final winner in a learnable way at all — a small,
-  separate, own-written `ValueProbe` supervised on real-final-winner labels
-  from 64 clean `POLICY_ONLY` self-play games, compared against uniform and
-  current-net-worth-leader baselines. Does not touch the policy network,
-  run PUCT, or make any win-rate/strength claim — see
-  `docs/EXPERIMENTS.md`/`logs/experiments/020-*.json` once run.
+- **The learned-value-probe direction is KILLed (`020`→`021`→`022`).**
+  `020` found some learnable full-horizon signal over uniform; `021` gave
+  an unbiased TEST read showing the learned `ValueProbe` losing to a
+  probabilistic net-worth-leader baseline on every metric
+  (game-block-bootstrap-confirmed); `022`'s post-hoc audit searched every
+  segment (round bucket, leader margin, current-player rank, decision
+  type, legal-action count) for any pocket where the probe won and found
+  none. See `docs/DECISIONS.md`'s "Close 021" entry. **Current next
+  milestone: the decision/policy win-rate phase** — this project's actual
+  competition objective (see the Competition strategy section above);
+  learned-value work is not resumed without a new proposed experiment and
+  decision log giving a reason to expect it'll help this time.
 - **Not yet approved: a factorized action head, or training any new actor
   network.** Both are plausible next steps if `020` shows the state
   representation *does* carry a learnable full-horizon signal, but neither
@@ -227,10 +230,18 @@ Investigated 2026-08-11, then corrected the same day — see
    Wilson-interval comparisons as the promotion test. See
    `docs/EVALUATION_PROTOCOL.md` and `scripts/evaluation_protocol.py`.
    **GO.**
-10. Current: full-horizon value-learnability probe (`020`) — does the
-    existing 300-dim state representation carry the true `max_rounds=200`
-    final winner in a learnable way, before any new policy/strength
-    training is proposed. No policy change, no PUCT, no win-rate claim.
+10. ✅ Full-horizon value-learnability probe (`020`) — some learnable
+    signal over uniform found, but `020`'s validation split doubled as its
+    early-stopping monitor (not an unbiased read).
+11. ✅ Value-generalization probe (`021`) — proper train/selection/test
+    split, TEST touched once: learned `ValueProbe` loses to a
+    probabilistic net-worth-leader baseline on every metric,
+    game-block-bootstrap-confirmed.
+12. ✅ Value decision audit (`022`) — post-hoc segment search across round
+    bucket/margin/rank/decision-type/legal-action-count found no pocket
+    where the learned probe beats the leader. **KILL** the learned-value
+    path (see `docs/DECISIONS.md`); current milestone moves to the
+    decision/policy win-rate phase.
 
 ## Future Phases (TBD)
 
