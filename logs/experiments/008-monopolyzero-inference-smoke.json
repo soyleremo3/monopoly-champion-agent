@@ -3,12 +3,15 @@
   "experiment_name": "ASU-independent MonopolyZero inference smoke (python -m monopoly_bench smoke)",
   "experiment_type": "inference_smoke",
   "date": "2026-08-11",
-  "code_commit_sha": "b785ff2f924f60dc7f5824e76d81cf91d93f3289",
+  "code_commit_sha": null,
   "reference_submodule_sha": "afd9205761317e196d77f679921c35fb04c7ab96",
   "exact_commands": [
     "cd references/DeepRL_Monopoly && PYTHONHASHSEED=0 PYTHONIOENCODING=utf-8 python -m monopoly_bench smoke"
   ],
-  "seeds": [23, 101],
+  "seeds": [
+    23,
+    101
+  ],
   "algorithm_config": {
     "component": "MonopolyZeroNet + MaxNPUCT (monopoly_bench.cli.smoke, no Trainer, no ASU import anywhere in the call graph)",
     "simulations": 4,
@@ -21,8 +24,15 @@
     "path": "references/DeepRL_Monopoly/artifacts/ppo_plus/ppo_hybrid_2000_v2.pt",
     "format_version": 3
   },
-  "counts": {"simulations": 4, "dice_outcomes_checked": 36, "search_calls": 1},
-  "runtime": {"wall_time_s": 5.43, "peak_rss_gib": 0.2206},
+  "counts": {
+    "simulations": 4,
+    "dice_outcomes_checked": 36,
+    "search_calls": 1
+  },
+  "runtime": {
+    "wall_time_s": 5.43,
+    "peak_rss_gib": 0.2206
+  },
   "metrics": {
     "status": "ok",
     "chosen_action": 1,
@@ -32,8 +42,12 @@
     "legal_action_masking_verified": true
   },
   "loss": null,
-  "integrity": {"illegal_actions": 0, "fallbacks": null, "crashes": 0},
+  "integrity": {
+    "illegal_actions": 0,
+    "fallbacks": null,
+    "crashes": 0
+  },
   "result": "Full ASU-independent MonopolyZero inference path verified end to end: MonopolyZeroNet.load_ppo_actor loaded and validated checkpoint metadata (did not raise), policy/value forward ran (search completed), legal-action masking held (smoke()'s own internal assertion did not raise), Max-N PUCT with 4 simulations returned a legal action. Exit code 0, status ok. Zero ASU coupling anywhere in the call graph (search.py and model.py both grep-clean of \"asu\").",
   "raw_logs": null,
-  "notes": "integrity.fallbacks is null (not applicable): MaxNPUCT/SearchAdapter select only from a legal-action-masked policy output by construction, so there is no fallback mechanism to trigger or count here, unlike the scripted-agent adapter. seeds records both the game-construction seed (23, via SharedGame.new) and the search decision seed (101) used by smoke()'s own hardcoded state setup. No separate raw output file was saved for this specific step (output is reproduced verbatim in docs/EXPERIMENTS.md); see 009 for the file-backed follow-up measurement on the same state."
+  "notes": "integrity.fallbacks is null (not applicable): MaxNPUCT/SearchAdapter select only from a legal-action-masked policy output by construction, so there is no fallback mechanism to trigger or count here, unlike the scripted-agent adapter. seeds records both the game-construction seed (23, via SharedGame.new) and the search decision seed (101) used by smoke()'s own hardcoded state setup. No separate raw output file was saved for this specific step (output is reproduced verbatim in docs/EXPERIMENTS.md); see 009 for the file-backed follow-up measurement on the same state. [2026-08-12 correction: code_commit_sha corrected to null — the clean-tree-before-run discipline did not exist when this ran, so there is no verified clean HEAD SHA at run time. For historical reference, this experiment was recorded in commit b785ff2f924f60dc7f5824e76d81cf91d93f3289.]"
 }

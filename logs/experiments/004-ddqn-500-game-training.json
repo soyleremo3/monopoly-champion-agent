@@ -3,12 +3,14 @@
   "experiment_name": "DDQN resume from 20-game milestone to 500 total games (CPU, seed 42)",
   "experiment_type": "training_run",
   "date": "2026-08-11",
-  "code_commit_sha": "6af746e33af9e921263699edaa7f761545852cdb",
+  "code_commit_sha": null,
   "reference_submodule_sha": "afd9205761317e196d77f679921c35fb04c7ab96",
   "exact_commands": [
     "PYTHONHASHSEED=0 PYTHONIOENCODING=utf-8 python references/DeepRL_Monopoly/tools/train_and_save.py --algo ddqn --games 500 --device cpu --seed 42 --checkpoint-every 100 --resume --out artifacts/training_smoke/ddqn_hybrid_20_v2.pt"
   ],
-  "seeds": [42],
+  "seeds": [
+    42
+  ],
   "algorithm_config": {
     "algo": "ddqn",
     "hybrid": true,
@@ -28,15 +30,24 @@
     "resumed_from_games": 20,
     "step_count": 211097
   },
-  "runtime": {"wall_time_s": 6681.37, "peak_rss_gib": 0.36},
+  "runtime": {
+    "wall_time_s": 6681.37,
+    "peak_rss_gib": 0.36
+  },
   "metrics": {
     "win_rate_percent": 0.0,
     "epsilon_start_this_run": 0.99,
     "epsilon_end": 0.7787520933134615
   },
   "loss": null,
-  "integrity": {"illegal_actions": 0, "fallbacks": null, "crashes": 0},
+  "integrity": {
+    "illegal_actions": 0,
+    "fallbacks": null,
+    "crashes": 0
+  },
   "result": "500/500 games completed (480 this run + 20 resumed), no crash, no interruption, no illegal action. Win rate stayed 0.0% in every logged window; epsilon only decayed to ~0.78, still early relative to the trainer's 0.9995/game decay toward a 0.05 floor (the paper's own reference run used 10,000 games). This checkpoint's actual strength vs. the 20-game one is measured separately in 005 - do not infer strength from this entry alone.",
-  "raw_logs": ["logs/experiments/raw/004-ddqn-500-game-training_stdout.txt"],
-  "notes": "integrity.fallbacks is null because the DDQN training loop's history schema does not expose a fallback counter for the fixed opponents it trains against (same gap as 002). RAM was rechecked before launch (3.49 GiB available, above the 2 GiB default floor) and this run completed with the default memory-watchdog thresholds, unlike the reproducibility-check attempts in 003."
+  "raw_logs": [
+    "logs/experiments/raw/004-ddqn-500-game-training_stdout.txt"
+  ],
+  "notes": "integrity.fallbacks is null because the DDQN training loop's history schema does not expose a fallback counter for the fixed opponents it trains against (same gap as 002). RAM was rechecked before launch (3.49 GiB available, above the 2 GiB default floor) and this run completed with the default memory-watchdog thresholds, unlike the reproducibility-check attempts in 003. [2026-08-12 correction: code_commit_sha corrected to null — the clean-tree-before-run discipline did not exist when this ran, so there is no verified clean HEAD SHA at run time. For historical reference, this experiment was recorded in commit 6af746e33af9e921263699edaa7f761545852cdb.]"
 }

@@ -3,57 +3,99 @@
   "experiment_name": "Greedy paired evaluation: 20-game vs 500-game DDQN checkpoints on held-out seeds 10000-10009",
   "experiment_type": "paired_evaluation",
   "date": "2026-08-11",
-  "code_commit_sha": "6af746e33af9e921263699edaa7f761545852cdb",
+  "code_commit_sha": null,
   "reference_submodule_sha": "afd9205761317e196d77f679921c35fb04c7ab96",
   "exact_commands": [
     "PYTHONHASHSEED=0 python scripts/run_baseline_match.py --focus \"ddqn:<path>/milestones/ddqn_hybrid_20_v2_milestone.pt\" --opponents fixed-a fixed-b fixed-c --seed 10000-10009 --output docs/baseline_runs/eval_20game_seeds10000-10009.json",
     "PYTHONHASHSEED=0 python scripts/run_baseline_match.py --focus \"ddqn:<path>/ddqn_hybrid_20_v2.pt\" --opponents fixed-a fixed-b fixed-c --seed 10000-10009 --output docs/baseline_runs/eval_500game_seeds10000-10009.json"
   ],
-  "seeds": [10000, 10001, 10002, 10003, 10004, 10005, 10006, 10007, 10008, 10009],
+  "seeds": [
+    10000,
+    10001,
+    10002,
+    10003,
+    10004,
+    10005,
+    10006,
+    10007,
+    10008,
+    10009
+  ],
   "algorithm_config": {
-    "opponents": ["fixed-a", "fixed-b", "fixed-c"],
+    "opponents": [
+      "fixed-a",
+      "fixed-b",
+      "fixed-c"
+    ],
     "seat_rotation": true,
     "action_selection": "greedy (masked argmax over Q-values, no epsilon sampling)",
     "held_out": "seeds never used during training (training used seed=42-derived per-game seeds only)"
   },
-  "model_checkpoint": {"sha256": null, "path": null, "format_version": null},
+  "model_checkpoint": {
+    "sha256": null,
+    "path": null,
+    "format_version": null
+  },
   "counts": {
     "seeds": 10,
     "seat_rotations_per_seed": 4,
     "games_per_checkpoint": 40,
     "checkpoints_compared": 2
   },
-  "runtime": {"wall_time_s": 105.44, "peak_rss_gib": null},
+  "runtime": {
+    "wall_time_s": 105.44,
+    "peak_rss_gib": null
+  },
   "metrics": {
     "checkpoint_20game": {
       "sha256": "47f3c177c1ae42449b8b3d1a34c253204329e15240a6345d78412f4f900716f4",
       "wall_time_s": 48.31,
       "ddqn_win_rate": "0/40 = 0.0%",
-      "ddqn_wilson_95": [0.0, 0.0876],
+      "ddqn_wilson_95": [
+        0.0,
+        0.0876
+      ],
       "ddqn_mean_net_worth": 363.9,
       "fixed_b_win_rate": "25/40 = 62.5%",
       "fixed_c_win_rate": "15/40 = 37.5%",
       "round_cap_rate": "13/40",
-      "fallbacks_by_policy": {"ddqn": 0, "fixed_a": 32, "fixed_b": 114, "fixed_c": 68}
+      "fallbacks_by_policy": {
+        "ddqn": 0,
+        "fixed_a": 32,
+        "fixed_b": 114,
+        "fixed_c": 68
+      }
     },
     "checkpoint_500game": {
       "sha256": "fee4f2952461364bf9fab6f1d545ea223f3634f131f25e55d5fc811e6c953a72",
       "wall_time_s": 57.13,
       "ddqn_win_rate": "1/40 = 2.5%",
-      "ddqn_wilson_95": [0.0044, 0.1288],
+      "ddqn_wilson_95": [
+        0.0044,
+        0.1288
+      ],
       "ddqn_mean_net_worth": 608.1,
       "fixed_b_win_rate": "25/40 = 62.5%",
       "fixed_c_win_rate": "13/40 = 32.5%",
       "round_cap_rate": "13/40",
-      "fallbacks_by_policy": {"ddqn": 0, "fixed_a": 28, "fixed_b": 142, "fixed_c": 97}
+      "fallbacks_by_policy": {
+        "ddqn": 0,
+        "fixed_a": 28,
+        "fixed_b": 142,
+        "fixed_c": 97
+      }
     }
   },
   "loss": null,
-  "integrity": {"illegal_actions": 0, "fallbacks": 481, "crashes": 0},
+  "integrity": {
+    "illegal_actions": 0,
+    "fallbacks": 481,
+    "crashes": 0
+  },
   "result": "NO IMPROVEMENT CLAIM: the 500-game checkpoint won 1/40 vs. the 20-game checkpoint's 0/40. The two Wilson 95% intervals ([0%, 8.76%] and [0.44%, 12.88%]) overlap almost completely - one additional win out of 40 paired games is statistically indistinguishable from noise at this sample size. Both checkpoints remain far below fixed-b/fixed-c. DDQN fallbacks were 0 for both checkpoints in every game, by construction (the neural adapter masks illegal actions before argmax, so it never needs the scripted-agent compatibility fallback).",
   "raw_logs": [
     "docs/baseline_runs/eval_20game_seeds10000-10009.json",
     "docs/baseline_runs/eval_500game_seeds10000-10009.json"
   ],
-  "notes": "integrity.fallbacks (481) is the sum of both checkpoints' fixed-opponent fallback totals (214 + 267); DDQN itself contributed 0 fallbacks in both evaluations, per fallbacks_by_policy above. peak_rss_gib is null (not separately measured for these evaluation runs). This evaluation is what grounded the 2026-08-11 DECISIONS.md entry to pause further DDQN training past 500 games."
+  "notes": "integrity.fallbacks (481) is the sum of both checkpoints' fixed-opponent fallback totals (214 + 267); DDQN itself contributed 0 fallbacks in both evaluations, per fallbacks_by_policy above. peak_rss_gib is null (not separately measured for these evaluation runs). This evaluation is what grounded the 2026-08-11 DECISIONS.md entry to pause further DDQN training past 500 games. [2026-08-12 correction: code_commit_sha corrected to null — the clean-tree-before-run discipline did not exist when this ran, so there is no verified clean HEAD SHA at run time. For historical reference, this experiment was recorded in commit 6af746e33af9e921263699edaa7f761545852cdb.]"
 }

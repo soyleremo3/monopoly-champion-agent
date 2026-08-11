@@ -3,24 +3,45 @@
   "experiment_name": "ASU-value-v1 as evaluation opponent only (short single-seed benchmark)",
   "experiment_type": "benchmark",
   "date": "2026-08-11",
-  "code_commit_sha": "58c5b4aa5e18d4725850bf510bd14b8adf76f1b4",
+  "code_commit_sha": null,
   "reference_submodule_sha": "afd9205761317e196d77f679921c35fb04c7ab96",
   "exact_commands": [
     "PYTHONHASHSEED=0 python scripts/run_baseline_match.py --focus asu-value-v1 --opponents fixed-a fixed-b fixed-c --seed 20000 --output docs/baseline_runs/asu_eval_probe_seed20000.json"
   ],
-  "seeds": [20000],
+  "seeds": [
+    20000
+  ],
   "algorithm_config": {
     "focus": "asu-value-v1",
-    "opponents": ["fixed-a", "fixed-b", "fixed-c"],
+    "opponents": [
+      "fixed-a",
+      "fixed-b",
+      "fixed-c"
+    ],
     "asu_role": "evaluation opponent only - no ASU output, action, value, or rollout data was collected, imitated, distilled, or used as a training label",
     "asu_frozen_spec_hash": "9ab1907e0de1af4b253ce36ffa107c4fdb5e2b913858ef87c362423e61a6fd74"
   },
-  "model_checkpoint": {"sha256": null, "path": null, "format_version": null},
-  "counts": {"seeds": 1, "seat_rotations": 4, "games": 4, "decisions_total": 8190},
-  "runtime": {"wall_time_s": 2126.6, "peak_rss_gib": null},
+  "model_checkpoint": {
+    "sha256": null,
+    "path": null,
+    "format_version": null
+  },
+  "counts": {
+    "seeds": 1,
+    "seat_rotations": 4,
+    "games": 4,
+    "decisions_total": 8190
+  },
+  "runtime": {
+    "wall_time_s": 2126.6,
+    "peak_rss_gib": null
+  },
   "metrics": {
     "asu_win_rate": "3/4 = 75.0%",
-    "asu_wilson_95": [0.3006, 0.9544],
+    "asu_wilson_95": [
+      0.3006,
+      0.9544
+    ],
     "asu_mean_net_worth": 31711.25,
     "fixed_a_mean_net_worth": 0.0,
     "fixed_b_mean_net_worth": 6072.5,
@@ -29,8 +50,14 @@
     "not_a_strength_claim": "single seed, n=4, extremely wide Wilson interval"
   },
   "loss": null,
-  "integrity": {"illegal_actions": 0, "fallbacks": 36, "crashes": 0},
+  "integrity": {
+    "illegal_actions": 0,
+    "fallbacks": 36,
+    "crashes": 0
+  },
   "result": "ASU-value-v1 runs cleanly as a fixed evaluation opponent: 0 illegal actions, 0 crashes, 0 fallbacks from ASU itself (all 36 fallbacks in the block came from fixed-a/b/c). Its cost (~531.7s/game blended average) is roughly 1,000x slower per decision than fixed/DDQN agents, due to its 5-turn dice-enumeration + 5-lap landing-distribution heuristic evaluated per legal action per decision. This cost is the real constraint on ever using it as a monopoly_bench collect-asu teacher signal at scale - not investigated as training, since ASU may only be an evaluation opponent per CLAUDE.md.",
-  "raw_logs": ["docs/baseline_runs/asu_eval_probe_seed20000.json"],
-  "notes": "Only one seed was run given the measured cost; the same 10000-10009 range used for the DDQN evaluations would extrapolate to roughly 15-20 CPU-hours at this rate. peak_rss_gib is null (not separately measured for this run)."
+  "raw_logs": [
+    "docs/baseline_runs/asu_eval_probe_seed20000.json"
+  ],
+  "notes": "Only one seed was run given the measured cost; the same 10000-10009 range used for the DDQN evaluations would extrapolate to roughly 15-20 CPU-hours at this rate. peak_rss_gib is null (not separately measured for this run). [2026-08-12 correction: code_commit_sha corrected to null — the clean-tree-before-run discipline did not exist when this ran, so there is no verified clean HEAD SHA at run time. For historical reference, this experiment was recorded in commit 58c5b4aa5e18d4725850bf510bd14b8adf76f1b4.]"
 }
