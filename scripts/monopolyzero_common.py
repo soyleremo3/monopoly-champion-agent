@@ -202,6 +202,9 @@ class LocalGameOutcome:
     illegal_actions: int = 0
     crashed: bool = False
     error: str | None = None
+    final_round: int = 0
+    final_net_worth: tuple = ()
+    search_latencies_s: list = field(default_factory=list)
 
 
 def play_local_game(*, game_id: int, seed: int, policies: dict, max_rounds: int, record_seats: set[int]) -> LocalGameOutcome:
@@ -218,6 +221,7 @@ def play_local_game(*, game_id: int, seed: int, policies: dict, max_rounds: int,
 
     game = SharedGame.new(seed, max_rounds)
     positions: list[ReplayPosition] = []
+    search_latencies_s: list[float] = []
     decision_budget = max_rounds * NUM_PLAYERS * MAX_DECISIONS_PER_TURN
 
     def resolve_one_turn(turn_index: int) -> int:
@@ -231,6 +235,7 @@ def play_local_game(*, game_id: int, seed: int, policies: dict, max_rounds: int,
         if getattr(policy, "kind", None) == "search":
             outcome = policy.choose(game, seat, decision_seed)
             chosen_action = outcome.chosen_action
+            search_latencies_s.append(outcome.latency_s)
             if seat in record_seats:
                 positions.append(
                     ReplayPosition(
@@ -261,12 +266,14 @@ def play_local_game(*, game_id: int, seed: int, policies: dict, max_rounds: int,
         return LocalGameOutcome(
             completed=False, winner=None, decisions=turn_index,
             positions=positions, illegal_actions=1, crashed=False, error=str(exc),
+            final_round=game.env.round, search_latencies_s=search_latencies_s,
         )
     except Exception as exc:  # noqa: BLE001 - intentional fail-closed boundary
         return LocalGameOutcome(
             completed=False, winner=None, decisions=turn_index,
             positions=positions, illegal_actions=0, crashed=True,
             error=f"{type(exc).__name__}: {exc}",
+            final_round=game.env.round, search_latencies_s=search_latencies_s,
         )
 
     finished = game.env.done
@@ -278,8 +285,12 @@ def play_local_game(*, game_id: int, seed: int, policies: dict, max_rounds: int,
         for position in positions:
             position.outcome = one_hot
 
+    net_worth = tuple(float(player.net_worth()) for player in game.env.players)
+
     return LocalGameOutcome(
         completed=finished, winner=winner, decisions=turn_index, positions=positions,
+        final_round=game.env.round, final_net_worth=net_worth,
+        search_latencies_s=search_latencies_s,
     )
 
 
