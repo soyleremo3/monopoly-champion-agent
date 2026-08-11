@@ -255,6 +255,22 @@ def test_arg_parser_accepts_benchmark_without_output_dir():
     assert args.benchmark_games == 20
 
 
+def test_arg_parser_seed_count_optional_at_parse_time():
+    """--seed-count is only required in shard mode - main() enforces that,
+    not argparse - so benchmark-only invocations don't need it."""
+    parser = runner_module.build_arg_parser()
+    args = parser.parse_args(
+        ["--seed-start", "44000", "--arm", "both", "--context", "crippled", "--benchmark-games", "20"]
+    )
+    assert args.seed_count is None
+
+
+def test_main_requires_seed_count_outside_benchmark_mode(monkeypatch):
+    monkeypatch.setattr(sys, "argv", ["colab_shard_runner.py"])
+    with pytest.raises(SystemExit, match="--seed-count is required"):
+        runner_module.main(["--seed-start", "44000", "--arm", "both", "--context", "crippled"])
+
+
 # ── tiny REAL-engine smoke run (not a "big run") ──────────────────────────
 
 

@@ -328,7 +328,7 @@ def run_shard(
 def build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--seed-start", type=int, required=True)
-    parser.add_argument("--seed-count", type=int, required=True)
+    parser.add_argument("--seed-count", type=int, default=None, help="required unless --benchmark-games is given")
     parser.add_argument("--arm", choices=ARMS, required=True)
     parser.add_argument("--context", choices=CONTEXTS, required=True)
     parser.add_argument("--output-dir", type=Path, default=None, help="required unless --benchmark-games is given")
@@ -340,10 +340,13 @@ def build_arg_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     args = build_arg_parser().parse_args(argv)
 
+    if args.benchmark_games is None and args.seed_count is None:
+        raise SystemExit("--seed-count is required unless --benchmark-games is given")
+
     common.require_pinned_hash_seed(Path(__file__).name)
     git_head_sha = common.require_clean_git_tree(Path(__file__).name)
     ep.require_seed_scope(
-        range(args.seed_start, args.seed_start + max(args.seed_count, args.benchmark_games or 0, 1)),
+        range(args.seed_start, args.seed_start + max(args.seed_count or 0, args.benchmark_games or 0, 1)),
         ep.SEED_CLASS_DEV, context="colab_shard_runner.py",
     )
     checkpoint_sha256 = decomp.audit_v1.verify_baseline_checkpoint()
