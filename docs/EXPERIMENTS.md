@@ -871,3 +871,53 @@ non-finite loss, no ASU module load), so proceeding to the paired evaluation
 
 Full structured record:
 [logs/experiments/013-monopolyzero-strength-pilot-training.json](../logs/experiments/013-monopolyzero-strength-pilot-training.json).
+
+### Paired evaluation: baseline vs. trained
+
+```bash
+PYTHONHASHSEED=0 PYTHONIOENCODING=utf-8 python scripts/monopolyzero_strength_eval.py
+```
+
+Held-out seeds `30000-30004` (never used in training), 4-seat rotation ×
+5 seeds = 20 games per checkpoint, vs. `fixed-a/b/c`, `max_rounds=200`,
+`self_play=False` (greedy/deterministic — masked argmax over visit counts,
+no temperature sampling or Dirichlet noise), same search config as training
+(4 simulations, depth 16). **ASU benchmark not run**, per task instruction.
+
+| | Baseline (pre-training) | Trained (32 games) |
+|---|---|---|
+| Win rate | 0/20 = **0.0%** | 1/20 = **5.0%** |
+| Wilson 95% CI | **[0.0%, 16.1%]** | **[0.9%, 23.6%]** |
+| Mean net worth | 2,450.4 | 3,759.3 |
+| Round-cap rate | 45% | 55% |
+| p95 search latency | 0.0132s | 0.0141s |
+| Illegal actions / crashes | 0 / 0 | 0 / 0 |
+| Fixed-agent fallbacks | 17 (fixed-b: 9, fixed-c: 8) | 17 (fixed-c: 17) |
+
+Wall time **322.39s** (~5.4 min), peak RSS **0.206 GiB**.
+`asu_modules_loaded_count: 0` for both checkpoints.
+
+**NO-SIGNAL — no improvement claim.** The trained checkpoint's Wilson
+interval `[0.9%, 23.6%]` overlaps almost completely with the baseline's
+`[0.0%, 16.1%]`; the non-overlap test (`trained_lower > baseline_upper`)
+fails. One extra win and a higher mean net worth over 20 games is not
+distinguishable from noise at this sample size — same discipline already
+applied to the DDQN 20-vs-500 comparison. Not a regression either: nothing
+got worse (net worth and win count both moved in the same direction, just
+not far enough to be significant).
+
+Full structured record:
+[logs/experiments/014-monopolyzero-strength-pilot-paired-eval.json](../logs/experiments/014-monopolyzero-strength-pilot-paired-eval.json).
+
+### Conclusion / next step
+
+Training plumbing works at pilot scale (32 games, 100 updates) with zero
+ASU involvement, zero crashes/illegal actions, and both checkpoints hashed
+and preserved locally for exact re-comparison. The paired evaluation found
+no statistically supported skill difference yet — 32 games / 100 updates is
+a small pilot, and this result (like the DDQN 20-vs-500 case) is the honest,
+correct outcome to report, not a failure. A larger pilot (more games, more
+updates) with the same paired-seed evaluation protocol is the natural next
+step, and per this project's standing practice needs its own
+`docs/DECISIONS.md` entry with a reason to expect it'll move the needle,
+not just "more of the same."

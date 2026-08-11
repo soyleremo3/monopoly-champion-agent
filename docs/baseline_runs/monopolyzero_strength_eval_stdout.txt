@@ -1,0 +1,880 @@
+{
+  "asu_modules_loaded": [],
+  "asu_modules_loaded_count": 0,
+  "baseline": {
+    "completed_games": 20,
+    "fixed_fallbacks": {
+      "fixed_a": 0,
+      "fixed_b": 9,
+      "fixed_c": 8
+    },
+    "fixed_fallbacks_total": 17,
+    "games": 20,
+    "label": "baseline",
+    "mean_net_worth": 2450.425,
+    "p95_search_latency_s": 0.013200700021116063,
+    "per_game": [
+      {
+        "completed": true,
+        "crashed": false,
+        "decisions": 2530,
+        "error": null,
+        "focus_net_worth": 0.0,
+        "focus_seat": 0,
+        "focus_won": false,
+        "illegal_actions": 0,
+        "net_worth": [
+          0.0,
+          0.0,
+          32349.0,
+          0.0
+        ],
+        "round_capped": false,
+        "rounds": 77,
+        "seed": 30000,
+        "winner": 2
+      },
+      {
+        "completed": true,
+        "crashed": false,
+        "decisions": 2235,
+        "error": null,
+        "focus_net_worth": 0.0,
+        "focus_seat": 1,
+        "focus_won": false,
+        "illegal_actions": 0,
+        "net_worth": [
+          0.0,
+          0.0,
+          37257.0,
+          0.0
+        ],
+        "round_capped": false,
+        "rounds": 64,
+        "seed": 30000,
+        "winner": 2
+      },
+      {
+        "completed": true,
+        "crashed": false,
+        "decisions": 4075,
+        "error": null,
+        "focus_net_worth": 0.0,
+        "focus_seat": 2,
+        "focus_won": false,
+        "illegal_actions": 0,
+        "net_worth": [
+          0.0,
+          0.0,
+          0.0,
+          34171.5
+        ],
+        "round_capped": false,
+        "rounds": 137,
+        "seed": 30000,
+        "winner": 3
+      },
+      {
+        "completed": true,
+        "crashed": false,
+        "decisions": 5790,
+        "error": null,
+        "focus_net_worth": 2131.0,
+        "focus_seat": 3,
+        "focus_won": false,
+        "illegal_actions": 0,
+        "net_worth": [
+          0.0,
+          23027.5,
+          8752.0,
+          2131.0
+        ],
+        "round_capped": true,
+        "rounds": 200,
+        "seed": 30000,
+        "winner": 1
+      },
+      {
+        "completed": true,
+        "crashed": false,
+        "decisions": 4315,
+        "error": null,
+        "focus_net_worth": 0.0,
+        "focus_seat": 0,
+        "focus_won": false,
+        "illegal_actions": 0,
+        "net_worth": [
+          0.0,
+          0.0,
+          43217.0,
+          0.0
+        ],
+        "round_capped": false,
+        "rounds": 126,
+        "seed": 30001,
+        "winner": 2
+      },
+      {
+        "completed": true,
+        "crashed": false,
+        "decisions": 3759,
+        "error": null,
+        "focus_net_worth": 0.0,
+        "focus_seat": 1,
+        "focus_won": false,
+        "illegal_actions": 0,
+        "net_worth": [
+          0.0,
+          0.0,
+          38154.0,
+          0.0
+        ],
+        "round_capped": false,
+        "rounds": 152,
+        "seed": 30001,
+        "winner": 2
+      },
+      {
+        "completed": true,
+        "crashed": false,
+        "decisions": 1714,
+        "error": null,
+        "focus_net_worth": 0.0,
+        "focus_seat": 2,
+        "focus_won": false,
+        "illegal_actions": 0,
+        "net_worth": [
+          0.0,
+          33159.0,
+          0.0,
+          0.0
+        ],
+        "round_capped": false,
+        "rounds": 60,
+        "seed": 30001,
+        "winner": 1
+      },
+      {
+        "completed": true,
+        "crashed": false,
+        "decisions": 7324,
+        "error": null,
+        "focus_net_worth": 4293.5,
+        "focus_seat": 3,
+        "focus_won": false,
+        "illegal_actions": 0,
+        "net_worth": [
+          0.0,
+          6476.0,
+          26424.0,
+          4293.5
+        ],
+        "round_capped": true,
+        "rounds": 200,
+        "seed": 30001,
+        "winner": 2
+      },
+      {
+        "completed": true,
+        "crashed": false,
+        "decisions": 4568,
+        "error": null,
+        "focus_net_worth": 0.0,
+        "focus_seat": 0,
+        "focus_won": false,
+        "illegal_actions": 0,
+        "net_worth": [
+          0.0,
+          0.0,
+          7768.5,
+          29721.0
+        ],
+        "round_capped": true,
+        "rounds": 200,
+        "seed": 30002,
+        "winner": 3
+      },
+      {
+        "completed": true,
+        "crashed": false,
+        "decisions": 6810,
+        "error": null,
+        "focus_net_worth": 5477.0,
+        "focus_seat": 1,
+        "focus_won": false,
+        "illegal_actions": 0,
+        "net_worth": [
+          4643.0,
+          5477.0,
+          22484.5,
+          4261.0
+        ],
+        "round_capped": true,
+        "rounds": 200,
+        "seed": 30002,
+        "winner": 2
+      },
+      {
+        "completed": true,
+        "crashed": false,
+        "decisions": 2604,
+        "error": null,
+        "focus_net_worth": 0.0,
+        "focus_seat": 2,
+        "focus_won": false,
+        "illegal_actions": 0,
+        "net_worth": [
+          0.0,
+          32608.0,
+          0.0,
+          0.0
+        ],
+        "round_capped": false,
+        "rounds": 77,
+        "seed": 30002,
+        "winner": 1
+      },
+      {
+        "completed": true,
+        "crashed": false,
+        "decisions": 6854,
+        "error": null,
+        "focus_net_worth": 8787.0,
+        "focus_seat": 3,
+        "focus_won": false,
+        "illegal_actions": 0,
+        "net_worth": [
+          4748.0,
+          11806.0,
+          10784.0,
+          8787.0
+        ],
+        "round_capped": true,
+        "rounds": 200,
+        "seed": 30002,
+        "winner": 1
+      },
+      {
+        "completed": true,
+        "crashed": false,
+        "decisions": 7462,
+        "error": null,
+        "focus_net_worth": 6735.0,
+        "focus_seat": 0,
+        "focus_won": false,
+        "illegal_actions": 0,
+        "net_worth": [
+          6735.0,
+          4329.0,
+          15505.5,
+          8844.0
+        ],
+        "round_capped": true,
+        "rounds": 200,
+        "seed": 30003,
+        "winner": 2
+      },
+      {
+        "completed": true,
+        "crashed": false,
+        "decisions": 5382,
+        "error": null,
+        "focus_net_worth": 6824.0,
+        "focus_seat": 1,
+        "focus_won": false,
+        "illegal_actions": 0,
+        "net_worth": [
+          0.0,
+          6824.0,
+          28164.5,
+          0.0
+        ],
+        "round_capped": true,
+        "rounds": 200,
+        "seed": 30003,
+        "winner": 2
+      },
+      {
+        "completed": true,
+        "crashed": false,
+        "decisions": 3498,
+        "error": null,
+        "focus_net_worth": 0.0,
+        "focus_seat": 2,
+        "focus_won": false,
+        "illegal_actions": 0,
+        "net_worth": [
+          0.0,
+          34250.0,
+          0.0,
+          0.0
+        ],
+        "round_capped": false,
+        "rounds": 106,
+        "seed": 30003,
+        "winner": 1
+      },
+      {
+        "completed": true,
+        "crashed": false,
+        "decisions": 7182,
+        "error": null,
+        "focus_net_worth": 4930.0,
+        "focus_seat": 3,
+        "focus_won": false,
+        "illegal_actions": 0,
+        "net_worth": [
+          5306.0,
+          9475.0,
+          13421.0,
+          4930.0
+        ],
+        "round_capped": true,
+        "rounds": 200,
+        "seed": 30003,
+        "winner": 2
+      },
+      {
+        "completed": true,
+        "crashed": false,
+        "decisions": 6478,
+        "error": null,
+        "focus_net_worth": 9831.0,
+        "focus_seat": 0,
+        "focus_won": false,
+        "illegal_actions": 0,
+        "net_worth": [
+          9831.0,
+          6196.0,
+          9554.0,
+          10794.0
+        ],
+        "round_capped": true,
+        "rounds": 200,
+        "seed": 30004,
+        "winner": 3
+      },
+      {
+        "completed": true,
+        "crashed": false,
+        "decisions": 2703,
+        "error": null,
+        "focus_net_worth": 0.0,
+        "focus_seat": 1,
+        "focus_won": false,
+        "illegal_actions": 0,
+        "net_worth": [
+          0.0,
+          0.0,
+          37707.0,
+          0.0
+        ],
+        "round_capped": false,
+        "rounds": 90,
+        "seed": 30004,
+        "winner": 2
+      },
+      {
+        "completed": true,
+        "crashed": false,
+        "decisions": 4008,
+        "error": null,
+        "focus_net_worth": 0.0,
+        "focus_seat": 2,
+        "focus_won": false,
+        "illegal_actions": 0,
+        "net_worth": [
+          0.0,
+          0.0,
+          0.0,
+          37780.5
+        ],
+        "round_capped": false,
+        "rounds": 113,
+        "seed": 30004,
+        "winner": 3
+      },
+      {
+        "completed": true,
+        "crashed": false,
+        "decisions": 3237,
+        "error": null,
+        "focus_net_worth": 0.0,
+        "focus_seat": 3,
+        "focus_won": false,
+        "illegal_actions": 0,
+        "net_worth": [
+          0.0,
+          36790.0,
+          0.0,
+          0.0
+        ],
+        "round_capped": false,
+        "rounds": 139,
+        "seed": 30004,
+        "winner": 1
+      }
+    ],
+    "round_cap_rate": 0.45,
+    "total_crashed": 0,
+    "total_illegal_actions": 0,
+    "wilson_95": [
+      0.0,
+      0.16112515805281938
+    ],
+    "win_rate": 0.0,
+    "wins": 0
+  },
+  "baseline_checkpoint_sha256": "22ae2abea60478355f61ce0404a31de3b52fb97769d4f99f7e04f4c673629370",
+  "config": {
+    "held_out_seeds": [
+      30000,
+      30001,
+      30002,
+      30003,
+      30004
+    ],
+    "max_depth": 16,
+    "max_rounds": 200,
+    "opponents": [
+      "fixed-a",
+      "fixed-b",
+      "fixed-c"
+    ],
+    "seat_rotation": "4 seats x 5 seeds = 20 games per checkpoint",
+    "self_play": false,
+    "simulations": 4
+  },
+  "elapsed_s": 321.1336102000205,
+  "git_head_sha": "f2f49394b490280da714f77e32373f24809b4ad5",
+  "improvement_statistically_supported": false,
+  "peak_rss_gib": 0.205810546875,
+  "trained": {
+    "completed_games": 20,
+    "fixed_fallbacks": {
+      "fixed_a": 0,
+      "fixed_b": 0,
+      "fixed_c": 17
+    },
+    "fixed_fallbacks_total": 17,
+    "games": 20,
+    "label": "trained",
+    "mean_net_worth": 3759.275,
+    "p95_search_latency_s": 0.014062400005059317,
+    "per_game": [
+      {
+        "completed": true,
+        "crashed": false,
+        "decisions": 2469,
+        "error": null,
+        "focus_net_worth": 0.0,
+        "focus_seat": 0,
+        "focus_won": false,
+        "illegal_actions": 0,
+        "net_worth": [
+          0.0,
+          0.0,
+          38337.0,
+          0.0
+        ],
+        "round_capped": false,
+        "rounds": 93,
+        "seed": 30000,
+        "winner": 2
+      },
+      {
+        "completed": true,
+        "crashed": false,
+        "decisions": 2176,
+        "error": null,
+        "focus_net_worth": 0.0,
+        "focus_seat": 1,
+        "focus_won": false,
+        "illegal_actions": 0,
+        "net_worth": [
+          0.0,
+          0.0,
+          36817.0,
+          0.0
+        ],
+        "round_capped": false,
+        "rounds": 64,
+        "seed": 30000,
+        "winner": 2
+      },
+      {
+        "completed": true,
+        "crashed": false,
+        "decisions": 5949,
+        "error": null,
+        "focus_net_worth": 10864.0,
+        "focus_seat": 2,
+        "focus_won": false,
+        "illegal_actions": 0,
+        "net_worth": [
+          2670.0,
+          13459.0,
+          10864.0,
+          8592.0
+        ],
+        "round_capped": true,
+        "rounds": 200,
+        "seed": 30000,
+        "winner": 1
+      },
+      {
+        "completed": true,
+        "crashed": false,
+        "decisions": 4088,
+        "error": null,
+        "focus_net_worth": 0.0,
+        "focus_seat": 3,
+        "focus_won": false,
+        "illegal_actions": 0,
+        "net_worth": [
+          0.0,
+          17088.5,
+          21279.0,
+          0.0
+        ],
+        "round_capped": true,
+        "rounds": 200,
+        "seed": 30000,
+        "winner": 2
+      },
+      {
+        "completed": true,
+        "crashed": false,
+        "decisions": 4467,
+        "error": null,
+        "focus_net_worth": 0.0,
+        "focus_seat": 0,
+        "focus_won": false,
+        "illegal_actions": 0,
+        "net_worth": [
+          0.0,
+          0.0,
+          25718.0,
+          13897.0
+        ],
+        "round_capped": true,
+        "rounds": 200,
+        "seed": 30001,
+        "winner": 2
+      },
+      {
+        "completed": true,
+        "crashed": false,
+        "decisions": 2402,
+        "error": null,
+        "focus_net_worth": 0.0,
+        "focus_seat": 1,
+        "focus_won": false,
+        "illegal_actions": 0,
+        "net_worth": [
+          0.0,
+          0.0,
+          32224.0,
+          0.0
+        ],
+        "round_capped": false,
+        "rounds": 75,
+        "seed": 30001,
+        "winner": 2
+      },
+      {
+        "completed": true,
+        "crashed": false,
+        "decisions": 1696,
+        "error": null,
+        "focus_net_worth": 0.0,
+        "focus_seat": 2,
+        "focus_won": false,
+        "illegal_actions": 0,
+        "net_worth": [
+          0.0,
+          33310.0,
+          0.0,
+          0.0
+        ],
+        "round_capped": false,
+        "rounds": 60,
+        "seed": 30001,
+        "winner": 1
+      },
+      {
+        "completed": true,
+        "crashed": false,
+        "decisions": 6419,
+        "error": null,
+        "focus_net_worth": 9698.0,
+        "focus_seat": 3,
+        "focus_won": false,
+        "illegal_actions": 0,
+        "net_worth": [
+          3295.0,
+          8939.5,
+          16188.0,
+          9698.0
+        ],
+        "round_capped": true,
+        "rounds": 200,
+        "seed": 30001,
+        "winner": 2
+      },
+      {
+        "completed": true,
+        "crashed": false,
+        "decisions": 7146,
+        "error": null,
+        "focus_net_worth": 7714.0,
+        "focus_seat": 0,
+        "focus_won": false,
+        "illegal_actions": 0,
+        "net_worth": [
+          7714.0,
+          9255.0,
+          11067.0,
+          8102.0
+        ],
+        "round_capped": true,
+        "rounds": 200,
+        "seed": 30002,
+        "winner": 2
+      },
+      {
+        "completed": true,
+        "crashed": false,
+        "decisions": 7553,
+        "error": null,
+        "focus_net_worth": 5275.0,
+        "focus_seat": 1,
+        "focus_won": false,
+        "illegal_actions": 0,
+        "net_worth": [
+          4565.0,
+          5275.0,
+          22475.0,
+          5319.0
+        ],
+        "round_capped": true,
+        "rounds": 200,
+        "seed": 30002,
+        "winner": 2
+      },
+      {
+        "completed": true,
+        "crashed": false,
+        "decisions": 2591,
+        "error": null,
+        "focus_net_worth": 0.0,
+        "focus_seat": 2,
+        "focus_won": false,
+        "illegal_actions": 0,
+        "net_worth": [
+          0.0,
+          31403.0,
+          0.0,
+          0.0
+        ],
+        "round_capped": false,
+        "rounds": 77,
+        "seed": 30002,
+        "winner": 1
+      },
+      {
+        "completed": true,
+        "crashed": false,
+        "decisions": 6842,
+        "error": null,
+        "focus_net_worth": 7526.0,
+        "focus_seat": 3,
+        "focus_won": false,
+        "illegal_actions": 0,
+        "net_worth": [
+          4742.0,
+          11882.0,
+          11832.0,
+          7526.0
+        ],
+        "round_capped": true,
+        "rounds": 200,
+        "seed": 30002,
+        "winner": 1
+      },
+      {
+        "completed": true,
+        "crashed": false,
+        "decisions": 2839,
+        "error": null,
+        "focus_net_worth": 0.0,
+        "focus_seat": 0,
+        "focus_won": false,
+        "illegal_actions": 0,
+        "net_worth": [
+          0.0,
+          0.0,
+          46562.0,
+          0.0
+        ],
+        "round_capped": false,
+        "rounds": 111,
+        "seed": 30003,
+        "winner": 2
+      },
+      {
+        "completed": true,
+        "crashed": false,
+        "decisions": 7060,
+        "error": null,
+        "focus_net_worth": 13482.0,
+        "focus_seat": 1,
+        "focus_won": true,
+        "illegal_actions": 0,
+        "net_worth": [
+          3958.0,
+          13482.0,
+          10794.5,
+          7149.0
+        ],
+        "round_capped": true,
+        "rounds": 200,
+        "seed": 30003,
+        "winner": 1
+      },
+      {
+        "completed": true,
+        "crashed": false,
+        "decisions": 2988,
+        "error": null,
+        "focus_net_worth": 0.0,
+        "focus_seat": 2,
+        "focus_won": false,
+        "illegal_actions": 0,
+        "net_worth": [
+          0.0,
+          36262.0,
+          0.0,
+          0.0
+        ],
+        "round_capped": false,
+        "rounds": 108,
+        "seed": 30003,
+        "winner": 1
+      },
+      {
+        "completed": true,
+        "crashed": false,
+        "decisions": 6829,
+        "error": null,
+        "focus_net_worth": 5074.0,
+        "focus_seat": 3,
+        "focus_won": false,
+        "illegal_actions": 0,
+        "net_worth": [
+          5326.0,
+          9217.0,
+          13621.0,
+          5074.0
+        ],
+        "round_capped": true,
+        "rounds": 200,
+        "seed": 30003,
+        "winner": 2
+      },
+      {
+        "completed": true,
+        "crashed": false,
+        "decisions": 6507,
+        "error": null,
+        "focus_net_worth": 7931.0,
+        "focus_seat": 0,
+        "focus_won": false,
+        "illegal_actions": 0,
+        "net_worth": [
+          7931.0,
+          5838.0,
+          13592.0,
+          9702.0
+        ],
+        "round_capped": true,
+        "rounds": 200,
+        "seed": 30004,
+        "winner": 2
+      },
+      {
+        "completed": true,
+        "crashed": false,
+        "decisions": 2975,
+        "error": null,
+        "focus_net_worth": 0.0,
+        "focus_seat": 1,
+        "focus_won": false,
+        "illegal_actions": 0,
+        "net_worth": [
+          0.0,
+          0.0,
+          33266.0,
+          0.0
+        ],
+        "round_capped": false,
+        "rounds": 105,
+        "seed": 30004,
+        "winner": 2
+      },
+      {
+        "completed": true,
+        "crashed": false,
+        "decisions": 2695,
+        "error": null,
+        "focus_net_worth": 0.0,
+        "focus_seat": 2,
+        "focus_won": false,
+        "illegal_actions": 0,
+        "net_worth": [
+          0.0,
+          33525.0,
+          0.0,
+          0.0
+        ],
+        "round_capped": false,
+        "rounds": 109,
+        "seed": 30004,
+        "winner": 1
+      },
+      {
+        "completed": true,
+        "crashed": false,
+        "decisions": 6560,
+        "error": null,
+        "focus_net_worth": 7621.5,
+        "focus_seat": 3,
+        "focus_won": false,
+        "illegal_actions": 0,
+        "net_worth": [
+          5970.0,
+          9465.0,
+          11762.0,
+          7621.5
+        ],
+        "round_capped": true,
+        "rounds": 200,
+        "seed": 30004,
+        "winner": 2
+      }
+    ],
+    "round_cap_rate": 0.55,
+    "total_crashed": 0,
+    "total_illegal_actions": 0,
+    "wilson_95": [
+      0.008881448800795402,
+      0.23613119344674208
+    ],
+    "win_rate": 0.05,
+    "wins": 1
+  },
+  "trained_checkpoint_sha256": "d00263f4a2ab3cdd73a4d2691bdfae42385292a153996a17198b0074433d0f93"
+}
+real 322.39
+user 0.02
+sys 0.00
