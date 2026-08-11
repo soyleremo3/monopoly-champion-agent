@@ -59,6 +59,7 @@ DEV_SEED_RANGES: tuple[tuple[int, int, str], ...] = (
     (41000, 41015, "019 - horizon diagnostic vs-fixed games"),
     (42000, 42063, "020 - value-learnability probe: 64 clean POLICY_ONLY self-play games"),
     (42100, 42195, "021 - value-generalization probe: 96 clean POLICY_ONLY self-play games (64 train / 16 selection / 16 test)"),
+    (43000, 43019, "023 - hybrid-PPO BUY_PROPERTY/ACCEPT_TRADE fixed-action isolation screen: 20 seeds x 4 focus-seat rotation, POLICY_ONLY vs HYBRID_COMPAT paired games"),
 )
 
 # Fresh, disjoint from DEV_SEED_RANGES and from each other. Reserved here,

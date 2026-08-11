@@ -190,6 +190,144 @@ def build_local_policy_only(model):
     return _PolicyOnlyPolicy()
 
 
+def build_local_hybrid_compat_policy(model):
+    """Diagnostic-only policy — NOT a final-submission candidate. Reproduces
+    the ORIGINAL hybrid-PPO agent's BUY_PROPERTY/ACCEPT_TRADE fixed-rule
+    carve-out on top of otherwise-plain POLICY_ONLY inference, by
+    runtime-importing the reference's own fixed-decision functions (never
+    copied into this repo — see
+    references/DeepRL_Monopoly/monopoly_game_engine/agent_ppo.py's
+    `fixed_buy_decision`/`fixed_accept_trade_decision`, both zero-ASU
+    functions taking only the raw env + player id).
+
+    Exists to isolate whether `build_local_policy_only`'s flat legal-masked
+    argmax (which has no such carve-out) silently lets the neural policy
+    head pick BUY_PROPERTY/ACCEPT_TRADE off logits that PPO training's
+    `fixed_action_mask` (agent_ppo.py:186-189) permanently excluded from
+    every gradient update — i.e. logits still sitting at whatever
+    random-initialization value `ActorNetwork` started at, never trained by
+    either the original hybrid-PPO run or this project's own `load_ppo_actor`
+    copy (a pure weight copy, no training).
+
+    Mirrors `PPOAgent.choose_action`'s hybrid branching exactly: BUY_PROPERTY
+    checked first (bought via rule if legal and the rule says yes; otherwise
+    falls through with BUY_PROPERTY removed from the neural candidate set —
+    original hybrid semantics, not "always buy"/"never buy"), then an
+    incoming-trade response checked next (decided directly via rule,
+    accept/decline, whenever ACCEPT_TRADE is legal AND a pending trade
+    targeting this seat is actually found — same double-condition the
+    reference agent uses, not just legality).
+
+    Every decision is additionally logged on `self.log` (one dict per call)
+    recording the opportunity/intervention/disagreement-with-plain-
+    POLICY_ONLY audit trail this diagnostic exists to produce — see the
+    per-key comments below. A fresh instance should be built per game (like
+    `LocalFixedPolicy`), not reused across games, so `self.log` stays
+    game-scoped for the caller to tag with seed/seat afterward.
+    """
+    from monopoly_game_engine.actions import ActionType
+    from monopoly_game_engine.agent_ppo import fixed_accept_trade_decision, fixed_buy_decision
+
+    fixed_ids = {int(ActionType.BUY_PROPERTY), int(ActionType.ACCEPT_TRADE)}
+
+    class _HybridCompatPolicy:
+        kind = "hybrid_compat"
+
+        def __init__(self):
+            self.log: list[dict] = []
+
+        def choose(self, game, seat: int, decision_seed: int) -> "_PolicyOnlyResult":
+            started = time.perf_counter()
+            env = game.env
+            legal = tuple(env.get_allowed_actions(seat))
+            state = env._get_state(seat)
+
+            # What a plain POLICY_ONLY policy would do on this identical
+            # state — computed unconditionally so every decision (not just
+            # opportunity ones) has a POLICY_ONLY comparison point, which is
+            # also how the integrity check (100% agreement outside
+            # opportunity states) is verified downstream.
+            policy_only_priors, policy_only_value = model.predict(state, legal, seat)
+            policy_only_action = max(policy_only_priors, key=policy_only_priors.get)
+
+            is_buy_opportunity = int(ActionType.BUY_PROPERTY) in legal
+            is_trade_opportunity = int(ActionType.ACCEPT_TRADE) in legal
+            trade_pending_found = None
+            decision_kind = "no_opportunity"
+            chosen_action = None
+            value = policy_only_value
+
+            if is_buy_opportunity and fixed_buy_decision(env, seat):
+                chosen_action = int(ActionType.BUY_PROPERTY)
+                decision_kind = "buy_property_rule_bought"
+
+            if chosen_action is None and is_trade_opportunity:
+                pending = next(
+                    (offer for offer in env.pending_trades.values() if offer.to_player == seat),
+                    None,
+                )
+                trade_pending_found = pending is not None
+                if pending is not None:
+                    accept = fixed_accept_trade_decision(env, seat)
+                    chosen_action = int(ActionType.ACCEPT_TRADE) if accept else int(ActionType.DECLINE_TRADE)
+                    decision_kind = "trade_response_rule_accept" if accept else "trade_response_rule_decline"
+
+            fixed_rule_fired = chosen_action is not None
+            nn_legal = tuple(action for action in legal if action not in fixed_ids)
+
+            if chosen_action is None:
+                # Original hybrid semantics: BUY_PROPERTY/ACCEPT_TRADE are
+                # permanently excluded from the neural candidate set,
+                # regardless of why we got here (buy declined by rule, or an
+                # ACCEPT_TRADE-legal-but-no-pending-found edge case).
+                candidate_legal = nn_legal if nn_legal else legal
+                if candidate_legal == legal:
+                    priors = policy_only_priors
+                else:
+                    priors, value = model.predict(state, candidate_legal, seat)
+                    decision_kind = "candidate_set_narrowed_neural_pick"
+                chosen_action = max(priors, key=priors.get)
+
+            intervened = fixed_rule_fired or (nn_legal != legal)
+            latency_s = time.perf_counter() - started
+
+            self.log.append(
+                {
+                    "is_buy_opportunity": is_buy_opportunity,
+                    "is_trade_opportunity": is_trade_opportunity,
+                    "trade_pending_found": trade_pending_found,
+                    "decision_kind": decision_kind,
+                    "intervened": intervened,
+                    "policy_only_action": policy_only_action,
+                    "hybrid_compat_action": chosen_action,
+                    "disagrees_with_policy_only": chosen_action != policy_only_action,
+                    "policy_only_prob_buy": (
+                        policy_only_priors.get(int(ActionType.BUY_PROPERTY)) if is_buy_opportunity else None
+                    ),
+                    "policy_only_chose_buy": (
+                        (policy_only_action == int(ActionType.BUY_PROPERTY)) if is_buy_opportunity else None
+                    ),
+                    "policy_only_prob_accept_trade": (
+                        policy_only_priors.get(int(ActionType.ACCEPT_TRADE)) if is_trade_opportunity else None
+                    ),
+                    "policy_only_chose_accept_trade": (
+                        (policy_only_action == int(ActionType.ACCEPT_TRADE)) if is_trade_opportunity else None
+                    ),
+                }
+            )
+
+            return _PolicyOnlyResult(
+                chosen_action=chosen_action,
+                visits={chosen_action: 1},
+                q_values={},
+                root_value=value,
+                simulations=0,
+                latency_s=latency_s,
+            )
+
+    return _HybridCompatPolicy()
+
+
 class LocalFixedPolicy:
     """Reimplements the fixed-agent decision contract we need: a seeded,
     isolated call into a scripted FixedPolicyAgent subclass, with a

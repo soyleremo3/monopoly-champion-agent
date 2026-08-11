@@ -78,6 +78,7 @@ own `seeds` field, `logs/experiments/001-019`)
 | `40000`-`40015`, `41000`-`41015` | `019` | horizon diagnostic (self-play / vs-fixed) |
 | `42000`-`42063` | `020` | value-learnability probe: 64 clean POLICY_ONLY self-play games (baseline checkpoint, all 4 seats, zero fixed agents) |
 | `42100`-`42195` | `021` | value-generalization probe: 96 clean POLICY_ONLY self-play games (64 train / 16 selection / 16 held-out test) |
+| `43000`-`43019` | `023` | hybrid-PPO BUY_PROPERTY/ACCEPT_TRADE fixed-action isolation screen: 20 seeds x 4 focus-seat rotation, POLICY_ONLY vs HYBRID_COMPAT paired games, no fixed opponents |
 
 All of the above are unioned into `evaluation_protocol.DEV_SEEDS`. Any new
 DEV-scope run should extend `DEV_SEED_RANGES` in that module (with a

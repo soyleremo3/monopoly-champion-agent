@@ -10,6 +10,7 @@ import importlib.util
 import os
 import subprocess
 import sys
+import types
 from pathlib import Path
 
 import pytest
@@ -308,6 +309,173 @@ def test_build_local_policy_only_is_deterministic_regardless_of_decision_seed():
     first = policy.choose(game, seat=0, decision_seed=1).chosen_action
     second = policy.choose(game, seat=0, decision_seed=999999).chosen_action
     assert first == second == 3
+
+
+# ── HYBRID_COMPAT: diagnostic BUY_PROPERTY/ACCEPT_TRADE fixed-rule carve-out ──
+
+
+class _FakeHybridEnv:
+    """Satisfies build_local_hybrid_compat_policy's own attribute contract
+    (get_allowed_actions/_get_state/pending_trades). Does NOT satisfy
+    fixed_buy_decision/fixed_accept_trade_decision's real attribute contract
+    (env.players/env.properties/env._incoming_trade) — those two functions
+    are monkeypatched out in every test below, so their real bodies never
+    run against this fake."""
+
+    def __init__(self, legal, pending_trades=None, state="state"):
+        self._legal = legal
+        self.pending_trades = pending_trades or {}
+        self._state = state
+
+    def get_allowed_actions(self, seat):
+        return self._legal
+
+    def _get_state(self, seat):
+        return self._state
+
+
+def _build_hybrid_compat(model, *, buy_decision, accept_trade_decision):
+    """Monkeypatches the reference's fixed_buy_decision/fixed_accept_trade_decision
+    on the actual module object before building the policy, since
+    build_local_hybrid_compat_policy binds them via `from ... import ...` at
+    call time — patching the source module's attributes beforehand is picked
+    up by that import."""
+    common.ensure_reference_on_path()
+    import monopoly_game_engine.agent_ppo as agent_ppo_module
+
+    agent_ppo_module.fixed_buy_decision = lambda env, pid: buy_decision
+    agent_ppo_module.fixed_accept_trade_decision = lambda env, pid: accept_trade_decision
+    return common.build_local_hybrid_compat_policy(model)
+
+
+def _action_type():
+    common.ensure_reference_on_path()
+    from monopoly_game_engine.actions import ActionType
+
+    return ActionType
+
+
+def test_hybrid_compat_has_hybrid_compat_kind():
+    policy = _build_hybrid_compat(_FakeModel(), buy_decision=False, accept_trade_decision=False)
+    assert policy.kind == "hybrid_compat"
+
+
+def test_hybrid_compat_no_opportunity_matches_plain_policy_only():
+    AT = _action_type()
+    model = _FakeModel()
+    policy = _build_hybrid_compat(model, buy_decision=False, accept_trade_decision=False)
+    legal = (int(AT.END_TURN), int(AT.ROLL_DICE))
+    game = _FakeGame(_FakeHybridEnv(legal=legal))
+
+    result = policy.choose(game, seat=0, decision_seed=1)
+
+    assert result.chosen_action == int(AT.ROLL_DICE)  # _FakeModel favors the last legal action
+    entry = policy.log[-1]
+    assert entry["decision_kind"] == "no_opportunity"
+    assert entry["intervened"] is False
+    assert entry["hybrid_compat_action"] == entry["policy_only_action"]
+    assert entry["is_buy_opportunity"] is False
+    assert entry["is_trade_opportunity"] is False
+
+
+def test_hybrid_compat_buys_via_fixed_rule_when_rule_says_buy():
+    AT = _action_type()
+    model = _FakeModel()
+    policy = _build_hybrid_compat(model, buy_decision=True, accept_trade_decision=False)
+    legal = (int(AT.END_TURN), int(AT.BUY_PROPERTY))
+    game = _FakeGame(_FakeHybridEnv(legal=legal))
+
+    result = policy.choose(game, seat=1, decision_seed=1)
+
+    assert result.chosen_action == int(AT.BUY_PROPERTY)
+    entry = policy.log[-1]
+    assert entry["decision_kind"] == "buy_property_rule_bought"
+    assert entry["intervened"] is True
+    assert entry["is_buy_opportunity"] is True
+    assert entry["policy_only_prob_buy"] is not None
+
+
+def test_hybrid_compat_excludes_buy_from_candidates_when_rule_declines():
+    AT = _action_type()
+    model = _FakeModel()
+    policy = _build_hybrid_compat(model, buy_decision=False, accept_trade_decision=False)
+    legal = (int(AT.END_TURN), int(AT.BUY_PROPERTY))
+    game = _FakeGame(_FakeHybridEnv(legal=legal))
+
+    result = policy.choose(game, seat=0, decision_seed=1)
+
+    # BUY_PROPERTY removed from the neural candidate set -> only END_TURN
+    # remains, so the model is called with (END_TURN,) not the full legal set.
+    assert result.chosen_action == int(AT.END_TURN)
+    assert (model.calls[-1][1]) == (int(AT.END_TURN),)
+    entry = policy.log[-1]
+    assert entry["decision_kind"] == "candidate_set_narrowed_neural_pick"
+    assert entry["intervened"] is True
+    assert entry["policy_only_chose_buy"] is True  # plain POLICY_ONLY would have bought (last-legal bias)
+    assert entry["disagrees_with_policy_only"] is True
+
+
+def test_hybrid_compat_accepts_trade_via_fixed_rule():
+    AT = _action_type()
+    model = _FakeModel()
+    pending = {0: types.SimpleNamespace(to_player=2)}
+    policy = _build_hybrid_compat(model, buy_decision=False, accept_trade_decision=True)
+    legal = (int(AT.ACCEPT_TRADE), int(AT.DECLINE_TRADE))
+    game = _FakeGame(_FakeHybridEnv(legal=legal, pending_trades=pending))
+
+    result = policy.choose(game, seat=2, decision_seed=1)
+
+    assert result.chosen_action == int(AT.ACCEPT_TRADE)
+    entry = policy.log[-1]
+    assert entry["decision_kind"] == "trade_response_rule_accept"
+    assert entry["trade_pending_found"] is True
+    assert entry["intervened"] is True
+
+
+def test_hybrid_compat_declines_trade_via_fixed_rule():
+    AT = _action_type()
+    model = _FakeModel()
+    pending = {0: types.SimpleNamespace(to_player=2)}
+    policy = _build_hybrid_compat(model, buy_decision=False, accept_trade_decision=False)
+    legal = (int(AT.ACCEPT_TRADE), int(AT.DECLINE_TRADE))
+    game = _FakeGame(_FakeHybridEnv(legal=legal, pending_trades=pending))
+
+    result = policy.choose(game, seat=2, decision_seed=1)
+
+    assert result.chosen_action == int(AT.DECLINE_TRADE)
+    entry = policy.log[-1]
+    assert entry["decision_kind"] == "trade_response_rule_decline"
+    assert entry["trade_pending_found"] is True
+
+
+def test_hybrid_compat_trade_legal_but_no_pending_found_narrows_candidates():
+    AT = _action_type()
+    model = _FakeModel()
+    policy = _build_hybrid_compat(model, buy_decision=False, accept_trade_decision=True)
+    legal = (int(AT.ACCEPT_TRADE), int(AT.DECLINE_TRADE))
+    game = _FakeGame(_FakeHybridEnv(legal=legal, pending_trades={}))  # no pending trade recorded
+
+    result = policy.choose(game, seat=2, decision_seed=1)
+
+    # ACCEPT_TRADE permanently excluded from neural candidates -> only DECLINE_TRADE remains
+    assert result.chosen_action == int(AT.DECLINE_TRADE)
+    entry = policy.log[-1]
+    assert entry["trade_pending_found"] is False
+    assert entry["decision_kind"] == "candidate_set_narrowed_neural_pick"
+    assert entry["intervened"] is True
+
+
+def test_hybrid_compat_log_accumulates_across_calls():
+    AT = _action_type()
+    model = _FakeModel()
+    policy = _build_hybrid_compat(model, buy_decision=False, accept_trade_decision=False)
+    legal = (int(AT.END_TURN),)
+    game = _FakeGame(_FakeHybridEnv(legal=legal))
+
+    policy.choose(game, seat=0, decision_seed=1)
+    policy.choose(game, seat=0, decision_seed=2)
+
+    assert len(policy.log) == 2
 
 
 # ── _invoke_policy: normalizes search/policy_only/fixed return shapes ────
