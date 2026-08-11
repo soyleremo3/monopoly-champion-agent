@@ -24,7 +24,10 @@
   "counts": {"independent_runs_compared": 2, "games_per_run": 3},
   "runtime": {"wall_time_s": 17.86, "peak_rss_gib": 0.2833137512207031},
   "metrics": {
+    "runtime_field_source": "top-level runtime.wall_time_s is run1's `time -p` real value specifically (not an average of both runs); runtime.peak_rss_gib is copied verbatim from run1's own JSON output field of the same name (docs/baseline_runs/selfplay_repro_run1.json). Both runs' own figures are repeated below for completeness.",
     "run1": {
+      "wall_time_s": 17.86,
+      "peak_rss_gib": 0.2833137512207031,
       "positions_collected_total": 709,
       "winners": {"self_play_1": 1, "self_play_2": 3, "vs_fixed": 3},
       "batch_size_sampled": 8,
@@ -32,6 +35,8 @@
       "parameters_changed_count": 16
     },
     "run2": {
+      "wall_time_s": 10.89,
+      "peak_rss_gib": 0.2910003662109375,
       "positions_collected_total": 709,
       "winners": {"self_play_1": 1, "self_play_2": 3, "vs_fixed": 3},
       "batch_size_sampled": 8,
@@ -53,5 +58,5 @@
     "docs/baseline_runs/selfplay_repro_run1.json",
     "docs/baseline_runs/selfplay_repro_run2.json"
   ],
-  "notes": "This entry corrects/supersedes the reproducibility caveat in 010-selfplay-training-plumbing-smoke.json's notes field, which reported non-byte-identical results (721 vs 697 positions) between two runs and attributed it to expected self_play=True exploration randomness. That attribution undercounted the actual cause: the model's value_head was also unseeded at construction time. Both are now fixed by explicit RNG seeding; 010's own numbers are left as originally recorded (historical record), not edited."
+  "notes": "This entry corrects/supersedes the reproducibility caveat in 010-selfplay-training-plumbing-smoke.json's notes field, which reported non-byte-identical results (721 vs 697 positions) between two runs and attributed it to expected self_play=True exploration randomness. That attribution undercounted the actual cause: the model's value_head was also unseeded at construction time. Both are now fixed by explicit RNG seeding; 010's own numbers are left as originally recorded (historical record), not edited. [2026-08-11, later correction: this run and 010 both used the version of scripts/selfplay_train_smoke.py that imported monopoly_bench.adapters/arena/training, which load ASU_FROZEN_TEACHER into sys.modules as an import-time side effect even though no ASU output/teacher/label was ever used. Neither this entry's nor 010's actual results (positions, winners, loss, illegal actions, crashes) are affected or invalidated by that - only the code-cleanliness claim of being import-free was wrong. See 012-selfplay-asu-import-free-smoke.json for the corrected, genuinely ASU-import-free rerun, which reproduced these exact same numbers (709 positions, same winners, same loss) confirming the reimplementation is behaviorally equivalent, not just import-cleaner.] [2026-08-12 correction: runtime.wall_time_s/peak_rss_gib clarified as run1's measurement specifically (both were genuinely measured, not guessed) - see metrics.runtime_field_source and the per-run breakdown added there.]"
 }

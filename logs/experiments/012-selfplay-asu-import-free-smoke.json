@@ -1,0 +1,68 @@
+{
+  "experiment_id": "012-selfplay-asu-import-free-smoke",
+  "experiment_name": "Self-play training-plumbing smoke, genuinely ASU-import-free (own wiring, no adapters/arena/training import)",
+  "experiment_type": "selfplay_training_smoke",
+  "date": "2026-08-11",
+  "code_commit_sha": "f835a74dcb85acb7aa22a60ded5abaecb9d1fc90",
+  "reference_submodule_sha": "afd9205761317e196d77f679921c35fb04c7ab96",
+  "exact_commands": [
+    "PYTHONHASHSEED=0 PYTHONIOENCODING=utf-8 python scripts/selfplay_train_smoke.py",
+    "PYTHONHASHSEED=0 PYTHONIOENCODING=utf-8 python scripts/selfplay_train_smoke.py"
+  ],
+  "seeds": [42, 501, 502, 503],
+  "algorithm_config": {
+    "fix_under_test": "scripts/selfplay_train_smoke.py rewritten to import only monopoly_bench.engine/.model/.search/.storage/.config/.contracts and monopoly_game_engine.agents_fixed - never monopoly_bench.adapters, .arena, or .training, which import ASU_FROZEN_TEACHER at module level (adapters.py, training.py) or transitively (arena.py imports adapters.py)",
+    "own_wiring": [
+      "LocalSearchPolicy: thin wrapper around MaxNPUCT (search.py has zero ASU references)",
+      "LocalFixedPolicy: reimplements FixedAdapter's observed behavior (decision_seed isolation via random.seed/setstate, illegal-action fallback substitution) using only FP_AGENT_CLASSES and engine.unwrap/ActionType",
+      "play_local_game: own game loop (turn iteration, legal-action check, fail-closed on illegal/crash, position recording) built from SharedGame/legal_mask/terminal_value, not copied from arena.play_game",
+      "local_training_update: own training-step function (MCTS visit-count policy loss + real-winner value loss via actor_order reordering) built from ReplayBuffer's sample() contract, not copied from training.train_step"
+    ],
+    "runtime_guard": "sys.modules checked for ASU_FROZEN_TEACHER (or any submodule) at the end of the run; the run fails if any are present",
+    "opponent_pool": ["self-copy", "fixed-a", "fixed-b", "fixed-c"],
+    "simulations": 4,
+    "max_depth": 16,
+    "max_rounds_per_game": 5,
+    "reference_submodule_modified": false,
+    "working_tree_clean_before_run": true
+  },
+  "model_checkpoint": {
+    "sha256": "1c825dcdd2c8d83651bd21100024ab2d0b8ce2ba276d701dceb3599536f615cb",
+    "path": "references/DeepRL_Monopoly/artifacts/ppo_plus/ppo_hybrid_2000_v2.pt",
+    "format_version": 3
+  },
+  "counts": {
+    "games": 3,
+    "positions_collected_total": 709,
+    "replay_buffer_size_after_append": 709,
+    "batch_size_sampled": 8,
+    "train_step_updates": 1,
+    "independent_runs_compared": 2,
+    "games_breakdown": {
+      "self_play_1": {"seed": 501, "decisions": 416, "positions": 334, "winner": 1},
+      "self_play_2": {"seed": 502, "decisions": 383, "positions": 307, "winner": 3},
+      "vs_fixed": {"seed": 503, "decisions": 273, "positions": 68, "winner": 3}
+    }
+  },
+  "runtime": {"wall_time_s": 13.71, "peak_rss_gib": 0.29270172119140625},
+  "metrics": {
+    "run1": {"wall_time_s": 13.71, "positions_collected_total": 709, "loss": 2.804666519165039, "parameters_changed_count": 16},
+    "run2": {"wall_time_s": 10.56, "positions_collected_total": 709, "loss": 2.804666519165039, "parameters_changed_count": 16},
+    "diff_excluding_elapsed_s_and_peak_rss_gib": "empty (diff exit code 0)",
+    "matches_prior_asu_coupled_implementation": "yes - same seed, same numbers (709 positions, winners 1/3/3, same four loss values, 16/16 params changed) as docs/baseline_runs/selfplay_repro_run1.json (the last run of the previous, ASU-import-coupled implementation), confirming this reimplementation is behaviorally equivalent, not just import-cleaner"
+  },
+  "loss": {
+    "loss": 2.804666519165039,
+    "policy_loss": 1.4619874954223633,
+    "value_loss": 1.3426790237426758,
+    "gradient_norm": 9.985905647277832,
+    "identical_across_both_runs": true
+  },
+  "integrity": {"illegal_actions": 0, "fallbacks": 0, "crashes": 0},
+  "result": "Genuinely ASU-import-free: asu_modules_loaded was [] (count 0) in both runs, verified by the script's own end-of-run sys.modules check (which would raise if any ASU_FROZEN_TEACHER module were present). All plumbing checks passed: positions_collected_total 709 > 0, loss finite, 16/16 parameters changed, 0 illegal actions, 0 crashes, fixed-agent fallbacks genuinely measured (0/0/0 for fixed-a/b/c, not assumed). REPRODUCIBILITY PASSED across two independent runs: diff excluding elapsed_s/peak_rss_gib was empty. Results are numerically identical to the prior ASU-import-coupled implementation's last run, confirming the own-wiring reimplementation preserves behavior while removing the import-time ASU dependency.",
+  "raw_logs": [
+    "docs/baseline_runs/selfplay_asu_free_run1.json",
+    "docs/baseline_runs/selfplay_asu_free_run2.json"
+  ],
+  "notes": "Supersedes 010's and 011's ASU-independence framing (see their notes fields for the correction, not deleted): ASU output/teacher was never used in any of 010/011/012, but 010 and 011 ran a version of the script that still loaded ASU_FROZEN_TEACHER into sys.modules as an import-time side effect via monopoly_bench.adapters/arena/training. This entry (012) is the first one where sys.modules was actually checked and confirmed empty of ASU. Decision to do this rewrite logged in docs/DECISIONS.md."
+}

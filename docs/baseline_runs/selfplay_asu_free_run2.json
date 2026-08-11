@@ -1,0 +1,65 @@
+{
+  "asu_modules_loaded": [],
+  "asu_modules_loaded_count": 0,
+  "batch_size_sampled": 8,
+  "bootstrap": "ppo",
+  "elapsed_s": 8.180377199983923,
+  "fixed_adapter_fallbacks": {
+    "fixed_a": 0,
+    "fixed_b": 0,
+    "fixed_c": 0
+  },
+  "fixed_adapter_fallbacks_total": 0,
+  "games": [
+    {
+      "completed": true,
+      "crashes": 0,
+      "decisions": 416,
+      "error": null,
+      "illegal_actions": 0,
+      "label": "self_play_1",
+      "positions_collected": 334,
+      "seed": 501,
+      "winner": 1
+    },
+    {
+      "completed": true,
+      "crashes": 0,
+      "decisions": 383,
+      "error": null,
+      "illegal_actions": 0,
+      "label": "self_play_2",
+      "positions_collected": 307,
+      "seed": 502,
+      "winner": 3
+    },
+    {
+      "completed": true,
+      "crashes": 0,
+      "decisions": 273,
+      "error": null,
+      "illegal_actions": 0,
+      "label": "vs_fixed",
+      "positions_collected": 68,
+      "seed": 503,
+      "winner": 3
+    }
+  ],
+  "git_head_sha": "f835a74dcb85acb7aa22a60ded5abaecb9d1fc90",
+  "global_seed": 42,
+  "loss_finite": true,
+  "parameters_changed_count": 16,
+  "parameters_total_count": 16,
+  "peak_rss_gib": 0.284088134765625,
+  "positions_collected_total": 709,
+  "replay_buffer_size_after_append": 709,
+  "replay_indices_written": 709,
+  "total_crashes": 0,
+  "total_illegal_actions": 0,
+  "train_step_stats": {
+    "gradient_norm": 9.985905647277832,
+    "loss": 2.804666519165039,
+    "policy_loss": 1.4619874954223633,
+    "value_loss": 1.3426790237426758
+  }
+}

@@ -733,3 +733,80 @@ recommendation already on record in the prior entry: more games, more
 `train_step` updates, then the existing paired-seed evaluation protocol).
 See [logs/experiments/011-selfplay-smoke-reproducibility-check.json](../logs/experiments/011-selfplay-smoke-reproducibility-check.json)
 for the full structured record.
+
+## 2026-08-11 (later) — Self-play smoke made genuinely ASU-import-free
+
+- Hypothesis/correction: the self-play smoke's "ASU-independent" claim (both
+  entries above) was overstated. `scripts/selfplay_train_smoke.py` imported
+  `monopoly_bench.adapters` and `monopoly_bench.arena` for `SearchAdapter`/
+  `FixedAdapter`/`play_game`, and `monopoly_bench.training` for `train_step`.
+  `adapters.py` does `from ASU_FROZEN_TEACHER import ASURolloutV1,
+  ASUValueV1` at module scope; `training.py` does `from ASU_FROZEN_TEACHER
+  import FROZEN_SPEC_HASH` at module scope; `arena.py` imports `.adapters`.
+  So every prior run of this smoke loaded `ASU_FROZEN_TEACHER` into
+  `sys.modules` as an import side effect — ASU output/teacher/label was
+  never used (that ban was never actually violated), but "ASU-independent"
+  was not an accurate description of the import graph. See
+  `docs/DECISIONS.md`'s 2026-08-11 (later) correction entry.
+- Fix: rewrote the script to import only confirmed ASU-import-clean modules
+  — `monopoly_bench.engine`, `.model`, `.search`, `.storage`, `.config`,
+  `.contracts`, `monopoly_game_engine.agents_fixed` — and replaced
+  `SearchAdapter`/`FixedAdapter`/`arena.play_game`/`train_step` with this
+  project's own implementations (`LocalSearchPolicy`, `LocalFixedPolicy`,
+  `play_local_game`, `local_training_update`) built from the lower-level
+  primitives (`MaxNPUCT`, `SharedGame`, `ReplayBuffer`, `FP_AGENT_CLASSES`)
+  and their observed contracts — not copied from `adapters.py`/`arena.py`/
+  `training.py`. Added a runtime guard: at the end of the run, `sys.modules`
+  is checked for `ASU_FROZEN_TEACHER` (or any submodule); the run fails if
+  one is present, so "ASU-independent" is verified every run, not asserted.
+
+### Result
+
+```bash
+PYTHONHASHSEED=0 PYTHONIOENCODING=utf-8 python scripts/selfplay_train_smoke.py
+```
+
+- `asu_modules_loaded: []`, `asu_modules_loaded_count: 0` — confirmed in
+  both runs below by the script's own guard (which would have raised
+  otherwise).
+- Ran twice, independently, same seed, same clean HEAD
+  (`f835a74dcb85acb7aa22a60ded5abaecb9d1fc90`):
+
+| | Run 1 | Run 2 |
+|---|---|---|
+| Positions collected | 709 | 709 |
+| Winners (self_play_1 / self_play_2 / vs_fixed) | seat 1 / seat 3 / seat 3 | seat 1 / seat 3 / seat 3 |
+| `loss` | 2.804666519165039 | 2.804666519165039 |
+| `policy_loss` / `value_loss` / `gradient_norm` | 1.4619874954223633 / 1.3426790237426758 / 9.985905647277832 | identical |
+| Parameters changed | 16/16 | 16/16 |
+| `fixed_adapter_fallbacks` (a/b/c) | 0/0/0 | 0/0/0 |
+| Illegal actions / crashes | 0 / 0 | 0 / 0 |
+
+`diff` between the two outputs, excluding `elapsed_s`/`peak_rss_gib`, was
+empty — **reproducibility PASSED** again after the rewrite.
+
+**Notably**, these numbers (709 positions, same winners, same four loss
+values, 16/16 parameters changed) are numerically identical to the last run
+of the *old*, ASU-import-coupled implementation on the same seed — strong
+evidence the reimplementation preserves behavior exactly while removing the
+import-time ASU dependency, not a coincidence.
+
+### Historical entries corrected, not deleted
+
+`logs/experiments/010-selfplay-training-plumbing-smoke.json` and
+`011-selfplay-smoke-reproducibility-check.json` both predate this fix and
+both loaded ASU as an import side effect. Their `notes` fields now carry an
+explicit correction (their measured results — positions, winners, loss,
+illegal actions, crashes — are unaffected and remain accurate; only the
+import-cleanliness claim was overstated). Numbers were not rewritten or
+removed. See
+[logs/experiments/012-selfplay-asu-import-free-smoke.json](../logs/experiments/012-selfplay-asu-import-free-smoke.json)
+for the full structured record of this fix and rerun.
+
+### Conclusion / next step
+
+The self-play training-plumbing smoke is now genuinely ASU-import-free,
+bit-exact reproducible, and behaviorally verified equivalent to the prior
+implementation. This clears the way for the previously-recommended next
+step (more games, more `train_step` updates, then the existing paired-seed
+evaluation protocol) without carrying forward the import-graph caveat.
