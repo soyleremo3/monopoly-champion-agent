@@ -75,72 +75,74 @@ restrictions in `CLAUDE.md`. This document tracks phases as they are defined.
   file stays `TBD` until separately confirmed — do not infer more rules from
   the reference engine.
 
-## Next measurable milestones (Phase 3, not yet started)
+## Next measurable milestones (Phase 3, current)
 
-- A DDQN training run long enough to get `epsilon` meaningfully below the
-  ~0.78 reached at 500 games — the paper's own reference run used 10,000
-  games (`references/DeepRL_Monopoly/PPO_PLUS_RULES.md`) — then re-run the
-  exact same paired-seed evaluation protocol (seeds `10000-10009`,
-  seat-rotated, vs. `fixed-a/b/c`) against both the 20-game and 500-game
-  checkpoints as reference points, again requiring a statistically supported
-  Wilson-interval separation before claiming any improvement.
-- Decide, with evidence from that comparison, whether more DDQN training
-  games or a different approach is the better next step — this decision must
-  itself go through `docs/DECISIONS.md`, not be assumed here.
+- **DDQN long-run scaling is paused, not the current milestone.** After the
+  500-game paired evaluation showed no statistically supported improvement
+  over the 20-game checkpoint (`docs/DECISIONS.md`'s "Pause DDQN scaling
+  past 500 games" entry), the decision was to pause further DDQN games
+  rather than assume more of the same training helps. Resuming that track
+  would need its own new `docs/DECISIONS.md` entry with a reason to expect
+  it'll help this time — not assumed here.
+- **Current next milestone: an ASU-import-free MonopolyZero strength
+  pilot.** Small-scale (tens of games) training of `MonopolyZeroNet` via
+  this project's own ASU-import-free wiring (`scripts/monopolyzero_common.py`
+  + purpose-built training/eval runners — see the MonopolyZero section
+  below), then a paired evaluation against a pre-training baseline on
+  held-out seeds, same Wilson-interval discipline as the DDQN evaluations.
 - `docs/RULES_SPEC.md` still needs the rest of the official competition
   ruleset filled in beyond even-building — unblocked independently of the
   training track above, still `TBD`.
 
 ## MonopolyZero (`monopoly_bench`) — ASU-independent parts only
 
-Investigated 2026-08-11 (read-only, submodule untouched, nothing run beyond
-what's already logged in `docs/EXPERIMENTS.md`) — see `docs/REFERENCE_AUDIT.md`
-for the full write-up. Summary of what's usable under the ASU re-lock:
+Investigated 2026-08-11, then corrected the same day — see
+`docs/REFERENCE_AUDIT.md` for the full write-up and
+`docs/DECISIONS.md`'s "(later)" correction entry for exactly what changed.
 
-- **Usable as-is (no ASU coupling)**: `MonopolyZeroNet` (policy/value
-  network, `monopoly_bench/model.py`), `MaxNPUCT` (PUCT/Max-N search,
-  `monopoly_bench/search.py` — zero ASU references, verified by grep),
-  checkpoint/replay storage (`monopoly_bench/storage.py` — zero ASU
-  references), the generic `arena.play_game` mechanism (zero ASU references
-  itself; `monopoly_bench/ladder.py` chooses to call it with an ASU opponent
-  for gating, which is compliant evaluation use, not training).
-- **Not usable as shipped**: `Trainer`/`monopoly_bench train`'s bootstrap
-  (`bootstrap_asu_expert`/`expert_train_step` — direct ASU imitation, now
-  banned) and its self-play population generation
-  (`training.py::population_jobs` hardcodes `asu_count = max(1,
-  baseline_count // 2)` into every generation's "baseline" opponent slice,
-  with no config flag to exclude ASU). Using `Trainer.run_generation` as-is
-  would seat ASU as an opponent in self-play games that feed our replay
-  buffer and training updates — too close to the re-locked line to use
-  without modification, so it's out until we build our own opponent-pool
-  wiring that excludes ASU entirely.
-- `monopoly_bench/cli.py`'s `smoke` subcommand does **not** use `Trainer` at
-  all — it only loads a PPO checkpoint into `MonopolyZeroNet` and runs one
-  `MaxNPUCT.choose_action` call (4 simulations, depth 16). Zero ASU
-  involvement, zero training (pure inference). This is the smallest
-  ASU-independent smoke available, but requires a PPO checkpoint
-  (`artifacts/ppo_plus/ppo_hybrid_2000_v2.pt` by default) that we do not
-  currently have — we've only trained DDQN checkpoints so far, and DDQN
-  weights are not PPO-actor-compatible (different network class).
+- **Usable as-is (confirmed ASU-import-clean, not just "no ASU calls")**:
+  `MonopolyZeroNet` (`monopoly_bench/model.py`), `MaxNPUCT` (PUCT/Max-N
+  search, `monopoly_bench/search.py`), replay storage
+  (`monopoly_bench/storage.py`), `monopoly_bench/engine.py`, `.config`,
+  `.contracts`, and `monopoly_game_engine.agents_fixed` (`FP_AGENT_CLASSES`).
+  Confirmed by reading each module's own import statements, not just
+  grepping for the literal string "asu" in its body.
+- **NOT ASU-import-free — do not import these in a training process, even
+  though none of them ever call ASU**: `monopoly_bench.adapters` (`from
+  ASU_FROZEN_TEACHER import ASURolloutV1, ASUValueV1` at module scope),
+  `monopoly_bench.training` (`from ASU_FROZEN_TEACHER import
+  FROZEN_SPEC_HASH` at module scope), and `monopoly_bench.arena` (imports
+  `.adapters`, so it's the same problem transitively — an earlier version of
+  this document called `arena.play_game` "ASU-independent," which was
+  wrong at the import level; corrected 2026-08-11). Importing any of these
+  loads `ASU_FROZEN_TEACHER` into `sys.modules` as a side effect. `Trainer`/
+  `monopoly_bench train` is additionally unusable on its own merits: its
+  bootstrap directly imitates ASU (`bootstrap_asu_expert`/
+  `expert_train_step`, now banned), and its self-play population generation
+  (`training.py::population_jobs`) hardcodes ASU into part of every
+  generation's opponent pool with no disable flag.
+- `monopoly_bench/cli.py`'s `smoke` subcommand loads a PPO checkpoint into
+  `MonopolyZeroNet` and runs one `MaxNPUCT.choose_action` call — zero ASU
+  involvement, zero training (pure inference). Done — see
+  `docs/EXPERIMENTS.md`.
+- This project's own ASU-import-free wiring lives in
+  `scripts/monopolyzero_common.py`: a game loop, a search-policy wrapper, a
+  fixed-agent wrapper, and a training-update step, all built from the
+  ASU-clean primitives above with this project's own control flow/
+  expression (not copied from `adapters.py`/`arena.py`/`training.py` — see
+  the source-similarity audit note in that file's docstring and
+  `docs/DECISIONS.md`). A runtime guard checks `sys.modules` for
+  `ASU_FROZEN_TEACHER` at the end of every run using it.
 
-### Smallest ASU-independent MonopolyZero smoke plan (not yet started)
+### MonopolyZero progress
 
-1. Train a small PPO checkpoint purely for architectural compatibility (not
-   policy quality) — e.g. `tools/train_and_save.py --algo ppo --games 20`,
-   mirroring the already-validated DDQN 20-game smoke recipe
-   (`PYTHONHASHSEED=0`, `PYTHONIOENCODING=utf-8`, `psutil` installed,
-   reproducibility check recommended the same way as the DDQN one before
-   trusting it).
-2. Run `python -m monopoly_bench smoke` against that checkpoint — inference
-   only, no ASU, no training. Confirms `MonopolyZeroNet.load_ppo_actor` +
-   `MaxNPUCT` work end to end on our machine.
-3. Only after that passes: consider a hand-built, ASU-excluded self-play
-   loop using `MaxNPUCT` + `arena.play_game` + a hand-picked opponent pool
-   (fixed-a/b/c, and/or our own PPO/DDQN checkpoints — never
-   `ASUAdapter`/`asu_value_v1`/`asu_rollout_v1`) — this is genuinely new
-   wiring, not an existing entry point, and needs its own
-   `docs/DECISIONS.md` entry and small-step plan before being built. Not
-   started.
+1. ✅ PPO-compatible checkpoint trained (architecture compatibility only) —
+   `docs/EXPERIMENTS.md`.
+2. ✅ `python -m monopoly_bench smoke` passed — inference path validated.
+3. ✅ ASU-import-free self-play training-plumbing smoke (3 games, 1 update) —
+   `docs/EXPERIMENTS.md`, `logs/experiments/012-*.json`.
+4. Current: a small strength pilot (tens of games, paired evaluation against
+   a pre-training baseline) — see "Next measurable milestones" above.
 
 ## Future Phases (TBD)
 
