@@ -161,6 +161,19 @@ def test_reconcile_arm_against_023_raises_on_win_rate_mismatch():
         decomp_module.reconcile_arm_against_023(regenerated, logged, label="test")
 
 
+def test_reconcile_arm_against_023_matches_despite_int_vs_str_seat_keys():
+    """Regression: a freshly computed _arm_summary has int wins_by_seat keys
+    (0, 1, 2, 3), but 023's logged summary round-tripped through
+    json.loads has string keys ("0", "1", ...) - JSON object keys are
+    always strings. This must still reconcile as a match, not a spurious
+    failure."""
+    regenerated = _summary(wins_by_seat={0: 4, 1: 6, 2: 4, 3: 6})
+    logged = _summary(wins_by_seat={"0": 4, "1": 6, "2": 4, "3": 6})
+    result = decomp_module.reconcile_arm_against_023(regenerated, logged, label="test")
+    assert result["matches_023"] is True
+    assert result["wins_by_seat_match"] is True
+
+
 def test_reconcile_arm_against_023_raises_on_wins_by_seat_mismatch():
     regenerated = _summary(wins_by_seat={"0": 5, "1": 5, "2": 5, "3": 5})
     logged = _summary()

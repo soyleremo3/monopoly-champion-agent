@@ -210,7 +210,19 @@ def reconcile_arm_against_023(regenerated_summary: dict, logged_summary: dict, *
         else:
             deltas[field] = abs(regenerated_value - logged_value)
 
-    wins_by_seat_match = regenerated_summary.get("wins_by_seat") == logged_summary.get("wins_by_seat")
+    def _stringify_seat_keys(wins_by_seat: dict | None) -> dict | None:
+        # JSON object keys are always strings, so 023's logged wins_by_seat
+        # round-tripped through json.loads has string keys ("0","1",...)
+        # while a freshly computed summary has int keys (0,1,...) - normalize
+        # both to strings before comparing, or every regenerated arm would
+        # spuriously fail reconciliation despite identical values.
+        if wins_by_seat is None:
+            return None
+        return {str(seat): count for seat, count in wins_by_seat.items()}
+
+    wins_by_seat_match = _stringify_seat_keys(regenerated_summary.get("wins_by_seat")) == _stringify_seat_keys(
+        logged_summary.get("wins_by_seat")
+    )
     numeric_deltas = [delta for delta in deltas.values() if delta is not None]
     max_delta = max(numeric_deltas) if numeric_deltas else 0.0
     matches = (max_delta <= RECONCILIATION_TOLERANCE) and wins_by_seat_match
