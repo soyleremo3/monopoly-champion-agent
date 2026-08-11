@@ -134,15 +134,32 @@ as they are defined.
   The real competition horizon/rules/API remain `TBD` in
   `docs/RULES_SPEC.md` beyond even-building; that gap is independent of and
   blocks on top of every training/inference result recorded so far.
-- **Evaluation methodology is now governed by `docs/EVALUATION_PROTOCOL.md`**
-  — DEV / PROMOTION / FINAL_BLIND seed pools with a scope-exclusive guard
+- **Evaluation methodology: GO.** `docs/EVALUATION_PROTOCOL.md` — DEV /
+  PROMOTION / FINAL_BLIND seed pools with a scope-exclusive guard
   (`require_seed_scope`), and cluster-aware paired statistics in
   `scripts/evaluation_protocol.py`: a seed-block paired randomization test
   + seed-block bootstrap as the **primary** paired-comparison evidence
   (seat-level McNemar is kept only as a **secondary** diagnostic, since the
-  4 seats per seed are a cluster, not independent trials). Any new paired
-  evaluation should use that protocol rather than a from-scratch
-  Wilson-non-overlap check.
+  4 seats per seed are a cluster, not independent trials) — is adopted for
+  all evaluation going forward. Own test suite passing is what makes this a
+  GO; it is methodology, not an experiment result, so it has no
+  `logs/experiments/` entry of its own. Any new paired evaluation should
+  use that protocol rather than a from-scratch Wilson-non-overlap check.
+- **Current next milestone: a full-horizon value-learnability probe
+  (`020`).** Before any new strength/policy training, measure whether the
+  existing 300-dim state representation carries the true full-horizon
+  (`max_rounds=200`) final winner in a learnable way at all — a small,
+  separate, own-written `ValueProbe` supervised on real-final-winner labels
+  from 64 clean `POLICY_ONLY` self-play games, compared against uniform and
+  current-net-worth-leader baselines. Does not touch the policy network,
+  run PUCT, or make any win-rate/strength claim — see
+  `docs/EXPERIMENTS.md`/`logs/experiments/020-*.json` once run.
+- **Not yet approved: a factorized action head, or training any new actor
+  network.** Both are plausible next steps if `020` shows the state
+  representation *does* carry a learnable full-horizon signal, but neither
+  is decided or started here — either would need its own proposed
+  experiment and a `docs/DECISIONS.md` entry after `020`'s results are
+  read, not assumed from this milestone note.
 
 ## MonopolyZero (`monopoly_bench`) — ASU-independent parts only
 
@@ -203,12 +220,17 @@ Investigated 2026-08-11, then corrected the same day — see
    vs-fixed but fallback-contaminated); `013`'s replay is DEPRECATED/KILLed
    for strength training as a result (`019`, see `docs/DECISIONS.md` and
    `docs/EXPERIMENTS.md`).
-9. Current: methodology lockdown before any new training — a DEV /
-   PROMOTION / FINAL_BLIND seed-pool discipline and a paired McNemar +
-   seed-block-bootstrap evaluation helper, replacing ad-hoc Wilson-interval
-   comparisons as the promotion test. See `docs/EVALUATION_PROTOCOL.md` and
-   `scripts/evaluation_protocol.py`. No new games/training/evaluation are
-   run as part of this step — methodology/code only.
+9. ✅ Methodology lockdown before any new training — DEV / PROMOTION /
+   FINAL_BLIND seed-pool discipline (scope-exclusive guard) and cluster-aware
+   paired statistics (seed-block randomization test + bootstrap as primary,
+   seat-level McNemar demoted to secondary), replacing ad-hoc
+   Wilson-interval comparisons as the promotion test. See
+   `docs/EVALUATION_PROTOCOL.md` and `scripts/evaluation_protocol.py`.
+   **GO.**
+10. Current: full-horizon value-learnability probe (`020`) — does the
+    existing 300-dim state representation carry the true `max_rounds=200`
+    final winner in a learnable way, before any new policy/strength
+    training is proposed. No policy change, no PUCT, no win-rate claim.
 
 ## Future Phases (TBD)
 
