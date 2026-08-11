@@ -1,0 +1,60 @@
+{
+  "experiment_id": "002-ddqn-20-game-training-smoke",
+  "experiment_name": "First compliant DDQN training smoke (20 games, CPU) + seeded inference validation",
+  "experiment_type": "training_smoke",
+  "date": "2026-08-10",
+  "code_commit_sha": "cf73b575131488170e735d67eaa57b672fbf8ece",
+  "reference_submodule_sha": "afd9205761317e196d77f679921c35fb04c7ab96",
+  "exact_commands": [
+    "PYTHONHASHSEED=0 python references/DeepRL_Monopoly/tools/train_and_save.py --algo ddqn --games 20 --device cpu --seed 42 --checkpoint-every 10 --out artifacts/training_smoke/ddqn_hybrid_20_v2.pt",
+    "PYTHONHASHSEED=0 PYTHONIOENCODING=utf-8 python references/DeepRL_Monopoly/tools/train_and_save.py --algo ddqn --games 20 --device cpu --seed 42 --checkpoint-every 10 --out artifacts/training_smoke/ddqn_hybrid_20_v2.pt",
+    "PYTHONHASHSEED=0 python scripts/run_baseline_match.py --focus \"ddqn:<path>/artifacts/training_smoke/ddqn_hybrid_20_v2.pt\" --opponents fixed-a fixed-b fixed-c --seed 42 --output docs/baseline_runs/inference_ddqn_smoke.json"
+  ],
+  "seeds": [42],
+  "algorithm_config": {
+    "algo": "ddqn",
+    "hybrid": true,
+    "device": "cpu",
+    "opponents": ["FPAgentA (TheHoarder)", "FPAgentB (TheDealMaker)", "FPAgentC (TheGambler)"],
+    "reward": "potential-shaped (gamma * env._compute_reward(agent_pid) - Phi(prev)) + win/loss bonus",
+    "asu_involved": false,
+    "checkpoint_every": 10
+  },
+  "model_checkpoint": {
+    "sha256": "47f3c177c1ae42449b8b3d1a34c253204329e15240a6345d78412f4f900716f4",
+    "path": "artifacts/training_smoke/ddqn_hybrid_20_v2.pt",
+    "format_version": 3
+  },
+  "counts": {"games_trained": 20, "games_target": 20},
+  "runtime": {"wall_time_s": 175.19, "peak_rss_gib": 0.35},
+  "metrics": {
+    "win_rate_percent": 0.0,
+    "epsilon_start": 1.0,
+    "epsilon_end": 0.99,
+    "reward_min": -11.698729225929904,
+    "reward_max": -10.291332828894307,
+    "inference_validation": {
+      "command_wall_time_s": 9.18,
+      "checkpoint_metadata_validated": true,
+      "primary_game_result": {
+        "focus_seat": 0,
+        "winner": "seat 2 (fixed-b)",
+        "rounds": 200,
+        "decisions": 9703,
+        "elapsed_s": 3.89
+      },
+      "block_ddqn_win_rate_of_4": 0,
+      "block_total_fallbacks": 15,
+      "ddqn_fallbacks_in_block": 0,
+      "truncations": 0
+    }
+  },
+  "loss": null,
+  "integrity": {"illegal_actions": 0, "fallbacks": null, "crashes": 2},
+  "result": "Training+checkpoint+inference loop works end to end on CPU with zero ASU coupling (confirmed by grep across the full DDQN call chain, not just by not calling it). 2 crashes occurred and were fixed before the successful run, both environment/dependency gaps, not engine bugs (see notes). Checkpoint is not a meaningful policy (20 games, ~99% epsilon, 0% win rate) - this smoke proves plumbing, not agent quality.",
+  "raw_logs": [
+    "logs/experiments/raw/002-ddqn-20-game-training-smoke_stdout.txt",
+    "docs/baseline_runs/inference_ddqn_smoke.json"
+  ],
+  "notes": "The 2 crashes: (1) 'Memory watchdog stopped training: Process RSS is unavailable' - psutil was not yet installed and Windows has no /proc or resource module fallback (fixed: pip install psutil). (2) UnicodeEncodeError on the epsilon (ε) character under Windows cp1252 console encoding (fixed: PYTHONIOENCODING=utf-8). Both fixed without touching the submodule; see docs/EXPERIMENTS.md 2026-08-10 entry for exact tracebacks. integrity.fallbacks is null at top level because the DDQN training loop's own history schema does not expose a fallback counter (fixed-opponent substitutions inside monopoly_game_engine/train.py are not logged); the inference-validation sub-run's fallbacks (15, all from fixed-a/b/c, 0 from DDQN) are captured in metrics.inference_validation instead."
+}

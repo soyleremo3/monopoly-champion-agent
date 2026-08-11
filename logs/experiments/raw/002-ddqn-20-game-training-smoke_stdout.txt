@@ -1,0 +1,44 @@
+
+============================================================
+  Algorithm : DDQN
+  Mode      : Hybrid
+  Games     : 20
+  Device    : cpu
+  Save to   : artifacts/training_smoke/ddqn_hybrid_20_v2.pt
+============================================================
+
+
+============================================================
+Training Hybrid DDQN agent (player 0)
+Total games: 20  |  Log every: 1
+============================================================
+  Game     1 | Win%:   0.0%  ε=1.000 | Props: 9.0 | Trades init/acc/dec: 38.0/18.0/66.0
+  Game     2 | Win%:   0.0%  ε=0.999 | Props: 13.0 | Trades init/acc/dec: 27.0/9.0/34.0
+  Game     3 | Win%:   0.0%  ε=0.999 | Props: 19.0 | Trades init/acc/dec: 72.0/2.0/2.0
+  Game     4 | Win%:   0.0%  ε=0.998 | Props: 11.0 | Trades init/acc/dec: 86.0/3.0/6.0
+  Game     5 | Win%:   0.0%  ε=0.998 | Props: 11.0 | Trades init/acc/dec: 24.0/6.0/45.0
+  Game     6 | Win%:   0.0%  ε=0.997 | Props: 14.0 | Trades init/acc/dec: 63.0/1.0/3.0
+  Game     7 | Win%:   0.0%  ε=0.997 | Props: 10.0 | Trades init/acc/dec: 124.0/3.0/7.0
+  Game     8 | Win%:   0.0%  ε=0.996 | Props: 11.0 | Trades init/acc/dec: 44.0/6.0/116.0
+  Game     9 | Win%:   0.0%  ε=0.996 | Props: 9.0 | Trades init/acc/dec: 79.0/2.0/9.0
+  Game    10 | Win%:   0.0%  ε=0.995 | Props: 17.0 | Trades init/acc/dec: 105.0/3.0/8.0
+  Game    11 | Win%:   0.0%  ε=0.995 | Props: 22.0 | Trades init/acc/dec: 160.0/8.0/16.0
+  Game    12 | Win%:   0.0%  ε=0.994 | Props: 14.0 | Trades init/acc/dec: 48.0/2.0/0.0
+  Game    13 | Win%:   0.0%  ε=0.994 | Props: 10.0 | Trades init/acc/dec: 62.0/1.0/1.0
+  Game    14 | Win%:   0.0%  ε=0.993 | Props: 12.0 | Trades init/acc/dec: 27.0/8.0/32.0
+  Game    15 | Win%:   0.0%  ε=0.993 | Props: 9.0 | Trades init/acc/dec: 41.0/1.0/153.0
+  Game    16 | Win%:   0.0%  ε=0.992 | Props: 7.0 | Trades init/acc/dec: 7.0/1.0/7.0
+  Game    17 | Win%:   0.0%  ε=0.992 | Props: 6.0 | Trades init/acc/dec: 53.0/9.0/71.0
+  Game    18 | Win%:   0.0%  ε=0.991 | Props: 15.0 | Trades init/acc/dec: 37.0/1.0/31.0
+  Game    19 | Win%:   0.0%  ε=0.991 | Props: 14.0 | Trades init/acc/dec: 65.0/0.0/2.0
+  Game    20 | Win%:   0.0%  ε=0.990 | Props: 11.0 | Trades init/acc/dec: 49.0/4.0/17.0
+
+Training complete in 173.5s
+Games completed: 20/20
+Mean wall time: 8.675s/game
+Peak process RSS: 0.35 GiB
+Model saved to: artifacts/training_smoke/ddqn_hybrid_20_v2.pt
+Training history saved to: artifacts\training_smoke\ddqn_hybrid_20_v2_history.json
+
+Final win rate : 0.0%
+Best win rate  : 0.0%

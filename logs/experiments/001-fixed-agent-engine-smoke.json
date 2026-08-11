@@ -1,0 +1,46 @@
+{
+  "experiment_id": "001-fixed-agent-engine-smoke",
+  "experiment_name": "Fixed-agent 4-player engine smoke (fixed-d vs fixed-a/b/c)",
+  "experiment_type": "engine_smoke",
+  "date": "2026-08-10",
+  "code_commit_sha": "4943f70ebf566898de8df1e62830e13538177997",
+  "reference_submodule_sha": "afd9205761317e196d77f679921c35fb04c7ab96",
+  "exact_commands": [
+    "PYTHONHASHSEED=0 python scripts/run_baseline_match.py --seed 42 --output docs/baseline_runs/baseline_seed42_run1.json",
+    "PYTHONHASHSEED=0 python scripts/run_baseline_match.py --seed 42 --output docs/baseline_runs/baseline_seed42_run2.json"
+  ],
+  "seeds": [42],
+  "algorithm_config": {
+    "engine": "ppo-plus-v2",
+    "focus": "fixed-d",
+    "opponents": ["fixed-a", "fixed-b", "fixed-c"],
+    "checkpoint_required": false,
+    "asu_involved": false
+  },
+  "model_checkpoint": {"sha256": null, "path": null, "format_version": null},
+  "counts": {
+    "games": 4,
+    "rounds_total": 392,
+    "decisions_total": 11363,
+    "seat_rotation": "1 seed, focus rotated through all 4 seats"
+  },
+  "runtime": {"wall_time_s": 2.7, "peak_rss_gib": null},
+  "metrics": {
+    "winner_by_game": {
+      "game1_focus_seat0": "seat 0 (fixed-d)",
+      "game2_focus_seat1": "seat 1 (fixed-d)",
+      "game3_focus_seat2": "seat 1 (fixed-b)",
+      "game4_focus_seat3": "seat 3 (fixed-d)"
+    },
+    "fixed_d_wins_of_4": 3,
+    "not_a_strength_claim": "62 compatibility fallbacks in the block invalidate any win-rate reading; single seed"
+  },
+  "loss": null,
+  "integrity": {"illegal_actions": 0, "fallbacks": 62, "crashes": 0},
+  "result": "Engine runs fixed-vs-fixed 4-player games end to end with zero crashes and zero illegal actions. Reproducible bit-for-bit across two independent process launches when PYTHONHASHSEED=0 is pinned; NOT reproducible otherwise (see the critical PYTHONHASHSEED finding in docs/REFERENCE_AUDIT.md, discovered via this same experiment run without the pin first). 62 compatibility fallbacks in the block mean this is an engine-plumbing smoke, not a strength baseline (see docs/BASELINE.md's reclassification).",
+  "raw_logs": [
+    "docs/baseline_runs/baseline_seed42_run1.json",
+    "docs/baseline_runs/baseline_seed42_run2.json"
+  ],
+  "notes": "Full narrative and the non-deterministic-without-PYTHONHASHSEED diff are in docs/BASELINE.md and docs/REFERENCE_AUDIT.md#critical-issue-found. peak_rss_gib is null because it was not measured for this run (psutil RSS polling was only added in later experiments)."
+}
