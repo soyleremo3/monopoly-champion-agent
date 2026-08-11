@@ -102,3 +102,53 @@ only the calendar label was wrong in places. Fixed going forward from here.*
 - Decision: **Kill the current PUCT/MCTS inference path as currently configured** — it is not earning its computational cost on this checkpoint. **The next experiment should pivot toward a search-free learning objective/architecture**, not further MCTS tuning (simulation count, depth, etc. — 017 already killed that direction too). This is now the third and most direct of three independent tests (013/014 training pilot, 015/016 update-budget scaling, 017 search-budget scaling, 018 search-vs-no-search) all converging on the same conclusion for this checkpoint family: the missing skill is not being unlocked by spending more compute at either training time or inference time within the current recipe.
 - Alternatives considered: keep PUCT as the production inference path anyway on the theory that search should help in principle even if this measurement didn't show it (rejected — the whole point of this ablation was to test that assumption directly, on real held-out games, not asserted; a 2.93% disagreement rate with no win-rate difference is a clear negative result, not an inconclusive one); re-run with a larger seed sample to see if the 5.0%-vs-5.0% tie breaks (not decided here — the Wilson intervals here are already wide at n=40 per policy, so a larger sample is plausible future work, but it competes with the more promising open levers below rather than being an obvious next step on its own).
 - Reference checked: `references/DeepRL_Monopoly` at `afd9205761317e196d77f679921c35fb04c7ab96` (submodule unchanged, read-only). No training or reference code changed for this decision.
+
+## 2026-08-11 (later still x2) — Deprecate the 013 replay for strength training; horizon mismatch confirmed
+
+- Context: `019-monopolyzero-horizon-diagnostic` measured whether a round-50
+  net-worth leader (013's replay was generated at `max_rounds=50`) predicts
+  the round-200-or-terminal winner, on 32 fresh held-out games (seeds
+  `40000-40015`/`41000-41015`, never used before). Overall agreement was
+  **19/32 (59.4%)**. Split by category: **self-play 6/16 (37.5%), clean** —
+  no fixed-agent fallback substitutions possible in a self-play game, so
+  this number reflects the model's own play only. **vs-fixed 13/16
+  (81.25%), but contaminated**: 90 fixed-agent fallback substitutions
+  occurred across those 16 games (`TheDealMaker`/`TheGambler`/`TheHoarder`
+  proposing an illegal action and being substituted) — the vs-fixed
+  agreement number is not a clean read of the checkpoint's own horizon
+  behavior, since the opponents' actual policy was partly a fallback
+  substitute rather than their real scripted decision. Separately, the same
+  experiment ran a state-encoding ablation: cloning 200 non-forced
+  decision states from rounds 1-50 and flipping only `env.max_rounds`
+  (200 vs 50) confirmed, at runtime (not assumed), that exactly state-vector
+  index 278 (`round/max_rounds`) changes and nothing else, with small but
+  nonzero POLICY_ONLY action disagreement (1.5% baseline, 1.0% trained) and
+  a notably larger value-head delta for the trained checkpoint (~7.5x
+  baseline's).
+- Decision: **The existing 37,772-position replay from `013` is
+  DEPRECATED/KILLed as a source for any new strength-training run** — not
+  deleted (kept as historical/reference data, referenced by path and
+  provenance, same as any other artifact) — because a 59.4% overall / 37.5%
+  clean-self-play round-50-leader-equals-final-winner rate is too weak a
+  proxy signal for a `max_rounds=200`-evaluated agent to train on. **The
+  state-index-278 ablation result, on its own, is explicitly NOT sufficient
+  grounds for a feature-removal decision** (e.g. dropping or reweighting
+  the round/max_rounds scalar from the state encoding): the 200-state
+  sample was collected as the *first* 200 non-forced states encountered
+  across the 32 games in fixed (game-order, then turn-order) sequence, not
+  a round-stratified sample — so it is not guaranteed to represent rounds
+  1-50 evenly, and a feature-level change should not be made from an
+  un-stratified convenience sample. If that specific question (does the
+  round/max_rounds scalar itself need to change) becomes worth answering
+  later, it needs its own round-stratified experiment, not a reuse of this
+  one's states.
+- Alternatives considered: treat the 81.25% vs-fixed number as the headline
+  figure (rejected — it's inflated by fallback contamination, not a clean
+  signal; self-play's 37.5% is the trustworthy number here); make a
+  feature-removal call on the state encoding directly from the index-278
+  ablation (rejected — explicitly out of scope per the sampling caveat
+  above); keep training on the 013 replay anyway on the theory that a weak
+  proxy is still better than nothing (rejected — no evidence offered for
+  that claim, and it contradicts this project's own "no unverified
+  assumptions" rule in `CLAUDE.md`).
+- Reference checked: `references/DeepRL_Monopoly` at `afd9205761317e196d77f679921c35fb04c7ab96` (submodule unchanged, read-only). No training or reference code changed for this decision. Note: `max_rounds=200` here is this project's own current reference evaluation horizon, not a confirmed official competition parameter — see `docs/PLAN.md`'s P0 blocker note.
