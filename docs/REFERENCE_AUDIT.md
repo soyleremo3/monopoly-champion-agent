@@ -153,11 +153,20 @@ on seeded reproducibility for real experiments later.
 
 ## MonopolyZero / ASU-teacher-bootstrap path (read-only investigation, 2026-08-11)
 
+*Update, later the same day: `CLAUDE.md`'s ASU policy was re-locked to
+evaluation-only (see `docs/DECISIONS.md`), superseding the brief window where
+ASU-as-teacher was allowed. Two mentions below ("the corrected policy...
+permits/allows") describe that now-revoked window and are kept for history;
+they no longer reflect current policy. The "ASU-independent vs ASU-coupled
+parts" breakdown further down was added after the re-lock and is the current
+guidance for what's actually usable.*
+
 Investigated `monopoly_bench/` (`cli.py`, `training.py`, `model.py`,
-`config.py`, `watchdog.py`) to understand how ASU is used as a teacher there,
-without running any of it — no `monopoly_bench train`/`collect-asu`/
-`export-teacher` command was executed, per `CLAUDE.md`'s gate on starting
-this pipeline. Submodule untouched.
+`config.py`, `watchdog.py`, `adapters.py`, `search.py`, `arena.py`,
+`storage.py`, `ladder.py`) to understand how ASU is used as a teacher there,
+and which parts don't touch ASU at all, without running any of it — no
+`monopoly_bench train`/`collect-asu`/`export-teacher` command was executed,
+per `CLAUDE.md`'s gate on starting this pipeline. Submodule untouched.
 
 ### Scripts / entry points
 
@@ -258,6 +267,52 @@ just for `collect-asu`, before any of `train`'s 2,000-update bootstrap or
 further generations. This is an extrapolation from one seed's measured cost,
 not a direct measurement of `collect-asu` itself — flagged as an estimate,
 not a fact, in the numbers given to the user.
+
+### ASU-independent vs ASU-coupled parts (re-audited 2026-08-11 under the re-locked policy)
+
+Checked each of the four areas the current investigation asked about,
+specifically for ASU coupling (`grep -rn "ASU\|asu"` per file, plus reading
+the actual call graph, not just import lists):
+
+- **Policy/Value network** (`monopoly_bench/model.py::MonopolyZeroNet`) —
+  **ASU-independent.** Its only external weight source is a PPO checkpoint
+  (`load_ppo_actor`); ASU contributes nothing to the architecture or its
+  weights directly. It only becomes ASU-coupled if something else *trains*
+  it with ASU-derived targets (see `expert_train_step` above) — the network
+  class itself is clean and reusable standalone.
+- **PUCT/Max-N search** (`monopoly_bench/search.py::MaxNPUCT`) —
+  **ASU-independent.** Zero matches for "asu" in the file. Operates purely on
+  a `MonopolyZeroNet` and a cloned game state; does not know ASU exists.
+- **Self-play** (`monopoly_bench/training.py::generate_population_games` →
+  `population_jobs`) — **NOT ASU-independent as shipped.**
+  `population_jobs` (`training.py:493-533`) hardcodes
+  `asu_count = max(1, baseline_count // 2)` and always assigns that many of
+  the generation's "baseline" category jobs to `"asu_value_v1"` — there is no
+  parameter to exclude it, and `adapters.py::available_baselines` always adds
+  `baselines["asu_value_v1"] = ASUAdapter()` unconditionally (only the
+  rollout variant is optional, via `include_asu_rollout`). Concretely: every
+  single generation of self-play under `Trainer.run_generation` seats ASU as
+  an opponent in some of the games whose resulting positions feed the replay
+  buffer and `train_step`. Even though `train_step` itself only uses our own
+  model's MCTS visit counts and the real game winner (never ASU's action
+  choices) as training targets — so this is arguably not "ASU output as a
+  training label" in the strict sense — it is close enough to the re-locked
+  line (see `docs/DECISIONS.md`) that it should not be used as-is. An
+  ASU-independent self-play setup needs a hand-built opponent pool (e.g. via
+  `arena.play_game` directly with fixed/PPO/CFR/self-copy adapters only,
+  never `ASUAdapter`) rather than `Trainer.run_generation`/
+  `generate_population_games` as shipped.
+- **Checkpoint/evaluation**: `monopoly_bench/storage.py` (`CheckpointManager`,
+  `ReplayBuffer` persistence) — **ASU-independent**, zero "asu" matches.
+  `monopoly_bench/ladder.py` (promotion gate) — **uses ASU, but only as an
+  evaluation/gate opponent**: `evaluate_promotion`/`gate_run_directory`
+  require passing a `"mixed_asu_dealmaker_gambler"` matchup and an
+  `asu_rollout_screen` before a candidate can be promoted to "champion". This
+  is a legitimate, compliant use under the re-locked policy — ASU is being
+  used exactly as "an important evaluation opponent and anti-ASU robustness
+  benchmark" (per the competition-strategy decision), not as a training
+  signal; no gradient or label ever flows from these gate games into the
+  model.
 
 ### Does it need Modal?
 
