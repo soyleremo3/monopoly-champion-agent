@@ -810,3 +810,64 @@ bit-exact reproducible, and behaviorally verified equivalent to the prior
 implementation. This clears the way for the previously-recommended next
 step (more games, more `train_step` updates, then the existing paired-seed
 evaluation protocol) without carrying forward the import-graph caveat.
+
+## 2026-08-11 (later) — First MonopolyZero strength pilot: 32-game training
+
+- Housekeeping first: `docs/PLAN.md` updated (DDQN long-scaling paused, this
+  pilot is the current milestone), and a source-similarity audit of
+  `scripts/selfplay_train_smoke.py`'s game loop / training-update code found
+  real overlap with `arena.py::play_game` / `training.py::train_step`
+  (identical magic constants, near line-for-line structure with renamed
+  variables) — with no compatible license in the reference repo, that's a
+  real risk. Refactored into `scripts/monopolyzero_common.py` with a
+  different decision-seed mix, a different control-flow shape (closure +
+  `while` loop vs. a single `for step in range(...)` body), and a dense
+  scatter-then-normalize policy-target formulation instead of the
+  reference's sparse gather-and-mask — same verified behavior, independent
+  expression. See that module's docstring and `docs/DECISIONS.md`.
+  Verification run after the refactor caught a real bug (dense policy
+  cross-entropy produced `NaN` from `0 * -inf` on masked illegal-action
+  logits) — fixed and regression-tested before proceeding to this pilot.
+
+### Training
+
+New reusable runners: `scripts/monopolyzero_strength_train.py` and
+`scripts/monopolyzero_strength_eval.py`, both built on
+`monopolyzero_common.py` — no `monopoly_bench.adapters`/`.arena`/`.training`
+import anywhere, verified by the same `sys.modules` guard used since the
+ASU-import-free self-play smoke.
+
+```bash
+PYTHONHASHSEED=0 PYTHONIOENCODING=utf-8 python scripts/monopolyzero_strength_train.py
+```
+
+- **32/32 games completed** (16 self-play, our model in every seat; 16
+  vs-fixed, our model seat-rotated evenly 0-3, `fixed-a/b/c` filling the
+  rest), seed 42, CPU, 4 PUCT simulations, `max_rounds=50`.
+- **0 illegal actions, 0 crashes.** 11 fixed-agent fallbacks total, all from
+  `TheDealMaker` in one game (seed 20013) — not an error, the documented
+  compatibility-fallback path.
+- **37,772 positions** collected into the replay buffer (all accepted).
+- **100/100 training updates finite** — final update: `loss=2.4687`,
+  `policy_loss=1.6583`, `value_loss=0.8104`, `gradient_norm=3.1287`.
+- Optimizer hyperparameters (`lr=3e-4`, `weight_decay=1e-4`,
+  `gradient_clip=1.0`) read directly from `monopoly_bench.config
+  .TrainingConfig`'s defaults (an ASU-free dataclass, just parameters).
+  `batch_size=64` and `updates=100` are this project's own pilot-scale
+  choice, not `TrainingConfig`'s frozen-v1 defaults (`batch_size=256`,
+  `updates_per_generation=1000`, sized for 32-games-*per-generation* at full
+  scale, not a one-shot 32-game pilot).
+- Wall time **301.55s** (~5 min), peak RSS **0.665 GiB**.
+- `asu_modules_loaded: []` (count 0) — confirmed by the script's own guard.
+- Checkpoints saved and hashed, not committed (gitignored):
+  baseline (pre-training) SHA-256
+  `22ae2abea60478355f61ce0404a31de3b52fb97769d4f99f7e04f4c673629370`,
+  trained (post-training) SHA-256
+  `d00263f4a2ab3cdd73a4d2691bdfae42385292a153996a17198b0074433d0f93`.
+
+None of the stop conditions triggered (no crash, no illegal action, no
+non-finite loss, no ASU module load), so proceeding to the paired evaluation
+— see the next entry.
+
+Full structured record:
+[logs/experiments/013-monopolyzero-strength-pilot-training.json](../logs/experiments/013-monopolyzero-strength-pilot-training.json).

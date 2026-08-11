@@ -1,0 +1,529 @@
+{
+  "asu_modules_loaded": [],
+  "asu_modules_loaded_count": 0,
+  "baseline_checkpoint": {
+    "path": "C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\monopolyzero_strength_pilot\\baseline_pretraining.pt",
+    "sha256": "22ae2abea60478355f61ce0404a31de3b52fb97769d4f99f7e04f4c673629370"
+  },
+  "config": {
+    "batch_size": 64,
+    "batch_size_and_updates_source": "this project's own pilot-scale choice, not TrainingConfig's frozen-v1 defaults (batch_size=256, updates_per_generation=1000, sized for a 32-games-per-generation full run, not a one-shot 32-game pilot)",
+    "games_total": 32,
+    "global_seed": 42,
+    "gradient_clip": 1.0,
+    "learning_rate": 0.0003,
+    "max_depth": 16,
+    "max_rounds": 50,
+    "opponent_mix": "16 self-play games (model controls all 4 seats) + 16 vs-fixed games (model rotates through seats 0-3, 4 times each; fixed-a/b/c fill the other 3 seats)",
+    "optimizer_source": "monopoly_bench.config.TrainingConfig defaults (learning_rate/weight_decay/gradient_clip only)",
+    "simulations": 4,
+    "updates_requested": 100,
+    "weight_decay": 0.0001
+  },
+  "elapsed_s": 299.97408459999133,
+  "final_update_stats": {
+    "gradient_norm": 3.1286780834198,
+    "loss": 2.468712329864502,
+    "policy_loss": 1.6582667827606201,
+    "value_loss": 0.8104456067085266
+  },
+  "games": [
+    {
+      "category": "self_play",
+      "completed": true,
+      "crashed": false,
+      "decisions": 2710,
+      "error": null,
+      "fixed_fallbacks": {},
+      "focus_seat": null,
+      "illegal_actions": 0,
+      "positions_collected": 2102,
+      "seed": 10000,
+      "winner": 1
+    },
+    {
+      "category": "self_play",
+      "completed": true,
+      "crashed": false,
+      "decisions": 2474,
+      "error": null,
+      "fixed_fallbacks": {},
+      "focus_seat": null,
+      "illegal_actions": 0,
+      "positions_collected": 1879,
+      "seed": 10001,
+      "winner": 0
+    },
+    {
+      "category": "self_play",
+      "completed": true,
+      "crashed": false,
+      "decisions": 2332,
+      "error": null,
+      "fixed_fallbacks": {},
+      "focus_seat": null,
+      "illegal_actions": 0,
+      "positions_collected": 1825,
+      "seed": 10002,
+      "winner": 0
+    },
+    {
+      "category": "self_play",
+      "completed": true,
+      "crashed": false,
+      "decisions": 2757,
+      "error": null,
+      "fixed_fallbacks": {},
+      "focus_seat": null,
+      "illegal_actions": 0,
+      "positions_collected": 2084,
+      "seed": 10003,
+      "winner": 2
+    },
+    {
+      "category": "self_play",
+      "completed": true,
+      "crashed": false,
+      "decisions": 2382,
+      "error": null,
+      "fixed_fallbacks": {},
+      "focus_seat": null,
+      "illegal_actions": 0,
+      "positions_collected": 1796,
+      "seed": 10004,
+      "winner": 0
+    },
+    {
+      "category": "self_play",
+      "completed": true,
+      "crashed": false,
+      "decisions": 2841,
+      "error": null,
+      "fixed_fallbacks": {},
+      "focus_seat": null,
+      "illegal_actions": 0,
+      "positions_collected": 2170,
+      "seed": 10005,
+      "winner": 2
+    },
+    {
+      "category": "self_play",
+      "completed": true,
+      "crashed": false,
+      "decisions": 2550,
+      "error": null,
+      "fixed_fallbacks": {},
+      "focus_seat": null,
+      "illegal_actions": 0,
+      "positions_collected": 1951,
+      "seed": 10006,
+      "winner": 2
+    },
+    {
+      "category": "self_play",
+      "completed": true,
+      "crashed": false,
+      "decisions": 2620,
+      "error": null,
+      "fixed_fallbacks": {},
+      "focus_seat": null,
+      "illegal_actions": 0,
+      "positions_collected": 2026,
+      "seed": 10007,
+      "winner": 3
+    },
+    {
+      "category": "self_play",
+      "completed": true,
+      "crashed": false,
+      "decisions": 2352,
+      "error": null,
+      "fixed_fallbacks": {},
+      "focus_seat": null,
+      "illegal_actions": 0,
+      "positions_collected": 1808,
+      "seed": 10008,
+      "winner": 0
+    },
+    {
+      "category": "self_play",
+      "completed": true,
+      "crashed": false,
+      "decisions": 2474,
+      "error": null,
+      "fixed_fallbacks": {},
+      "focus_seat": null,
+      "illegal_actions": 0,
+      "positions_collected": 1858,
+      "seed": 10009,
+      "winner": 3
+    },
+    {
+      "category": "self_play",
+      "completed": true,
+      "crashed": false,
+      "decisions": 2679,
+      "error": null,
+      "fixed_fallbacks": {},
+      "focus_seat": null,
+      "illegal_actions": 0,
+      "positions_collected": 2077,
+      "seed": 10010,
+      "winner": 0
+    },
+    {
+      "category": "self_play",
+      "completed": true,
+      "crashed": false,
+      "decisions": 2802,
+      "error": null,
+      "fixed_fallbacks": {},
+      "focus_seat": null,
+      "illegal_actions": 0,
+      "positions_collected": 2172,
+      "seed": 10011,
+      "winner": 1
+    },
+    {
+      "category": "self_play",
+      "completed": true,
+      "crashed": false,
+      "decisions": 2948,
+      "error": null,
+      "fixed_fallbacks": {},
+      "focus_seat": null,
+      "illegal_actions": 0,
+      "positions_collected": 2277,
+      "seed": 10012,
+      "winner": 1
+    },
+    {
+      "category": "self_play",
+      "completed": true,
+      "crashed": false,
+      "decisions": 2726,
+      "error": null,
+      "fixed_fallbacks": {},
+      "focus_seat": null,
+      "illegal_actions": 0,
+      "positions_collected": 2094,
+      "seed": 10013,
+      "winner": 0
+    },
+    {
+      "category": "self_play",
+      "completed": true,
+      "crashed": false,
+      "decisions": 2849,
+      "error": null,
+      "fixed_fallbacks": {},
+      "focus_seat": null,
+      "illegal_actions": 0,
+      "positions_collected": 2264,
+      "seed": 10014,
+      "winner": 1
+    },
+    {
+      "category": "self_play",
+      "completed": true,
+      "crashed": false,
+      "decisions": 3036,
+      "error": null,
+      "fixed_fallbacks": {},
+      "focus_seat": null,
+      "illegal_actions": 0,
+      "positions_collected": 2317,
+      "seed": 10015,
+      "winner": 1
+    },
+    {
+      "category": "vs_fixed",
+      "completed": true,
+      "crashed": false,
+      "decisions": 2116,
+      "error": null,
+      "fixed_fallbacks": {
+        "TheDealMaker": 0,
+        "TheGambler": 0,
+        "TheHoarder": 0
+      },
+      "focus_seat": 0,
+      "illegal_actions": 0,
+      "positions_collected": 301,
+      "seed": 20000,
+      "winner": 2
+    },
+    {
+      "category": "vs_fixed",
+      "completed": true,
+      "crashed": false,
+      "decisions": 2013,
+      "error": null,
+      "fixed_fallbacks": {
+        "TheDealMaker": 0,
+        "TheGambler": 0,
+        "TheHoarder": 0
+      },
+      "focus_seat": 1,
+      "illegal_actions": 0,
+      "positions_collected": 314,
+      "seed": 20001,
+      "winner": 2
+    },
+    {
+      "category": "vs_fixed",
+      "completed": true,
+      "crashed": false,
+      "decisions": 1814,
+      "error": null,
+      "fixed_fallbacks": {
+        "TheDealMaker": 0,
+        "TheGambler": 0,
+        "TheHoarder": 0
+      },
+      "focus_seat": 2,
+      "illegal_actions": 0,
+      "positions_collected": 213,
+      "seed": 20002,
+      "winner": 1
+    },
+    {
+      "category": "vs_fixed",
+      "completed": true,
+      "crashed": false,
+      "decisions": 2063,
+      "error": null,
+      "fixed_fallbacks": {
+        "TheDealMaker": 0,
+        "TheGambler": 0,
+        "TheHoarder": 0
+      },
+      "focus_seat": 3,
+      "illegal_actions": 0,
+      "positions_collected": 351,
+      "seed": 20003,
+      "winner": 2
+    },
+    {
+      "category": "vs_fixed",
+      "completed": true,
+      "crashed": false,
+      "decisions": 1982,
+      "error": null,
+      "fixed_fallbacks": {
+        "TheDealMaker": 0,
+        "TheGambler": 0,
+        "TheHoarder": 0
+      },
+      "focus_seat": 0,
+      "illegal_actions": 0,
+      "positions_collected": 265,
+      "seed": 20004,
+      "winner": 2
+    },
+    {
+      "category": "vs_fixed",
+      "completed": true,
+      "crashed": false,
+      "decisions": 2127,
+      "error": null,
+      "fixed_fallbacks": {
+        "TheDealMaker": 0,
+        "TheGambler": 0,
+        "TheHoarder": 0
+      },
+      "focus_seat": 1,
+      "illegal_actions": 0,
+      "positions_collected": 356,
+      "seed": 20005,
+      "winner": 2
+    },
+    {
+      "category": "vs_fixed",
+      "completed": true,
+      "crashed": false,
+      "decisions": 2034,
+      "error": null,
+      "fixed_fallbacks": {
+        "TheDealMaker": 0,
+        "TheGambler": 0,
+        "TheHoarder": 0
+      },
+      "focus_seat": 2,
+      "illegal_actions": 0,
+      "positions_collected": 358,
+      "seed": 20006,
+      "winner": 3
+    },
+    {
+      "category": "vs_fixed",
+      "completed": true,
+      "crashed": false,
+      "decisions": 1941,
+      "error": null,
+      "fixed_fallbacks": {
+        "TheDealMaker": 0,
+        "TheGambler": 0,
+        "TheHoarder": 0
+      },
+      "focus_seat": 3,
+      "illegal_actions": 0,
+      "positions_collected": 363,
+      "seed": 20007,
+      "winner": 1
+    },
+    {
+      "category": "vs_fixed",
+      "completed": true,
+      "crashed": false,
+      "decisions": 1858,
+      "error": null,
+      "fixed_fallbacks": {
+        "TheDealMaker": 0,
+        "TheGambler": 0,
+        "TheHoarder": 0
+      },
+      "focus_seat": 0,
+      "illegal_actions": 0,
+      "positions_collected": 301,
+      "seed": 20008,
+      "winner": 2
+    },
+    {
+      "category": "vs_fixed",
+      "completed": true,
+      "crashed": false,
+      "decisions": 1975,
+      "error": null,
+      "fixed_fallbacks": {
+        "TheDealMaker": 0,
+        "TheGambler": 0,
+        "TheHoarder": 0
+      },
+      "focus_seat": 1,
+      "illegal_actions": 0,
+      "positions_collected": 406,
+      "seed": 20009,
+      "winner": 2
+    },
+    {
+      "category": "vs_fixed",
+      "completed": true,
+      "crashed": false,
+      "decisions": 1962,
+      "error": null,
+      "fixed_fallbacks": {
+        "TheDealMaker": 0,
+        "TheGambler": 0,
+        "TheHoarder": 0
+      },
+      "focus_seat": 2,
+      "illegal_actions": 0,
+      "positions_collected": 249,
+      "seed": 20010,
+      "winner": 1
+    },
+    {
+      "category": "vs_fixed",
+      "completed": true,
+      "crashed": false,
+      "decisions": 1879,
+      "error": null,
+      "fixed_fallbacks": {
+        "TheDealMaker": 0,
+        "TheGambler": 0,
+        "TheHoarder": 0
+      },
+      "focus_seat": 3,
+      "illegal_actions": 0,
+      "positions_collected": 319,
+      "seed": 20011,
+      "winner": 1
+    },
+    {
+      "category": "vs_fixed",
+      "completed": true,
+      "crashed": false,
+      "decisions": 1845,
+      "error": null,
+      "fixed_fallbacks": {
+        "TheDealMaker": 0,
+        "TheGambler": 0,
+        "TheHoarder": 0
+      },
+      "focus_seat": 0,
+      "illegal_actions": 0,
+      "positions_collected": 250,
+      "seed": 20012,
+      "winner": 2
+    },
+    {
+      "category": "vs_fixed",
+      "completed": true,
+      "crashed": false,
+      "decisions": 1882,
+      "error": null,
+      "fixed_fallbacks": {
+        "TheDealMaker": 11,
+        "TheGambler": 0,
+        "TheHoarder": 0
+      },
+      "focus_seat": 1,
+      "illegal_actions": 0,
+      "positions_collected": 228,
+      "seed": 20013,
+      "winner": 3
+    },
+    {
+      "category": "vs_fixed",
+      "completed": true,
+      "crashed": false,
+      "decisions": 2406,
+      "error": null,
+      "fixed_fallbacks": {
+        "TheDealMaker": 0,
+        "TheGambler": 0,
+        "TheHoarder": 0
+      },
+      "focus_seat": 2,
+      "illegal_actions": 0,
+      "positions_collected": 393,
+      "seed": 20014,
+      "winner": 1
+    },
+    {
+      "category": "vs_fixed",
+      "completed": true,
+      "crashed": false,
+      "decisions": 2257,
+      "error": null,
+      "fixed_fallbacks": {
+        "TheDealMaker": 0,
+        "TheGambler": 0,
+        "TheHoarder": 0
+      },
+      "focus_seat": 3,
+      "illegal_actions": 0,
+      "positions_collected": 405,
+      "seed": 20015,
+      "winner": 1
+    }
+  ],
+  "git_head_sha": "6bda4963f9fb05b0560e0e663d921b36f316a8a3",
+  "loss_all_finite": true,
+  "peak_rss_gib": 0.6654853820800781,
+  "positions_collected_total": 37772,
+  "replay_buffer_size_after_append": 37772,
+  "replay_indices_written": 37772,
+  "status": "OK",
+  "total_crashed": 0,
+  "total_illegal_actions": 0,
+  "trained_checkpoint": {
+    "path": "C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\monopolyzero_strength_pilot\\trained_32games.pt",
+    "sha256": "d00263f4a2ab3cdd73a4d2691bdfae42385292a153996a17198b0074433d0f93"
+  },
+  "updates_completed": 100
+}
+real 301.55
+user 0.00
+sys 0.02
