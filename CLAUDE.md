@@ -21,16 +21,28 @@ These rules govern how work proceeds in this repo. They override default behavio
 
 ## Experiment Logging (mandatory)
 
+*Corrected 2026-08-12: `code_commit_sha`'s meaning was originally wrong (see
+below) — fixed here and in `logs/experiments/schema.json` and `README.md`.*
+
 - Every training run, benchmark, reproducibility check, A/B test, or
   replay-derived result **must** get a `logs/experiments/NNN-slug.json`
   entry conforming to `logs/experiments/schema.json` — see
   `logs/experiments/README.md` for the standard. This is required, not
   optional, starting 2026-08-11.
+- **The working tree must be `git status --porcelain`-clean before a
+  meaningful experiment starts.** Commit and push any pending code changes
+  first, then run the experiment against that clean HEAD.
+- `code_commit_sha` in the log entry is that clean HEAD SHA (`git rev-parse
+  HEAD`) captured *at the moment the experiment ran* — **not** the commit
+  that later records the results in `docs/EXPERIMENTS.md`/the log itself.
+  Which commit added a given log file is already discoverable via `git log`/
+  `git blame` on that file, so it is not duplicated as a separate field.
 - Write the JSON log entry as part of the same commit that records the
   experiment in `docs/EXPERIMENTS.md` — not a separate, later, or skipped
   step.
 - Unknown or unmeasured values are `null` in the log — never guessed or
-  estimated into a field that should hold a measured number.
+  estimated into a field that should hold a measured number. This includes
+  `code_commit_sha` itself when the clean-tree discipline wasn't followed.
 - Never commit checkpoints, replay buffers, or other large/binary artifacts
   into `logs/experiments/` (or anywhere else in this repo) — reference them
   by SHA-256 and local path instead. Small raw stdout/stderr `.txt` logs are

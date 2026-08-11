@@ -59,3 +59,35 @@ def test_raw_logs_paths_exist_when_declared(path):
 def test_experiment_ids_are_unique():
     ids = [json.loads(path.read_text(encoding="utf-8"))["experiment_id"] for path in _log_paths]
     assert len(ids) == len(set(ids)), f"duplicate experiment_id(s): {ids}"
+
+
+# ── code_commit_sha semantics (corrected 2026-08-12) ────────────────────────
+# code_commit_sha must be the clean git HEAD SHA at run time, never "the
+# commit that recorded the results". Entries 001-010 predate the
+# clean-tree-before-run discipline, so they were corrected to null.
+
+_PRE_DISCIPLINE_IDS = {
+    "001-fixed-agent-engine-smoke",
+    "002-ddqn-20-game-training-smoke",
+    "003-ddqn-reproducibility-check",
+    "004-ddqn-500-game-training",
+    "005-ddqn-20-vs-500-paired-evaluation",
+    "006-asu-evaluation-only-benchmark",
+    "007-ppo-1-game-compatibility-checkpoint",
+    "008-monopolyzero-inference-smoke",
+    "009-monopolyzero-puct-sim-runtime",
+    "010-selfplay-training-plumbing-smoke",
+}
+
+
+@pytest.mark.parametrize(
+    "path",
+    [path for path in _log_paths if path.stem in _PRE_DISCIPLINE_IDS],
+    ids=lambda path: path.stem,
+)
+def test_pre_discipline_entries_have_null_code_commit_sha(path):
+    entry = json.loads(path.read_text(encoding="utf-8"))
+    assert entry["code_commit_sha"] is None, (
+        f"{path.name}: predates the clean-tree-before-run discipline, "
+        "code_commit_sha must be null, not a 'recorded the results' commit"
+    )

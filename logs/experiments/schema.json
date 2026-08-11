@@ -56,7 +56,7 @@
     "code_commit_sha": {
       "type": ["string", "null"],
       "pattern": "^[0-9a-f]{7,40}$",
-      "description": "Full SHA of the commit that recorded this experiment's results in this repo. null only if genuinely unknown."
+      "description": "The clean git HEAD SHA of THIS repo at the moment the experiment was actually run (git rev-parse HEAD, captured only when git status --porcelain was empty). This is NOT the commit that later recorded/committed the results - do not backfill it with that. null only if genuinely unknown (e.g. the clean-tree-before-running discipline did not exist yet when the run happened)."
     },
     "reference_submodule_sha": {
       "type": ["string", "null"],
