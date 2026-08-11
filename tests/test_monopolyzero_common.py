@@ -505,6 +505,19 @@ def test_invoke_policy_normalizes_policy_only_kind_to_result_object():
     assert latency_s == result.latency_s
 
 
+def test_invoke_policy_normalizes_hybrid_compat_kind_to_result_object():
+    AT = _action_type()
+    model = _FakeModel()
+    policy = _build_hybrid_compat(model, buy_decision=False, accept_trade_decision=False)
+    legal = (int(AT.END_TURN), int(AT.ROLL_DICE))
+    game = _FakeGame(_FakeHybridEnv(legal=legal))
+    action, latency_s, result, kind = common._invoke_policy(policy, game, seat=0, decision_seed=0)
+    assert kind == "hybrid_compat"
+    assert action == result.chosen_action
+    assert latency_s == result.latency_s
+    assert latency_s is not None
+
+
 # ── play_local_game: shadow_policy hook signature ─────────────────────────
 
 

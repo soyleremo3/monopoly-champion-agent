@@ -395,10 +395,10 @@ class LocalGameOutcome:
 def _invoke_policy(policy, game, seat: int, decision_seed: int):
     """Runs one policy's choose() and normalizes the return shape: (action,
     latency_s|None, result|None, kind). `result` carries visits/q_values/
-    root_value for kinds that have them (search, policy_only) and is None
-    for plain-int-returning kinds (fixed)."""
+    root_value for kinds that have them (search, policy_only, hybrid_compat)
+    and is None for plain-int-returning kinds (fixed)."""
     kind = getattr(policy, "kind", None)
-    if kind in ("search", "policy_only"):
+    if kind in ("search", "policy_only", "hybrid_compat"):
         result = policy.choose(game, seat, decision_seed)
         return result.chosen_action, result.latency_s, result, kind
     return policy.choose(game, seat, decision_seed), None, None, kind
