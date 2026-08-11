@@ -1,0 +1,88 @@
+{
+  "experiment_id": "021-monopolyzero-value-generalization-probe",
+  "experiment_name": "Value-generalization probe: unbiased TEST-set read after fixing 020's validation-doubles-as-early-stopping and first-N sampling gaps",
+  "experiment_type": "training_run",
+  "date": "2026-08-11",
+  "code_commit_sha": "645fd5777639afbf11c988bbe275135918cb57d1",
+  "reference_submodule_sha": "afd9205761317e196d77f679921c35fb04c7ab96",
+  "exact_commands": [
+    "PYTHONHASHSEED=0 PYTHONIOENCODING=utf-8 python scripts/monopolyzero_value_generalization_probe.py"
+  ],
+  "seeds": [42100, 42101, 42102, 42103, 42104, 42105, 42106, 42107, 42108, 42109, 42110, 42111, 42112, 42113, 42114, 42115, 42116, 42117, 42118, 42119, 42120, 42121, 42122, 42123, 42124, 42125, 42126, 42127, 42128, 42129, 42130, 42131, 42132, 42133, 42134, 42135, 42136, 42137, 42138, 42139, 42140, 42141, 42142, 42143, 42144, 42145, 42146, 42147, 42148, 42149, 42150, 42151, 42152, 42153, 42154, 42155, 42156, 42157, 42158, 42159, 42160, 42161, 42162, 42163, 42164, 42165, 42166, 42167, 42168, 42169, 42170, 42171, 42172, 42173, 42174, 42175, 42176, 42177, 42178, 42179, 42180, 42181, 42182, 42183, 42184, 42185, 42186, 42187, 42188, 42189, 42190, 42191, 42192, 42193, 42194, 42195],
+  "algorithm_config": {
+    "seed_pool": "DEV (evaluation_protocol.require_seed_scope, 42100-42195, registered before this run)",
+    "games_total": 96,
+    "policy": "POLICY_ONLY (no MCTS/PUCT)",
+    "opponents": "none - all 4 seats are baseline_pretraining.pt, clean self-play, zero fixed agents, zero ASU",
+    "max_rounds": 200,
+    "split": "64 TRAIN / 16 SELECTION / 16 TEST games - TEST touched exactly once, only for the final 64-train-game model; never used for early stopping, hyperparameter/temperature selection, or model choice",
+    "round_buckets": ["1-25", "26-50", "51-100", "101-150", "151-terminal"],
+    "samples_per_cell": 3,
+    "sampling_method": "quantile-spread (min/median/max of available occurrences per game/seat/bucket) - fixes 020's first-N clustering",
+    "label": "actor-relative one-hot of the REAL final winner",
+    "value_probe_architecture": "same as 020: own-written MLP 300 -> Linear(256) -> ReLU -> Linear(4), CPU, reused directly from monopolyzero_value_learnability_probe.py",
+    "value_probe_training": {"early_stopping_split": "SELECTION", "training_seed": 0},
+    "baselines_compared": ["uniform", "hard current-net-worth-leader (accuracy diagnostic only)", "probabilistic net-worth-leader (temperature-scaled softmax, temperature fit on TRAIN+SELECTION pooled only, never TEST)"],
+    "temperature_grid": [50.0, 100.0, 200.0, 500.0, 1000.0, 2000.0, 5000.0, 10000.0, 20000.0, 50000.0],
+    "fitted_temperature": 500.0,
+    "learning_curve_train_game_counts": [16, 32, 64],
+    "learning_curve_evaluated_on": "SELECTION only, for all three points including the 64-game one (TEST is not touched repeatedly)",
+    "uncertainty_method": "game-block (not state-level) bootstrap - states from the same game are correlated, so the unit of resampling is the game",
+    "bootstrap_resamples": 2000,
+    "bootstrap_seed": 0,
+    "reuses_020_games": false,
+    "no_policy_training": true,
+    "no_puct": true,
+    "no_win_rate_evaluation": true,
+    "no_arbitrary_go_kill_threshold": true,
+    "asu_involved": false
+  },
+  "model_checkpoint": {
+    "sha256": "22ae2abea60478355f61ce0404a31de3b52fb97769d4f99f7e04f4c673629370",
+    "path": "artifacts/monopolyzero_strength_pilot/baseline_pretraining.pt",
+    "format_version": 1
+  },
+  "counts": {
+    "games_total": 96,
+    "train_games": 64,
+    "selection_games": 16,
+    "test_games": 16,
+    "train_states": 2598,
+    "selection_states": 656,
+    "test_states": 759
+  },
+  "runtime": {"wall_time_s": 1636.2106430999993, "peak_rss_gib": 0.4971275329589844},
+  "metrics": {
+    "test_overall": {
+      "uniform": {"cross_entropy": 1.3862943611198906, "brier_score": 0.75, "top1_accuracy": 0.30039525691699603, "ece": 0.050395256916996034},
+      "hard_net_worth_leader": {"cross_entropy": 0.5096659929200124, "brier_score": 0.07378099605943085, "top1_accuracy": 0.9631093544137023, "ece": 0.03688764558629798},
+      "probabilistic_net_worth_leader": {"cross_entropy": 0.06338964916824777, "brier_score": 0.031589695206331786, "top1_accuracy": 0.9657444005270093, "ece": 0.018939096558304704},
+      "learned_value_probe": {"cross_entropy": 1.1823417251498285, "brier_score": 0.6434750784030007, "top1_accuracy": 0.5546772068511199, "ece": 0.2664468061861156}
+    },
+    "test_probabilistic_leader_by_bucket_top1_accuracy": {"1-25": 0.8624338624338624, "26-50": 1.0, "51-100": 1.0, "101-150": 1.0, "151-terminal": 1.0},
+    "test_learned_by_bucket_top1_accuracy": {"1-25": 0.5873015873015873, "26-50": 0.43137254901960786, "51-100": 0.5533333333333333, "101-150": 0.5777777777777777, "151-terminal": 0.6287878787878788},
+    "game_block_bootstrap_learned_vs_probabilistic_leader": {
+      "cross_entropy_diff": {"point": 1.1189520759815808, "ci_95": [0.7474938860259, 1.5554921637804655]},
+      "brier_diff": {"point": 0.6118853831966689, "ci_95": [0.4497829601511245, 0.7618518359416853]},
+      "accuracy_diff": {"point": -0.4110671936758894, "ci_95": [-0.5033244643802413, -0.3091108966108967]},
+      "n_games": 16, "n_resamples": 2000
+    },
+    "learning_curve_selection": [
+      {"train_games": 16, "train_states": 639, "epochs_run": 24, "selection_cross_entropy": 1.1047935999850738, "selection_brier_score": 0.6696296483873586, "selection_top1_accuracy": 0.46189024390243905},
+      {"train_games": 32, "train_states": 1266, "epochs_run": 22, "selection_cross_entropy": 1.0146812236207365, "selection_brier_score": 0.6133219585402218, "selection_top1_accuracy": 0.5228658536585366},
+      {"train_games": 64, "train_states": 2598, "epochs_run": 32, "selection_cross_entropy": 0.8138130558300912, "selection_brier_score": 0.4433393894266265, "selection_top1_accuracy": 0.6920731707317073}
+    ],
+    "bucket_provenance_test": {
+      "1-25": {"count": 189, "unique_games": 16, "median_round": 9, "min_round": 1, "max_round": 25},
+      "26-50": {"count": 153, "unique_games": 16, "median_round": 38, "min_round": 26, "max_round": 50},
+      "51-100": {"count": 150, "unique_games": 16, "median_round": 75.0, "min_round": 51, "max_round": 100},
+      "101-150": {"count": 135, "unique_games": 14, "median_round": 125, "min_round": 101, "max_round": 150},
+      "151-terminal": {"count": 132, "unique_games": 14, "median_round": 174.5, "min_round": 151, "max_round": 199}
+    }
+  },
+  "loss": {"final_value_probe_selection_loss_at_early_stop": 0.8138130903244019, "epochs_run": 32, "test_cross_entropy": 1.1823417251498285, "note": "SELECTION loss (0.814, the early-stopping criterion) vs. the truly-unseen TEST cross-entropy (1.182) for the identical final model - the gap between these two numbers is exactly what 020 could not measure, since its own validation split played both roles at once"},
+  "integrity": {"illegal_actions": 0, "fallbacks": 0, "crashes": 0},
+  "result": "Purely descriptive measurement, no GO/KILL threshold applied (per the task's own instruction). 96/96 games completed cleanly (0 illegal, 0 crashes, 0 fixed-agent fallbacks - no fixed agents were seated - 0 ASU modules loaded). All pairwise seed and state leakage guards across TRAIN/SELECTION/TEST read zero. Quantile-spread sampling visibly worked: TEST bucket round provenance spans each bucket's full range (e.g. 151-terminal: min 151, median 174.5, max 199), unlike 020's first-N clustering. On the untouched 16-game TEST set (759 states, evaluated exactly once with the final 64-train-game model): the probabilistic net-worth-leader baseline (temperature=500, fit on TRAIN+SELECTION only) is the strongest predictor on every metric (CE 0.063, Brier 0.032, accuracy 96.6%), the hard/epsilon-smoothed leader is close behind on accuracy (96.3%) but scores worse on CE (0.510) since it is penalized hard whenever wrong, and the learned ValueProbe (CE 1.182, Brier 0.643, accuracy 55.5%) barely beats uniform (CE 1.386, accuracy 30.0%) and is clearly worse than both leader baselines on every metric this time, including cross-entropy - unlike 020's validation-contaminated read, where the learned probe had actually beaten the leader baseline on cross-entropy. The game-block bootstrap (unit of resampling = TEST game, not state, since a game's ~8 sampled states are correlated) confirms this is not sampling noise: learned-minus-probabilistic-leader 95% CIs exclude zero in the adverse direction on all three metrics (cross-entropy +1.119 [+0.747, +1.555], Brier +0.612 [+0.450, +0.762], accuracy -0.411 [-0.503, -0.309], n=16 games). The SELECTION-based learning curve (16/32/64 train games: CE 1.105 -> 1.015 -> 0.814, accuracy 46.2% -> 52.3% -> 69.2%) still shows no plateau at 64 games, and the SELECTION accuracy at 64 games (69.2%) is close to 020's old validation figure (69.2%, coincidentally identical to 3 significant figures) while the true TEST accuracy for the same model is only 55.5% - a real generalization gap that 020's design could not have detected, since its validation split was also its stopping criterion. No claim is made about POLICY_ONLY/PUCT/MonopolyZeroNet strength; no win-rate evaluation or PUCT was run; the policy network's own weights were never touched.",
+  "raw_logs": ["docs/baseline_runs/monopolyzero_value_generalization_probe_stdout.txt"],
+  "notes": "Full per-bucket breakdown, calibration bins, and confusion matrices for all four TEST predictors, plus the full temperature grid search (500.0 chosen, CE 0.0735 on TRAIN+SELECTION pooled - the next-best grid points were 200.0 at 0.0811 and 1000.0 at 0.1129, a fairly flat/broad minimum), are in the raw stdout log (28.8KB), not duplicated here. bucket_provenance in the raw log also covers TRAIN and SELECTION splits, not just TEST, all showing similarly full within-bucket round spread. State-level N (759 TEST states) must not be read as 759 independent samples - the state_level_n_warning field in the raw log flags this explicitly, and the game_block_bootstrap result (16 games) is the correct uncertainty quantification for the learned-vs-probabilistic-leader comparison."
+}

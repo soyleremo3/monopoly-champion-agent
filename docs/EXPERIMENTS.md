@@ -1367,3 +1367,92 @@ its own proposed experiment and decision log.
   and should not be read as "loses on every metric" — the learned
   `ValueProbe` actually beat the leader baseline on cross-entropy overall
   (0.716 vs. 1.238).
+
+## 2026-08-11 (later still x4) — Value-generalization probe: an unbiased TEST read after fixing 020's two gaps
+
+- Hypothesis: none pre-registered, purely descriptive. `020` showed the
+  300-dim state carries *some* learnable full-horizon signal, but its
+  "validation" split doubled as its own early-stopping monitor, so 69.2%
+  accuracy wasn't a trustworthy estimate of generalization to unseen games
+  — and its "first N" sampling could cluster all samples near the start of
+  a round bucket. Does a proper train/selection/**test** split (test
+  touched exactly once) and quantile-spread sampling change the picture?
+- Setup: 96 fresh `POLICY_ONLY` self-play games (seeds `42100-42195`, newly
+  DEV-registered, **not** reusing `020`'s 64 games), split 64 TRAIN / 16
+  SELECTION / 16 TEST at the game level. Quantile-spread sampling
+  (min/median/max of each game/seat/bucket's occurrences, not first-N) with
+  full round provenance. Same `ValueProbe` architecture as `020`, fit on
+  TRAIN, early-stopped on SELECTION, evaluated on TEST exactly once with
+  the final 64-train-game model — never for early stopping, hyperparameter/
+  temperature selection, or model choice. Added a **probabilistic**
+  net-worth-leader baseline (temperature-scaled softmax over relative net
+  worth, temperature grid-fit on TRAIN+SELECTION pooled, never TEST) since
+  the plain hard-leader baseline is a degenerate predictor for
+  cross-entropy purposes. Uncertainty for the learned-vs-probabilistic-leader
+  comparison uses a **game-block** bootstrap (resamples whole TEST games,
+  not states, since a game's ~8 sampled states are correlated) rather than
+  treating state count as an independent sample size.
+- Result:
+
+  **Untouched TEST (16 games, 759 states, evaluated once):**
+
+  | | Cross-entropy | Brier | Top-1 accuracy |
+  |---|---|---|---|
+  | Uniform | 1.386 | 0.750 | 30.0% |
+  | Hard leader (accuracy-diagnostic only) | 0.510 | 0.074 | 96.3% |
+  | **Probabilistic leader** (T=500) | **0.063** | **0.032** | **96.6%** |
+  | Learned ValueProbe | 1.182 | 0.643 | 55.5% |
+
+  This time the learned `ValueProbe` loses to **both** leader baselines on
+  **every** metric, including cross-entropy — the opposite of `020`'s
+  contaminated read, where the probe had actually won on CE. Per-bucket,
+  the probabilistic leader hits 100.0% accuracy in 4 of 5 buckets (same
+  snowball signature `020` found) while the `ValueProbe` stays in the
+  43-63% range everywhere:
+
+  | Bucket | Probabilistic leader acc. | ValueProbe acc. | Unique TEST games |
+  |---|---|---|---|
+  | 1-25 | 86.2% | 58.7% | 16 |
+  | 26-50 | 100.0% | 43.1% | 16 |
+  | 51-100 | 100.0% | 55.3% | 16 |
+  | 101-150 | 100.0% | 57.8% | 14 |
+  | 151-terminal | 100.0% | 62.9% | 14 |
+
+  **Game-block bootstrap** (learned − probabilistic leader, 16 TEST games,
+  2000 resamples): cross-entropy diff **+1.119** `[+0.747, +1.555]`, Brier
+  diff **+0.612** `[+0.450, +0.762]`, accuracy diff **−0.411** `[−0.503,
+  −0.309]` — all three 95% CIs exclude zero in the adverse direction, so
+  this isn't sampling noise at the game level.
+
+  **Quantile-spread sampling confirmed working**: TEST bucket round
+  provenance spans full ranges (e.g. `151-terminal`: min 151, median 174.5,
+  max 199; `1-25`: min 1, median 9, max 25) instead of clustering near a
+  bucket's start.
+
+  **Learning curve** (SELECTION only, all 3 points — TEST not repeatedly
+  consumed): 16 games CE 1.105/acc 46.2%, 32 games CE 1.015/acc 52.3%, 64
+  games CE 0.814/acc 69.2% — still improving, no plateau. Notably, that
+  64-game **SELECTION** accuracy (69.2%) came out numerically identical to
+  `020`'s old validation figure (69.2%) — while the same model's real
+  **TEST** accuracy is only 55.5%. That gap is exactly what `020` couldn't
+  see, since its validation split played both roles at once.
+
+  Leakage guards: 0 seed/state overlap across all three split pairs.
+  Integrity: 96/96 games clean (0 illegal, 0 crashes, 0 fallbacks, 0 ASU).
+  Wall time 1636.2s, peak RSS 0.50 GiB.
+
+  Full structured record:
+  [logs/experiments/021-monopolyzero-value-generalization-probe.json](../logs/experiments/021-monopolyzero-value-generalization-probe.json).
+
+- Conclusion / next step: **No GO/KILL verdict is being called here** —
+  per the task instructions this experiment measures only. What it
+  resolves from `020`: the true generalization picture is materially worse
+  for the `ValueProbe` than `020` suggested (55.5% real TEST accuracy vs.
+  the 69.2% model-selection number), and a simple probabilistic net-worth
+  heuristic remains far ahead of the learned probe on every metric, with
+  game-block-bootstrap-confirmed statistical support this time, not just a
+  point estimate. Whether the fix is more training data (the SELECTION
+  learning curve still hadn't plateaued at 64 games), a different probe
+  architecture/objective, or accepting that a cheap net-worth-based
+  heuristic already captures most of the accessible signal in this
+  checkpoint's self-play dynamics, is for a human to decide from here.
