@@ -1356,3 +1356,14 @@ its own proposed experiment and decision log.
   bottleneck at all and the leader-heuristic result says something more
   fundamental about this checkpoint's self-play dynamics, is for a human
   to decide from here — not pre-judged by this entry.
+
+  **Corrected 2026-08-11 (later still x3), see `docs/DECISIONS.md`'s GO
+  entry for `020`:** (1) the "VALIDATION" split above doubled as the
+  early-stopping monitor, so its 69.2% accuracy / 0.716 CE is a
+  model-selection number, not an unbiased held-out generalization
+  estimate — `021` re-runs this with a proper train/selection/test split.
+  (2) "loses to the trivial net-worth-leader baseline on every validation
+  round-bucket" above is about *accuracy* specifically (true, per-bucket)
+  and should not be read as "loses on every metric" — the learned
+  `ValueProbe` actually beat the leader baseline on cross-entropy overall
+  (0.716 vs. 1.238).

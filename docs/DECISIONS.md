@@ -152,3 +152,47 @@ only the calendar label was wrong in places. Fixed going forward from here.*
   that claim, and it contradicts this project's own "no unverified
   assumptions" rule in `CLAUDE.md`).
 - Reference checked: `references/DeepRL_Monopoly` at `afd9205761317e196d77f679921c35fb04c7ab96` (submodule unchanged, read-only). No training or reference code changed for this decision. Note: `max_rounds=200` here is this project's own current reference evaluation horizon, not a confirmed official competition parameter — see `docs/PLAN.md`'s P0 blocker note.
+
+## 2026-08-11 (later still x3) — 300-dim state carries a learnable full-horizon signal (GO); 020's figure is not an unbiased generalization estimate
+
+- Context: `020-monopolyzero-value-learnability-probe` trained a small,
+  separate `ValueProbe` (300 → 256 → 4) on the TRUE full-horizon winner
+  label from 64 clean `POLICY_ONLY` self-play games, and compared it
+  against a uniform baseline and a current-net-worth-leader baseline. The
+  `ValueProbe` clearly beat uniform on its held-out split (cross-entropy
+  0.716 vs. 1.386, top-1 accuracy 69.2% vs. 32.2%) — real signal exists in
+  the 300-dim state encoding for the full-horizon winner, not just noise.
+- Decision: **GO** — the state representation does carry a learnable
+  full-horizon-winner signal; that is a real, usable finding. Two things
+  about how `020` was run need to be on the record alongside it, though,
+  so this GO isn't misread as stronger than it is:
+  1. **020's "validation" split doubled as its own early-stopping
+     monitor** — training was stopped based on that exact split's loss,
+     which makes it a model-selection set, not a held-out generalization
+     test. Its reported 69.2% accuracy / 0.716 cross-entropy **must not be
+     quoted as an unbiased estimate of how the `ValueProbe` generalizes to
+     unseen games** — early-stopping-on-the-same-split-you-report-on
+     optimistically biases the reported number by an unknown amount. A
+     proper three-way train/selection/test split, with the test split
+     touched exactly once, is needed before that number can be trusted —
+     see `021`.
+  2. **Correction to how `020` was summarized**: the net-worth-leader
+     baseline beat the learned `ValueProbe` on accuracy (91.0% vs. 69.2%)
+     and Brier score (0.179 vs. 0.427), but the learned `ValueProbe` was
+     actually *better* than the leader baseline on cross-entropy (0.716
+     vs. 1.238). "The leader baseline wins every metric" is not an
+     accurate summary of `020`'s own numbers and should not be repeated —
+     each metric answers a different question (cross-entropy rewards
+     well-calibrated probabilities across the whole distribution; the hard
+     leader baseline is a degenerate near-0/1 predictor that gets
+     penalized hard on cross-entropy whenever it's wrong, even though its
+     argmax is right more often).
+- Alternatives considered: treat `020` as fully conclusive and move
+  straight to policy/architecture changes (rejected — the early-stopping/
+  test-set conflation means the generalization claim isn't actually
+  supported yet, only the weaker "there is *some* learnable signal" claim
+  is); discard `020` entirely as invalid (rejected — the uniform-vs-learned
+  comparison inside `020` doesn't depend on the validation/test conflation,
+  since uniform has no free parameters to overfit to that split; only the
+  *generalization magnitude* claim is what's unsupported).
+- Reference checked: `references/DeepRL_Monopoly` at `afd9205761317e196d77f679921c35fb04c7ab96` (submodule unchanged, read-only). No training or reference code changed for this decision.
