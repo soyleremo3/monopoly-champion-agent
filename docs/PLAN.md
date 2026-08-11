@@ -1,11 +1,15 @@
 # Plan
 
-## Status: Reference validated, first compliant training milestone in progress
+## Status: MonopolyZero recipe/inference scaling paused pending methodology lockdown
 
-No agent code of our own exists yet — everything so far calls the
-`references/DeepRL_Monopoly` submodule's existing entry points
-(`ASU_FROZEN_TEACHER.evaluate`, `tools/train_and_save.py`) under the ASU
-restrictions in `CLAUDE.md`. This document tracks phases as they are defined.
+This project has its own agent code now — `scripts/monopolyzero_common.py`
+plus purpose-built training/eval/diagnostic runners (`scripts/monopolyzero_*.py`,
+see the MonopolyZero section below), built on the ASU-clean primitives of the
+`references/DeepRL_Monopoly` submodule (`MonopolyZeroNet`, `MaxNPUCT`,
+engine/storage/config/contracts, `agents_fixed`) under the ASU restrictions in
+`CLAUDE.md`. The reference submodule itself stays read-only, consumed via
+import at its pinned SHA, never edited in place. This document tracks phases
+as they are defined.
 
 ## Phase 0 — Project Setup (done)
 
@@ -88,31 +92,52 @@ restrictions in `CLAUDE.md`. This document tracks phases as they are defined.
   PUCT simulation count, and the 32-game training pass itself all tested —
   see `docs/DECISIONS.md`'s "Pause current MonopolyZero recipe scaling
   entirely" entry).
-- **The current PUCT/MCTS inference path is KILLed** — `018` showed it has
-  no statistically supported win-rate advantage over bare policy-head
-  inference on held-out games (2/40 vs 2/40, identical Wilson interval),
-  at ~8x the per-decision latency, with only 2.93% action disagreement.
-  See `docs/DECISIONS.md`'s "Kill the current PUCT/MCTS inference path"
-  entry. **POLICY_ONLY (`common.build_local_policy_only`) is now the
-  diagnostic/default inference path** for this checkpoint family —
-  PUCT stays available for reference/comparison only, not as the assumed
-  default in new scripts.
-- **The existing 37,772-position replay (from `013`) is not approved for
-  any new strength-training run** until a horizon/label audit passes: that
-  replay was generated at `max_rounds=50`, but the competition target is
-  `max_rounds=200` — whether a 50-round-truncated net-worth-leader signal
-  actually predicts the 200-round winner (and whether the `round/max_rounds`
-  state encoding itself materially changes model output at the same game
-  state) is exactly what the horizon diagnostic (`019`, see
-  `docs/EXPERIMENTS.md`) measures. No GO/KILL call is made until that
-  result is read and a decision is separately recorded.
+- **The current PUCT/MCTS inference path is KILLed for the current
+  recipe/checkpoint family only** — `018` showed it has no statistically
+  supported win-rate advantage over bare policy-head inference on held-out
+  games (2/40 vs 2/40, identical Wilson interval), at ~8x the per-decision
+  latency, with only 2.93% action disagreement. See `docs/DECISIONS.md`'s
+  "Kill the current PUCT/MCTS inference path" entry. **POLICY_ONLY
+  (`common.build_local_policy_only`) is now the diagnostic/default
+  inference path** for this checkpoint family — PUCT stays available for
+  reference/comparison only, not as the assumed default in new scripts.
+  This is not a permanent verdict on search itself: search adds value only
+  when the value/policy head it searches over is informative enough to
+  reward deeper lookahead, so PUCT is a reasonable thing to re-test once a
+  materially better value model exists, not before.
+- **The existing 37,772-position replay (from `013`) is DEPRECATED/KILLed
+  for strength training** — not deleted, kept as historical data — per the
+  horizon diagnostic (`019`, see `docs/EXPERIMENTS.md`). That replay was
+  generated at `max_rounds=50`, and `019` measured a round-50 net-worth
+  leader agreeing with the eventual winner only 59.4% overall (37.5% in
+  clean self-play, 81.25% in vs-fixed but that subgroup is contaminated by
+  90 fixed-agent fallbacks — see `docs/DECISIONS.md`'s `019` entry) — too
+  weak a proxy signal to justify training on. Note the horizon this replay
+  was checked against (`max_rounds=200`) is this project's own *current
+  reference evaluation horizon*, not a confirmed official competition
+  parameter — see the P0 blocker note below. The state-encoding ablation in
+  the same experiment (isolating index 278, `round/max_rounds`) is a
+  narrower, separate result and is not on its own sufficient grounds for a
+  feature-removal decision — see `docs/DECISIONS.md`'s `019` entry for the
+  sampling-methodology caveat.
+- **The 500-update checkpoint (`trained_updates_500.pt`) is
+  diagnostic/research-only** — it exists to compare training-update budgets
+  and to drive ablations (`016`-`019`), not as a candidate for production
+  use or further promotion testing as-is.
 - **Official competition engine/rules/API remain a P0 blocker.** The
   `references/DeepRL_Monopoly` reference engine (`ppo-plus-v2` ruleset) is
   a technical reference only, per `CLAUDE.md` — it must never be treated as
-  the official competition engine/ruleset/API. `docs/RULES_SPEC.md` still
-  needs the real competition ruleset filled in beyond even-building; that
-  gap is independent of and blocks on top of every training/inference
-  result recorded so far.
+  the official competition engine/ruleset/API. In particular,
+  `max_rounds=200` (used throughout `014`-`019`) is this project's own
+  *current reference evaluation horizon*, chosen for consistency across
+  experiments — it is **not** a confirmed official competition parameter.
+  The real competition horizon/rules/API remain `TBD` in
+  `docs/RULES_SPEC.md` beyond even-building; that gap is independent of and
+  blocks on top of every training/inference result recorded so far.
+- **Evaluation methodology is now governed by `docs/EVALUATION_PROTOCOL.md`**
+  (DEV / PROMOTION / FINAL_BLIND seed pools, paired McNemar/bootstrap stats
+  in `scripts/evaluation_protocol.py`) — any new paired evaluation should
+  use that protocol rather than a from-scratch Wilson-non-overlap check.
 
 ## MonopolyZero (`monopoly_bench`) — ASU-independent parts only
 
@@ -168,12 +193,17 @@ Investigated 2026-08-11, then corrected the same day — see
 6. ✅ PUCT search-budget scaling (4/16/32 simulations) — KILL (`017`).
 7. ✅ POLICY_ONLY vs PUCT_4 ablation — KILL the PUCT inference path, no
    search-vs-no-search advantage found (`018`).
-8. Current: an ASU-free, training-free horizon diagnostic — does a
-   round-50 net-worth leader predict the round-200 winner, and does the
-   `round/max_rounds` state encoding alone change model output at a fixed
-   game state? Gates whether the existing 50-round replay/training recipe
-   is even aimed at the right target before any new strength training is
-   proposed — see "Next measurable milestones" above and `docs/EXPERIMENTS.md`.
+8. ✅ Horizon diagnostic — round-50 net-worth leader only agreed with the
+   round-200/terminal winner 59.4% overall (37.5% clean self-play, 81.25%
+   vs-fixed but fallback-contaminated); `013`'s replay is DEPRECATED/KILLed
+   for strength training as a result (`019`, see `docs/DECISIONS.md` and
+   `docs/EXPERIMENTS.md`).
+9. Current: methodology lockdown before any new training — a DEV /
+   PROMOTION / FINAL_BLIND seed-pool discipline and a paired McNemar +
+   seed-block-bootstrap evaluation helper, replacing ad-hoc Wilson-interval
+   comparisons as the promotion test. See `docs/EVALUATION_PROTOCOL.md` and
+   `scripts/evaluation_protocol.py`. No new games/training/evaluation are
+   run as part of this step — methodology/code only.
 
 ## Future Phases (TBD)
 
