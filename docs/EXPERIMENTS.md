@@ -902,9 +902,20 @@ interval `[0.9%, 23.6%]` overlaps almost completely with the baseline's
 `[0.0%, 16.1%]`; the non-overlap test (`trained_lower > baseline_upper`)
 fails. One extra win and a higher mean net worth over 20 games is not
 distinguishable from noise at this sample size — same discipline already
-applied to the DDQN 20-vs-500 comparison. Not a regression either: nothing
-got worse (net worth and win count both moved in the same direction, just
-not far enough to be significant).
+applied to the DDQN 20-vs-500 comparison. **No statistically supported
+regression either** on win rate/net worth (both moved in the same
+direction, just not far enough to be significant) — **but this is not
+"nothing got worse."** *Correction, 2026-08-12: round-cap rate moved from
+45% (baseline) to 55% (trained) — the trained checkpoint's games hit the
+200-round cap without a decisive winner more often, which is a move in the
+undesirable direction. It wasn't tested for statistical significance (no
+Wilson interval was computed for it, unlike win rate), so "statistically
+supported regression" still correctly reads "none confirmed" — but the
+original wording overclaimed by implying every metric was flat or better.
+Historical numbers (45%/55%, win rates, net worth) are unchanged; only this
+interpretive sentence is corrected. See
+[logs/experiments/014-monopolyzero-strength-pilot-paired-eval.json](../logs/experiments/014-monopolyzero-strength-pilot-paired-eval.json)'s
+`notes` field for the same correction attached to the structured record.*
 
 Full structured record:
 [logs/experiments/014-monopolyzero-strength-pilot-paired-eval.json](../logs/experiments/014-monopolyzero-strength-pilot-paired-eval.json).
