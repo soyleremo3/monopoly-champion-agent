@@ -226,6 +226,28 @@ def test_run_shard_resume_with_no_prior_metadata_starts_fresh(monkeypatch, tmp_p
     assert len(lines) == 8  # 2 seeds x 4 rotation games
 
 
+def test_run_shard_resume_with_no_metadata_but_nonempty_jsonl_stops(monkeypatch, tmp_path):
+    """Regression: --resume + no metadata.json + an already-populated
+    per_game.jsonl (orphaned data - e.g. a partially-copied Drive folder)
+    must STOP, not silently treat unverified data as resumable. git SHA/
+    checkpoint/arm/context can't be checked without metadata.json."""
+    runner_module.common.ensure_reference_on_path()
+    monkeypatch.setattr(runner_module.common, "play_local_game", lambda **kwargs: _fake_outcome())
+
+    output_dir = tmp_path / "shard_orphan"
+    output_dir.mkdir()
+    (output_dir / "per_game.jsonl").write_text(
+        json.dumps({"seed": 44160, "focus_seat": 0}) + "\n", encoding="utf-8"
+    )
+    assert not (output_dir / "metadata.json").exists()
+
+    with pytest.raises(SystemExit, match="refusing to resume onto unverified data"):
+        runner_module.run_shard(
+            seed_start=44160, seed_count=2, context="crippled", arm="policy_only", output_dir=output_dir,
+            resume=True, model=_FakeModel(), git_head_sha="a" * 40, checkpoint_sha256="b" * 64, submodule_sha="c" * 40,
+        )
+
+
 def test_run_shard_without_resume_refuses_to_overwrite_nonempty_jsonl(monkeypatch, tmp_path):
     runner_module.common.ensure_reference_on_path()
     monkeypatch.setattr(runner_module.common, "play_local_game", lambda **kwargs: _fake_outcome())

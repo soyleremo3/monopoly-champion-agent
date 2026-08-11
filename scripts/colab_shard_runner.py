@@ -247,11 +247,21 @@ def run_shard(
             )
         completed_seeds = _read_completed_seeds(jsonl_path, required_games_per_seed)
     elif resume:
-        # --resume given but metadata.json doesn't exist yet (first invocation) -
-        # nothing to resume from and nothing to validate against, so this starts
-        # fresh exactly like a non-resume run. Still reads any orphaned jsonl data
-        # (defensive - normal fresh output_dir has none).
-        completed_seeds = _read_completed_seeds(jsonl_path, required_games_per_seed)
+        # --resume given but metadata.json doesn't exist yet. If per_game.jsonl
+        # is also missing/empty, this is a genuine first invocation - starts
+        # fresh exactly like a non-resume run. If per_game.jsonl already has
+        # data with no metadata.json to validate it against (git SHA/checkpoint/
+        # arm/context all unverifiable - orphaned data from some other run, a
+        # partially-copied Drive folder, etc.), refuse rather than silently
+        # treating unverified data as safe to build on.
+        if jsonl_path.is_file() and jsonl_path.stat().st_size > 0:
+            raise SystemExit(
+                f"--resume given but {metadata_path} does not exist while {jsonl_path} "
+                "already has data - refusing to resume onto unverified data (no metadata "
+                "to check git SHA/checkpoint/arm/context against). Remove/rename the stale "
+                "per_game.jsonl first, or restore its matching metadata.json."
+            )
+        completed_seeds = set()
     else:
         if jsonl_path.is_file() and jsonl_path.stat().st_size > 0:
             raise SystemExit(
