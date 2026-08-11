@@ -124,6 +124,53 @@ def test_buy_only_and_trade_only_gate_correctly():
     assert both.log[-1]["trade_rule_active"] is True
 
 
+# ── _run_rotation_arm / _run_self_play_uniform_arm: games_played ─────────
+#
+# Regression: an earlier version of the payload's config.games_run field
+# summed len(per_game) (a RECORD count - 4 per physical game for the
+# self-play-optimized arm) instead of the actual number of physical games
+# executed, silently overstating context_2's BOTH arm as "80 games" when
+# only 20 self-play games were actually played. Fixed by tracking
+# games_played explicitly in each run's return dict.
+
+
+def _fake_outcome(**overrides):
+    import types
+
+    base = dict(
+        completed=True, winner=0, decisions=10, final_round=5,
+        final_net_worth=(100.0, 200.0, 300.0, 400.0),
+        illegal_actions=0, crashed=False, search_latencies_s=[0.001],
+    )
+    base.update(overrides)
+    return types.SimpleNamespace(**base)
+
+
+def test_run_rotation_arm_reports_one_physical_game_per_seed_per_seat(monkeypatch):
+    decomp_module.common.ensure_reference_on_path()
+    monkeypatch.setattr(decomp_module.common, "play_local_game", lambda **kwargs: _fake_outcome())
+
+    model = _FakeModel()
+    run = decomp_module._run_rotation_arm(
+        (100, 101), decomp_module._focus_policy_factory(model, decomp_module.ARM_POLICY_ONLY),
+        lambda: decomp_module.common.build_local_policy_only(model),
+    )
+    assert run["games_played"] == 2 * decomp_module.NUM_SEATS  # 2 seeds x 4 seats = 8 physical games
+    assert len(run["per_game"]) == 8
+    assert len(run["records"]) == 8
+
+
+def test_run_self_play_uniform_arm_reports_one_physical_game_per_seed(monkeypatch):
+    decomp_module.common.ensure_reference_on_path()
+    monkeypatch.setattr(decomp_module.common, "play_local_game", lambda **kwargs: _fake_outcome())
+
+    model = _FakeModel()
+    run = decomp_module._run_self_play_uniform_arm((100, 101), decomp_module.ARM_BOTH, model)
+    assert run["games_played"] == 2  # 2 seeds = 2 physical self-play games
+    assert len(run["per_game"]) == 8  # but 4 seat-records extracted per game
+    assert len(run["records"]) == 8
+
+
 # ── reconcile_arm_against_023 ─────────────────────────────────────────────
 
 

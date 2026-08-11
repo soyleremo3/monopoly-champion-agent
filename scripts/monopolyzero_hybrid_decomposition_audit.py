@@ -137,6 +137,7 @@ def _run_rotation_arm(seeds, focus_factory, peer_policy_factory, *, max_rounds: 
         "per_game": per_game, "records": records, "latencies": latencies,
         "intervention_log": intervention_log, "total_illegal": total_illegal,
         "total_crashed": total_crashed, "incomplete": incomplete,
+        "games_played": len(seeds) * NUM_SEATS,  # one physical game per (seed, focus_seat)
     }
 
 
@@ -194,6 +195,7 @@ def _run_self_play_uniform_arm(seeds, arm, model, *, max_rounds: int = MAX_ROUND
         "per_game": per_game, "records": records, "latencies": latencies,
         "intervention_log": intervention_log, "total_illegal": total_illegal,
         "total_crashed": total_crashed, "incomplete": incomplete,
+        "games_played": len(seeds),  # one physical self-play game per seed, not per (seed, seat)
     }
 
 
@@ -428,8 +430,13 @@ def main(argv: list[str] | None = None) -> int:
             "context_1": "crippled peers - other 3 seats POLICY_ONLY (023's exact setup); POLICY_ONLY/BOTH regenerated+reconciled against 023's log, BUY_ONLY/TRADE_ONLY fresh",
             "context_2": "repaired peers - other 3 seats HYBRID_COMPAT(BOTH); all 4 arms fresh, BOTH arm uses 20 self-play games (not 80) since focus==peer policy",
             "games_run": {
-                "context_1": sum(len(run["per_game"]) for run in ctx1_runs.values()),
-                "context_2": sum(len(run["per_game"]) for run in ctx2_runs.values()),
+                # physical games actually executed (not paired-record count -
+                # the self-play-optimized context_2 BOTH arm plays 20 games
+                # but yields 80 records, 4 seats each; see per-arm breakdown)
+                "context_1": sum(run["games_played"] for run in ctx1_runs.values()),
+                "context_2": sum(run["games_played"] for run in ctx2_runs.values()),
+                "context_1_by_arm": {arm: run["games_played"] for arm, run in ctx1_runs.items()},
+                "context_2_by_arm": {arm: run["games_played"] for arm, run in ctx2_runs.items()},
             },
             "asu_involved": False,
         },
