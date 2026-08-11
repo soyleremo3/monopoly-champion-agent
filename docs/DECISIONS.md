@@ -196,3 +196,53 @@ only the calendar label was wrong in places. Fixed going forward from here.*
   since uniform has no free parameters to overfit to that split; only the
   *generalization magnitude* claim is what's unsupported).
 - Reference checked: `references/DeepRL_Monopoly` at `afd9205761317e196d77f679921c35fb04c7ab96` (submodule unchanged, read-only). No training or reference code changed for this decision.
+
+## 2026-08-11 (later still x5) — Close 021: KILL the current learned-value-probe direction; move to the decision/policy win-rate phase
+
+- Context: `021-monopolyzero-value-generalization-probe` gave an unbiased,
+  properly-held-out TEST read (fixing `020`'s validation/test conflation):
+  the learned `ValueProbe` lost to the probabilistic net-worth-leader
+  baseline on every metric (cross-entropy 1.182 vs. 0.063, Brier 0.643 vs.
+  0.032, accuracy 55.5% vs. 96.6%), with a game-block bootstrap (unit =
+  TEST game, not state) confirming all three metric-difference 95% CIs
+  exclude zero in the adverse direction (CE +1.119 `[+0.747, +1.555]`,
+  Brier +0.612 `[+0.450, +0.762]`, accuracy −0.411 `[−0.503, −0.309]`,
+  n=16 games). Before closing that out, `022-monopolyzero-value-decision-audit`
+  did the due-diligence check this decision needed: a post-hoc,
+  decision-critical audit of `021`'s exact TEST predictions (deterministically
+  re-derived and reconciled bit-exact against `021`'s own logged numbers,
+  zero new self-play/model/PUCT/temperature-fit) segmented by round bucket,
+  leader-margin quartile, current-player rank, decision type, and
+  legal-action count, explicitly searching for ANY segment where the
+  learned probe meaningfully beat the leader. **None was found** - every
+  segment across all five axes still favored the leader baseline, most by
+  a wide margin (leader 86-100% accuracy vs. `ValueProbe` 35-77%
+  everywhere), against a bar (≥20 states, ≥5-point accuracy margin) fixed
+  before the audit ran.
+- Decision: **KILL the current learned-value-probe direction** on this
+  checkpoint/state-representation family - `021`'s point estimate plus its
+  own confirmatory game-block bootstrap plus `022`'s exhaustive
+  post-hoc segment search all converge on the same answer, with no
+  qualifying counter-evidence anywhere. **Final call, per `022`'s
+  pre-stated decision rule: option A** - drop the learned-value path for
+  now and move to the decision/policy win-rate phase (the next milestone
+  this project's actual competition objective, per `docs/PLAN.md`'s
+  competition-strategy section, actually needs). Option B (propose a new
+  value hypothesis) is explicitly not taken - `022` found no strong
+  evidence to warrant it, and this project's own discipline (`CLAUDE.md`:
+  "do not make unverified assumptions") rules out proposing a new
+  hypothesis speculatively when the audit built specifically to look for
+  supporting evidence came up empty.
+- Alternatives considered: keep iterating on `ValueProbe` architecture/
+  training procedure on the theory that more tuning would close the gap
+  (rejected - the SELECTION learning curve in `021` was still improving at
+  64 games with no plateau, so more *data* remains plausible future work,
+  but `022` found no segment-level evidence that architecture/tuning
+  specifically is the bottleneck rather than data volume or the ceiling of
+  what a 300-dim net-worth-derived state can support); treat `022`'s
+  round-26-onward 100% leader accuracy as grounds for a NEW value
+  hypothesis built around net worth directly (not decided here - noted as
+  a live possibility in `docs/EXPERIMENTS.md`'s `022` entry, but proposing
+  it formally needs its own experiment design, not an inference from this
+  closing decision).
+- Reference checked: `references/DeepRL_Monopoly` at `afd9205761317e196d77f679921c35fb04c7ab96` (submodule unchanged, read-only). No training or reference code changed for this decision.
