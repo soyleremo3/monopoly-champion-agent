@@ -84,15 +84,35 @@ restrictions in `CLAUDE.md`. This document tracks phases as they are defined.
   rather than assume more of the same training helps. Resuming that track
   would need its own new `docs/DECISIONS.md` entry with a reason to expect
   it'll help this time — not assumed here.
-- **Current next milestone: an ASU-import-free MonopolyZero strength
-  pilot.** Small-scale (tens of games) training of `MonopolyZeroNet` via
-  this project's own ASU-import-free wiring (`scripts/monopolyzero_common.py`
-  + purpose-built training/eval runners — see the MonopolyZero section
-  below), then a paired evaluation against a pre-training baseline on
-  held-out seeds, same Wilson-interval discipline as the DDQN evaluations.
-- `docs/RULES_SPEC.md` still needs the rest of the official competition
-  ruleset filled in beyond even-building — unblocked independently of the
-  training track above, still `TBD`.
+- **Current MonopolyZero recipe scaling is paused** (training-update budget,
+  PUCT simulation count, and the 32-game training pass itself all tested —
+  see `docs/DECISIONS.md`'s "Pause current MonopolyZero recipe scaling
+  entirely" entry).
+- **The current PUCT/MCTS inference path is KILLed** — `018` showed it has
+  no statistically supported win-rate advantage over bare policy-head
+  inference on held-out games (2/40 vs 2/40, identical Wilson interval),
+  at ~8x the per-decision latency, with only 2.93% action disagreement.
+  See `docs/DECISIONS.md`'s "Kill the current PUCT/MCTS inference path"
+  entry. **POLICY_ONLY (`common.build_local_policy_only`) is now the
+  diagnostic/default inference path** for this checkpoint family —
+  PUCT stays available for reference/comparison only, not as the assumed
+  default in new scripts.
+- **The existing 37,772-position replay (from `013`) is not approved for
+  any new strength-training run** until a horizon/label audit passes: that
+  replay was generated at `max_rounds=50`, but the competition target is
+  `max_rounds=200` — whether a 50-round-truncated net-worth-leader signal
+  actually predicts the 200-round winner (and whether the `round/max_rounds`
+  state encoding itself materially changes model output at the same game
+  state) is exactly what the horizon diagnostic (`019`, see
+  `docs/EXPERIMENTS.md`) measures. No GO/KILL call is made until that
+  result is read and a decision is separately recorded.
+- **Official competition engine/rules/API remain a P0 blocker.** The
+  `references/DeepRL_Monopoly` reference engine (`ppo-plus-v2` ruleset) is
+  a technical reference only, per `CLAUDE.md` — it must never be treated as
+  the official competition engine/ruleset/API. `docs/RULES_SPEC.md` still
+  needs the real competition ruleset filled in beyond even-building; that
+  gap is independent of and blocks on top of every training/inference
+  result recorded so far.
 
 ## MonopolyZero (`monopoly_bench`) — ASU-independent parts only
 
@@ -141,8 +161,19 @@ Investigated 2026-08-11, then corrected the same day — see
 2. ✅ `python -m monopoly_bench smoke` passed — inference path validated.
 3. ✅ ASU-import-free self-play training-plumbing smoke (3 games, 1 update) —
    `docs/EXPERIMENTS.md`, `logs/experiments/012-*.json`.
-4. Current: a small strength pilot (tens of games, paired evaluation against
-   a pre-training baseline) — see "Next measurable milestones" above.
+4. ✅ Small strength pilot (32 games, paired evaluation against a
+   pre-training baseline) — NO-SIGNAL (`013`/`014`).
+5. ✅ Same-replay update-budget scaling (100/500/1000 updates) — NO-SIGNAL
+   (`015`/`016`).
+6. ✅ PUCT search-budget scaling (4/16/32 simulations) — KILL (`017`).
+7. ✅ POLICY_ONLY vs PUCT_4 ablation — KILL the PUCT inference path, no
+   search-vs-no-search advantage found (`018`).
+8. Current: an ASU-free, training-free horizon diagnostic — does a
+   round-50 net-worth leader predict the round-200 winner, and does the
+   `round/max_rounds` state encoding alone change model output at a fixed
+   game state? Gates whether the existing 50-round replay/training recipe
+   is even aimed at the right target before any new strength training is
+   proposed — see "Next measurable milestones" above and `docs/EXPERIMENTS.md`.
 
 ## Future Phases (TBD)
 
