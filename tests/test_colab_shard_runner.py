@@ -123,24 +123,46 @@ def test_run_benchmark_reports_sec_per_game_and_projections(monkeypatch):
     result = runner_module.run_benchmark(
         n_games=8, seed_start=100, context="crippled", arm="policy_only", model=_FakeModel(),
     )
-    assert result["games_completed"] == 8  # 2 seeds x 4 games (rotation mode)
+    assert result["physical_games_completed"] == 8  # 2 seeds x 4 physical games (rotation mode)
     assert result["seeds_used"] == 2
-    assert result["sec_per_game"] is not None
-    assert result["projected_seconds"]["100"] == pytest.approx(result["sec_per_game"] * 100)
-    assert result["projected_seconds"]["500"] == pytest.approx(result["sec_per_game"] * 500)
-    assert result["projected_seconds"]["1000"] == pytest.approx(result["sec_per_game"] * 1000)
+    assert result["sec_per_physical_game"] is not None
+    assert result["projected_seconds"]["100"] == pytest.approx(result["sec_per_physical_game"] * 100)
+    assert result["projected_seconds"]["500"] == pytest.approx(result["sec_per_physical_game"] * 500)
+    assert result["projected_seconds"]["1000"] == pytest.approx(result["sec_per_physical_game"] * 1000)
 
 
-def test_run_benchmark_self_play_optimized_uses_fewer_seeds(monkeypatch):
+def test_run_benchmark_rotation_mode_physical_equals_seat_records(monkeypatch):
+    """Regression: in rotation mode (not self-play-optimized) each physical
+    game IS one seat-record, 1:1 - both counts must agree exactly."""
+    runner_module.common.ensure_reference_on_path()
+    monkeypatch.setattr(runner_module.common, "play_local_game", lambda **kwargs: _fake_outcome())
+
+    result = runner_module.run_benchmark(
+        n_games=8, seed_start=100, context="crippled", arm="policy_only", model=_FakeModel(),
+    )
+    assert result["self_play_optimized"] is False
+    assert result["seat_records_completed"] == result["physical_games_completed"] == 8
+
+
+def test_run_benchmark_self_play_mode_counts_physical_games_not_seat_records(monkeypatch):
+    """Regression for the counting bug: self-play-optimized mode
+    (context=repaired, arm=both) produces 4 seat-records from 1 PHYSICAL
+    game per seed. Requesting 8 games must play 8 physical games (8 seeds),
+    not stop after 8 seat-records (2 seeds) - the old bug used
+    len(per_game) as the loop's stopping condition, so it silently
+    under-ran physical games by 4x while still claiming 8 "games completed"
+    and reporting a sec/game 4x too optimistic."""
     runner_module.common.ensure_reference_on_path()
     monkeypatch.setattr(runner_module.common, "play_local_game", lambda **kwargs: _fake_outcome())
 
     result = runner_module.run_benchmark(
         n_games=8, seed_start=100, context="repaired", arm="both", model=_FakeModel(),
     )
-    assert result["games_completed"] == 8
-    assert result["seeds_used"] == 2  # self-play yields 4 seat-records per seed, so 8 games needs only 2 seeds
     assert result["self_play_optimized"] is True
+    assert result["physical_games_completed"] == 8
+    assert result["seeds_used"] == 8  # 1 physical game per seed - NOT 2
+    assert result["seat_records_completed"] == 32  # 8 seeds x 4 seat-records/seed
+    assert result["seat_records_completed"] == result["physical_games_completed"] * 4
 
 
 def test_run_benchmark_raises_on_illegal(monkeypatch):
@@ -181,6 +203,27 @@ def test_run_shard_fresh_then_resume(monkeypatch, tmp_path):
     assert summary2["seeds_already_complete_before_this_run"] == 2
     lines_after = (output_dir / "per_game.jsonl").read_text(encoding="utf-8").strip().splitlines()
     assert len(lines_after) == 8  # unchanged - nothing re-played
+
+
+def test_run_shard_resume_with_no_prior_metadata_starts_fresh(monkeypatch, tmp_path):
+    """Regression: --resume on a brand-new output_dir (no metadata.json yet,
+    e.g. the very first invocation of a shard, as the runbook documents)
+    must behave exactly like a fresh run, not raise 'nothing to resume'."""
+    runner_module.common.ensure_reference_on_path()
+    monkeypatch.setattr(runner_module.common, "play_local_game", lambda **kwargs: _fake_outcome())
+
+    output_dir = tmp_path / "shard_fresh_resume"
+    assert not output_dir.exists()
+
+    summary = runner_module.run_shard(
+        seed_start=44150, seed_count=2, context="crippled", arm="policy_only", output_dir=output_dir,
+        resume=True, model=_FakeModel(), git_head_sha="a" * 40, checkpoint_sha256="b" * 64, submodule_sha="c" * 40,
+    )
+    assert summary["status"] == "OK"
+    assert summary["seeds_completed_this_run"] == 2
+    assert summary["seeds_already_complete_before_this_run"] == 0
+    lines = (output_dir / "per_game.jsonl").read_text(encoding="utf-8").strip().splitlines()
+    assert len(lines) == 8  # 2 seeds x 4 rotation games
 
 
 def test_run_shard_without_resume_refuses_to_overwrite_nonempty_jsonl(monkeypatch, tmp_path):

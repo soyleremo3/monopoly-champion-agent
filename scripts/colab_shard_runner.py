@@ -159,28 +159,40 @@ def _play_one_seed(seed: int, context: str, arm: str, model, focus_factory, peer
 
 
 def run_benchmark(*, n_games: int, seed_start: int, context: str, arm: str, model) -> dict:
+    """Plays exactly `n_games` PHYSICAL games (real `play_local_game` calls),
+    not seat-records. In self-play-optimized mode (context=repaired,
+    arm=both) one physical game yields 4 seat-records, so counting records
+    instead of physical games would under-count real per-game cost by 4x -
+    `n_games` seat-records would only be `n_games / 4` physical games, and
+    `sec_per_game` derived from that would be 4x too optimistic."""
     focus_factory = decomp._focus_policy_factory(model, arm)
     peer_factory = build_peer_factory(context, model)
+    physical_games_per_seed = 1 if is_self_play_optimized(context, arm) else NUM_SEATS
 
     started = time.perf_counter()
-    games_completed = 0
+    physical_games_completed = 0
+    seat_records_completed = 0
     seed = seed_start
-    while games_completed < n_games:
+    while physical_games_completed < n_games:
         result = _play_one_seed(seed, context, arm, model, focus_factory, peer_factory)
         if result["total_illegal"] or result["total_crashed"]:
             raise RuntimeError(f"benchmark: illegal/crash at seed {seed} - {result}")
-        games_completed += len(result["per_game"])
+        physical_games_completed += physical_games_per_seed
+        seat_records_completed += len(result["per_game"])
         seed += 1
     elapsed_s = time.perf_counter() - started
 
-    sec_per_game = elapsed_s / games_completed if games_completed else None
+    sec_per_physical_game = elapsed_s / physical_games_completed if physical_games_completed else None
     projected_seconds = (
-        {str(n): sec_per_game * n for n in BENCHMARK_PROJECTION_GAME_COUNTS} if sec_per_game else None
+        {str(n): sec_per_physical_game * n for n in BENCHMARK_PROJECTION_GAME_COUNTS}
+        if sec_per_physical_game else None
     )
     return {
         "mode": "benchmark", "context": context, "arm": arm,
-        "seeds_used": seed - seed_start, "games_completed": games_completed,
-        "elapsed_s": elapsed_s, "sec_per_game": sec_per_game,
+        "seeds_used": seed - seed_start,
+        "physical_games_completed": physical_games_completed,
+        "seat_records_completed": seat_records_completed,
+        "elapsed_s": elapsed_s, "sec_per_physical_game": sec_per_physical_game,
         "projected_seconds": projected_seconds,
         "self_play_optimized": is_self_play_optimized(context, arm),
     }
@@ -222,9 +234,7 @@ def run_shard(
         "games_per_seed": required_games_per_seed, "max_rounds": MAX_ROUNDS,
     }
 
-    if resume:
-        if not metadata_path.is_file():
-            raise SystemExit(f"--resume given but {metadata_path} does not exist - nothing to resume")
+    if resume and metadata_path.is_file():
         prior_metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
         mismatched = {
             key: (prior_metadata.get(key), new_metadata[key])
@@ -235,6 +245,12 @@ def run_shard(
             raise RuntimeError(
                 f"--resume refuses to continue: shard config differs from the prior run's metadata.json: {mismatched}"
             )
+        completed_seeds = _read_completed_seeds(jsonl_path, required_games_per_seed)
+    elif resume:
+        # --resume given but metadata.json doesn't exist yet (first invocation) -
+        # nothing to resume from and nothing to validate against, so this starts
+        # fresh exactly like a non-resume run. Still reads any orphaned jsonl data
+        # (defensive - normal fresh output_dir has none).
         completed_seeds = _read_completed_seeds(jsonl_path, required_games_per_seed)
     else:
         if jsonl_path.is_file() and jsonl_path.stat().st_size > 0:

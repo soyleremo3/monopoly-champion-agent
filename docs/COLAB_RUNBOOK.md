@@ -135,15 +135,26 @@ session.
 
 ```python
 !PYTHONHASHSEED=0 PYTHONIOENCODING=utf-8 python scripts/colab_shard_runner.py \
-  --seed-start 44000 --arm both --context repaired --benchmark-games 20
+  --seed-start 43000 --arm both --context repaired --benchmark-games 20
 ```
 
-Prints `sec_per_game` and `projected_seconds` for 100/500/1000 games —
-read those before picking `--seed-count` for the real run below. Swap
-`--arm`/`--context` to match what you actually intend to run; benchmark
-numbers differ meaningfully between them (repaired-peer/HYBRID_COMPAT arms
-cost roughly 1.5-2x a plain POLICY_ONLY decision — see `024`'s experiment
-log for measured examples).
+Uses seeds from the `43000`-`43019` range already spent by experiments
+`023`/`024` (reusable here — a benchmark run produces no experiment-log
+data and isn't scored, so replaying already-used seeds costs nothing).
+**The `44000`-`44999` pool is reserved for real DEV shard data** (step 10)
+— don't burn seeds from it on throwaway benchmark timing runs.
+
+Prints `physical_games_completed`, `seat_records_completed`, and
+`sec_per_physical_game`/`projected_seconds` for 100/500/1000 games — read
+those before picking `--seed-count` for the real run below.
+`sec_per_physical_game` is keyed off actual `play_local_game` calls, not
+seat-records: in self-play-optimized mode (`context=repaired`,
+`arm=both`) one physical game yields 4 seat-records, so a naive
+records-based rate would look 4x faster than reality. Swap `--arm`/
+`--context` to match what you actually intend to run; benchmark numbers
+differ meaningfully between them (repaired-peer/HYBRID_COMPAT arms cost
+roughly 1.5-2x a plain POLICY_ONLY decision — see `024`'s experiment log
+for measured examples).
 
 ## 10. Real shard run
 
