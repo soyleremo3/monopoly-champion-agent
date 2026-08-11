@@ -246,3 +246,110 @@ def test_local_fixed_policy_falls_back_to_first_legal_without_end_turn():
     action = policy.choose(env, seat=0, decision_seed=1)
     assert action == 11
     assert policy.fallback_count == 1
+
+
+# ── POLICY_ONLY: direct policy-head inference, no search ─────────────────
+
+
+class _FakeEnvWithState:
+    def __init__(self, legal, state="state"):
+        self._legal = legal
+        self._state = state
+
+    def get_allowed_actions(self, seat):
+        return self._legal
+
+    def _get_state(self, seat):
+        return self._state
+
+
+class _FakeGame:
+    def __init__(self, env):
+        self.env = env
+
+
+class _FakeModel:
+    """predict() returns a higher prior on the last legal action, so the
+    argmax is deterministic and easy to assert on."""
+
+    def __init__(self):
+        self.calls = []
+
+    def predict(self, state, legal_actions, actor_id):
+        self.calls.append((state, tuple(legal_actions), actor_id))
+        legal = tuple(legal_actions)
+        priors = {action: 0.1 for action in legal}
+        priors[legal[-1]] = 0.9
+        return priors, [0.5]
+
+
+def test_build_local_policy_only_has_policy_only_kind():
+    policy = common.build_local_policy_only(_FakeModel())
+    assert policy.kind == "policy_only"
+
+
+def test_build_local_policy_only_picks_legal_argmax():
+    model = _FakeModel()
+    policy = common.build_local_policy_only(model)
+    game = _FakeGame(_FakeEnvWithState(legal=(3, 7, 9)))
+    result = policy.choose(game, seat=2, decision_seed=123)
+    assert result.chosen_action == 9
+    assert result.visits == {9: 1}
+    assert result.root_value == [0.5]
+    assert result.simulations == 0
+    assert result.latency_s >= 0.0
+    assert model.calls == [("state", (3, 7, 9), 2)]
+
+
+def test_build_local_policy_only_is_deterministic_regardless_of_decision_seed():
+    model = _FakeModel()
+    policy = common.build_local_policy_only(model)
+    game = _FakeGame(_FakeEnvWithState(legal=(1, 2, 3)))
+    first = policy.choose(game, seat=0, decision_seed=1).chosen_action
+    second = policy.choose(game, seat=0, decision_seed=999999).chosen_action
+    assert first == second == 3
+
+
+# ── _invoke_policy: normalizes search/policy_only/fixed return shapes ────
+
+
+class _FakeFixedKindPolicy:
+    kind = "fixed"
+
+    def choose(self, game, seat, decision_seed):
+        return 42
+
+
+def test_invoke_policy_normalizes_fixed_kind_to_plain_int_with_no_latency():
+    action, latency_s, result, kind = common._invoke_policy(
+        _FakeFixedKindPolicy(), game=None, seat=0, decision_seed=0
+    )
+    assert (action, latency_s, result, kind) == (42, None, None, "fixed")
+
+
+def test_invoke_policy_normalizes_policy_only_kind_to_result_object():
+    model = _FakeModel()
+    policy = common.build_local_policy_only(model)
+    game = _FakeGame(_FakeEnvWithState(legal=(1, 2)))
+    action, latency_s, result, kind = common._invoke_policy(policy, game, seat=0, decision_seed=0)
+    assert kind == "policy_only"
+    assert action == result.chosen_action == 2
+    assert latency_s == result.latency_s
+
+
+# ── play_local_game: shadow_policy hook signature ─────────────────────────
+
+
+def test_play_local_game_accepts_shadow_policy_kwargs():
+    import inspect
+
+    params = inspect.signature(common.play_local_game).parameters
+    assert "shadow_policy" in params
+    assert params["shadow_policy"].default is None
+    assert "shadow_seats" in params
+    assert params["shadow_seats"].default is None
+
+
+def test_local_game_outcome_has_shadow_decisions_field():
+    outcome = common.LocalGameOutcome(completed=True, winner=0, decisions=1)
+    assert outcome.shadow_decisions == []

@@ -144,6 +144,52 @@ def build_local_search_policy(model, search_config, *, self_play: bool):
     return _SearchPolicy()
 
 
+@dataclass
+class _PolicyOnlyResult:
+    """Same field shape as search.py's SearchResult contract (chosen_action,
+    visits, q_values, root_value, simulations, latency_s) so callers that
+    generically read `.chosen_action`/`.latency_s` don't need to special-case
+    which kind of policy produced it. visits/q_values are placeholders (no
+    search happened), never used to build a ReplayPosition."""
+
+    chosen_action: int
+    visits: dict
+    q_values: dict
+    root_value: object
+    simulations: int
+    latency_s: float
+
+
+def build_local_policy_only(model):
+    """Direct policy-head inference: no MCTS/search at all. Calls
+    MonopolyZeroNet.predict() (model.py's own public forward-pass API —
+    legal-masked softmax over the raw policy logits) and takes the legal
+    argmax. This is the cheapest possible policy for a given checkpoint,
+    used to measure whether PUCT search earns its computational cost over
+    the bare policy head."""
+
+    class _PolicyOnlyPolicy:
+        kind = "policy_only"
+
+        def choose(self, game, seat: int, decision_seed: int) -> "_PolicyOnlyResult":
+            started = time.perf_counter()
+            env = game.env
+            legal = tuple(env.get_allowed_actions(seat))
+            priors, value = model.predict(env._get_state(seat), legal, seat)
+            chosen_action = max(priors, key=priors.get)
+            latency_s = time.perf_counter() - started
+            return _PolicyOnlyResult(
+                chosen_action=chosen_action,
+                visits={chosen_action: 1},
+                q_values={},
+                root_value=value,
+                simulations=0,
+                latency_s=latency_s,
+            )
+
+    return _PolicyOnlyPolicy()
+
+
 class LocalFixedPolicy:
     """Reimplements the fixed-agent decision contract we need: a seeded,
     isolated call into a scripted FixedPolicyAgent subclass, with a
@@ -205,9 +251,31 @@ class LocalGameOutcome:
     final_round: int = 0
     final_net_worth: tuple = ()
     search_latencies_s: list = field(default_factory=list)
+    shadow_decisions: list = field(default_factory=list)
 
 
-def play_local_game(*, game_id: int, seed: int, policies: dict, max_rounds: int, record_seats: set[int]) -> LocalGameOutcome:
+def _invoke_policy(policy, game, seat: int, decision_seed: int):
+    """Runs one policy's choose() and normalizes the return shape: (action,
+    latency_s|None, result|None, kind). `result` carries visits/q_values/
+    root_value for kinds that have them (search, policy_only) and is None
+    for plain-int-returning kinds (fixed)."""
+    kind = getattr(policy, "kind", None)
+    if kind in ("search", "policy_only"):
+        result = policy.choose(game, seat, decision_seed)
+        return result.chosen_action, result.latency_s, result, kind
+    return policy.choose(game, seat, decision_seed), None, None, kind
+
+
+def play_local_game(
+    *,
+    game_id: int,
+    seed: int,
+    policies: dict,
+    max_rounds: int,
+    record_seats: set[int],
+    shadow_policy=None,
+    shadow_seats: set[int] | None = None,
+) -> LocalGameOutcome:
     """Plays one game turn-by-turn against the supplied per-seat policies.
 
     Structurally independent of arena.py's play_game: a closure-based
@@ -215,6 +283,13 @@ def play_local_game(*, game_id: int, seed: int, policies: dict, max_rounds: int,
     range(...)` body), a different decision-seed mixing function, and the
     game/crash/outcome bookkeeping assembled in one place at the end rather
     than mutated incrementally on a result object during the loop.
+
+    `shadow_policy`, when given, is asked what it would have chosen at every
+    non-forced decision made by a seat in `shadow_seats` — queried on the
+    exact same pre-step state as the real decision, but its answer is only
+    recorded (LocalGameOutcome.shadow_decisions), never acted on. Lets two
+    policies be compared on literally the same decision states a real
+    evaluation game visits, without playing two divergent games.
     """
     from monopoly_bench.engine import MAX_DECISIONS_PER_TURN, NUM_PLAYERS, SharedGame, legal_mask
     from monopoly_bench.contracts import ReplayPosition
@@ -222,6 +297,8 @@ def play_local_game(*, game_id: int, seed: int, policies: dict, max_rounds: int,
     game = SharedGame.new(seed, max_rounds)
     positions: list[ReplayPosition] = []
     search_latencies_s: list[float] = []
+    shadow_decisions: list[dict] = []
+    shadow_seats = shadow_seats or set()
     decision_budget = max_rounds * NUM_PLAYERS * MAX_DECISIONS_PER_TURN
 
     def resolve_one_turn(turn_index: int) -> int:
@@ -232,25 +309,34 @@ def play_local_game(*, game_id: int, seed: int, policies: dict, max_rounds: int,
 
         decision_seed = _mix_decision_seed(seed, turn_index, seat)
         policy = policies[seat]
-        if getattr(policy, "kind", None) == "search":
-            outcome = policy.choose(game, seat, decision_seed)
-            chosen_action = outcome.chosen_action
-            search_latencies_s.append(outcome.latency_s)
-            if seat in record_seats:
-                positions.append(
-                    ReplayPosition(
-                        state=game.env._get_state(seat),
-                        legal_mask=legal_mask(legal_actions),
-                        visits=outcome.visits,
-                        q_values=outcome.q_values,
-                        selected_action=chosen_action,
-                        value=outcome.root_value,
-                        actor_id=seat,
-                        game_id=game_id,
-                    )
+        chosen_action, latency_s, result, kind = _invoke_policy(policy, game, seat, decision_seed)
+        if latency_s is not None:
+            search_latencies_s.append(latency_s)
+        if kind == "search" and seat in record_seats:
+            positions.append(
+                ReplayPosition(
+                    state=game.env._get_state(seat),
+                    legal_mask=legal_mask(legal_actions),
+                    visits=result.visits,
+                    q_values=result.q_values,
+                    selected_action=chosen_action,
+                    value=result.root_value,
+                    actor_id=seat,
+                    game_id=game_id,
                 )
-        else:
-            chosen_action = policy.choose(game, seat, decision_seed)
+            )
+
+        if shadow_policy is not None and seat in shadow_seats:
+            shadow_action, _, _, _ = _invoke_policy(shadow_policy, game, seat, decision_seed)
+            shadow_decisions.append(
+                {
+                    "turn_index": turn_index,
+                    "seat": seat,
+                    "actual_action": chosen_action,
+                    "shadow_action": shadow_action,
+                    "agree": chosen_action == shadow_action,
+                }
+            )
 
         if chosen_action not in legal_actions:
             raise RuntimeError(f"seat {seat} attempted illegal action {chosen_action}")
@@ -267,6 +353,7 @@ def play_local_game(*, game_id: int, seed: int, policies: dict, max_rounds: int,
             completed=False, winner=None, decisions=turn_index,
             positions=positions, illegal_actions=1, crashed=False, error=str(exc),
             final_round=game.env.round, search_latencies_s=search_latencies_s,
+            shadow_decisions=shadow_decisions,
         )
     except Exception as exc:  # noqa: BLE001 - intentional fail-closed boundary
         return LocalGameOutcome(
@@ -274,6 +361,7 @@ def play_local_game(*, game_id: int, seed: int, policies: dict, max_rounds: int,
             positions=positions, illegal_actions=0, crashed=True,
             error=f"{type(exc).__name__}: {exc}",
             final_round=game.env.round, search_latencies_s=search_latencies_s,
+            shadow_decisions=shadow_decisions,
         )
 
     finished = game.env.done
@@ -290,7 +378,7 @@ def play_local_game(*, game_id: int, seed: int, policies: dict, max_rounds: int,
     return LocalGameOutcome(
         completed=finished, winner=winner, decisions=turn_index, positions=positions,
         final_round=game.env.round, final_net_worth=net_worth,
-        search_latencies_s=search_latencies_s,
+        search_latencies_s=search_latencies_s, shadow_decisions=shadow_decisions,
     )
 
 
