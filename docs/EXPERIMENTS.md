@@ -1056,3 +1056,77 @@ update budgets on a fixed 37,772-position set risk overfitting the value
 head without improving the policy. Any next step scaling either games or
 updates further needs its own `docs/DECISIONS.md` entry with a reason to
 expect it'll help, per this project's standing practice — not assumed here.
+
+## 2026-08-11 (later still) — Offline PUCT search-budget diagnostic: KILL
+
+*Note: this and the entry above were originally dated 2026-08-12 in a few
+places across this project; that was one day ahead of the actual system
+clock. Corrected going forward, not rewritten everywhere retroactively —
+see `docs/DECISIONS.md`'s matching correction note.*
+
+**Question**: before spending a full game-evaluation budget on it, does
+scaling PUCT simulation count (4 → 16 → 32) on the 500-update checkpoint
+actually change decisions enough to be worth measuring in real games? Zero
+new training, zero new self-play data, ASU untouched.
+
+### Checkpoint integrity
+
+Verified `artifacts/monopolyzero_strength_pilot/trained_updates_500.pt`
+SHA-256 `152c0a0f6136d1fc91e74973ac245b2f72774694c424d2a48854514ed2848383`
+matches 016's recorded value exactly — confirmed before running anything
+(built into `scripts/monopolyzero_search_budget_diagnostic.py`'s
+`verify_checkpoint()`, which raises `SystemExit` on any mismatch).
+
+### Diagnostic
+
+```bash
+PYTHONHASHSEED=0 PYTHONIOENCODING=utf-8 python scripts/monopolyzero_search_budget_diagnostic.py
+```
+
+Collected exactly **200 non-forced decision states** by playing sims=4,
+`self_play=False` games (the 500-update checkpoint vs. `fixed-a/b/c`, focus
+seat rotating) on held-out seeds `31000-31004`, snapshotting a clone of the
+game before every decision where the checkpoint faced more than one legal
+action. Then re-ran PUCT search on each *exact frozen state* at 4, 16, and
+32 simulations (`self_play=False`, `depth=16`) — same state, same decision
+seed, only simulation count varies.
+
+| | 4 vs 16 | 16 vs 32 | 4 vs 32 |
+|---|---|---|---|
+| Chosen-action disagreement | **1.5%** (3/200) | 2.0% (4/200) | 3.5% (7/200) |
+| Mean abs. root-value change (self) | 0.0386 | 0.0238 | 0.0492 |
+
+| | 4 sims | 16 sims | 32 sims |
+|---|---|---|---|
+| Mean chosen-action visit share | 97.75% | 76.91% | 63.48% |
+| Search latency mean / p50 / p95 | 0.0090s / 0.0083s / 0.0137s | 0.0396s / 0.0372s / 0.0689s | 0.0808s / 0.0755s / 0.1388s |
+
+Illegal actions during search: **0**. `asu_modules_loaded_count: 0`. Wall
+time for the whole diagnostic (collection + 600 searches): **27.95s**
+(29.19s including process startup), peak RSS **0.206 GiB**.
+
+Latency scales roughly linearly with simulation count (16 sims ≈ 5x the
+p95 latency of 4 sims; 32 sims ≈ 10x) — exactly the cost a full 4-vs-16 or
+4-vs-32 game evaluation would have paid per decision, for a chosen-action
+difference this diagnostic already shows is small.
+
+**GO / NO-SIGNAL / KILL: KILL.** 4-vs-16 disagreement (1.5%) is well under
+the 5% kill threshold, and the mean root-value change (0.0386) is under the
+0.05 threshold too — both conditions for killing search-budget scaling are
+met. **No full game evaluation was run**, per the task's own decision rule
+(not a shortcut — spending ~20+ minutes of game evaluation to confirm what
+a 28-second, training-free diagnostic already shows clearly would have been
+the wrong call).
+
+Full structured record:
+[logs/experiments/017-monopolyzero-search-budget-diagnostic.json](../logs/experiments/017-monopolyzero-search-budget-diagnostic.json).
+
+### Conclusion / next step
+
+More PUCT simulations per decision is not, on its own, a lever worth
+pursuing for this checkpoint — the policy's decisions are already stable
+under 4x-8x more search. Combined with the update-budget sweep's NO-SIGNAL
+result above, neither "train longer on the same data" nor "search harder
+at inference time" moved the needle for the 500-update checkpoint. The
+remaining unexplored lever, per both entries, is more self-play data —
+starting that needs its own `docs/DECISIONS.md` entry, not assumed here.

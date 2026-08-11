@@ -1,0 +1,54 @@
+{
+  "experiment_id": "017-monopolyzero-search-budget-diagnostic",
+  "experiment_name": "Offline PUCT search-budget diagnostic: 200 frozen states x 4/16/32 simulations, 500-update checkpoint",
+  "experiment_type": "performance_measurement",
+  "date": "2026-08-11",
+  "code_commit_sha": "a65e3429fb4b5530220c7a7f4ac1c2acf8c552f3",
+  "reference_submodule_sha": "afd9205761317e196d77f679921c35fb04c7ab96",
+  "exact_commands": [
+    "PYTHONHASHSEED=0 PYTHONIOENCODING=utf-8 python scripts/monopolyzero_search_budget_diagnostic.py"
+  ],
+  "seeds": [31000, 31001, 31002, 31003, 31004],
+  "algorithm_config": {
+    "held_out_seeds": [31000, 31001, 31002, 31003, 31004],
+    "target_states": 200,
+    "states_collected": 200,
+    "collection_simulations": 4,
+    "collection_max_rounds": 50,
+    "collection_note": "states collected by playing sims=4 self_play=False games (checkpoint vs fixed-a/b/c, focus seat rotating) and snapshotting a clone of the game before every non-forced (>1 legal action) decision the checkpoint faced",
+    "simulation_tiers": [4, 16, 32],
+    "max_depth": 16,
+    "self_play": false,
+    "opponents": ["fixed-a", "fixed-b", "fixed-c"],
+    "no_new_training": true,
+    "no_new_self_play_data_generated": true,
+    "asu_involved": false,
+    "state_dumps_committed": false
+  },
+  "model_checkpoint": {
+    "sha256": "152c0a0f6136d1fc91e74973ac245b2f72774694c424d2a48854514ed2848383",
+    "path": "artifacts/monopolyzero_strength_pilot/trained_updates_500.pt",
+    "format_version": 1
+  },
+  "counts": {
+    "states_diagnosed": 200,
+    "searches_run": 600
+  },
+  "runtime": {"wall_time_s": 29.19, "peak_rss_gib": 0.20621871948242188},
+  "metrics": {
+    "disagreement": {"4_vs_16": 0.015, "16_vs_32": 0.02, "4_vs_32": 0.035},
+    "root_value_self_mean_abs_delta": {
+      "4_vs_16_mean_abs": 0.03856866540125339,
+      "16_vs_32_mean_abs": 0.02378079267207795,
+      "4_vs_32_mean_abs": 0.04924629128810921
+    },
+    "mean_chosen_action_visit_share": {"4": 0.9775, "16": 0.7690625, "32": 0.63484375},
+    "kill_threshold": "4_vs_16 disagreement < 0.05 AND 4_vs_16 root_value_self_mean_abs_delta < 0.05",
+    "kill_search_scaling_recommended": true
+  },
+  "loss": null,
+  "integrity": {"illegal_actions": 0, "fallbacks": null, "crashes": 0},
+  "result": "KILL search scaling. 4-vs-16-simulation disagreement across 200 held-out decision states was 1.5% (3/200 states chose a different action), well under the 5% kill threshold, and the mean absolute change in the acting player's own root value estimate between 4 and 16 simulations was 0.0386, also under the 0.05 threshold. 16-vs-32 disagreement (2.0%) and 4-vs-32 disagreement (3.5%) are both similarly small. Chosen-action visit share drops from 97.75% (4 sims) to 76.91% (16 sims) to 63.48% (32 sims) as expected (more simulations spread visits across more candidate actions), but this did not translate into meaningfully different final choices. Per the task's own decision rule, this result does NOT warrant spending a full game-evaluation budget on search-budget scaling - no full game eval was run, consistent with that rule, not a shortcut.",
+  "raw_logs": ["docs/baseline_runs/monopolyzero_search_budget_diagnostic_stdout.txt"],
+  "notes": "raw_logs includes the full per-state, per-tier breakdown (chosen_action, root_value, visit_share, latency for all 200 states x 3 tiers = 600 records) - this is action ids and small floats only, no raw state/env arrays were ever written to disk (verified by tests/test_monopolyzero_search_budget_diagnostic.py::test_does_not_persist_raw_state_arrays_in_output_record). fallbacks is null in integrity because this diagnostic's collection games use LocalFixedPolicy for the non-focus seats but their fallback counts were not aggregated/reported here (out of scope for a search-quality diagnostic; illegal_actions_during_search, the metric that actually matters for this experiment, was checked and is 0). search_latency_s (mean/p50/p95 per tier) is the wall-clock cost signal for the KILL decision - see docs/EXPERIMENTS.md for the full latency-scaling writeup: 4-sim p95 0.0137s, 16-sim p95 0.0689s (~5x), 32-sim p95 0.1388s (~10x) - roughly linear in simulation count, so scaling search budget would have been a real latency cost for a result that isn't there."
+}

@@ -73,7 +73,13 @@ Record of significant project decisions. Append chronologically, most recent las
 - Alternatives considered: leaving the "ASU-independent" claim as "no ASU output used" without correcting the import-level language (rejected — imprecise, and the whole point of `CLAUDE.md`'s ASU rules is to be exact about what "involves ASU" means); patching `adapters.py`/`training.py` to defer their ASU imports (rejected — would mean editing `references/DeepRL_Monopoly`, which must stay read-only).
 - Reference checked: `references/DeepRL_Monopoly` at `afd9205761317e196d77f679921c35fb04c7ab96` (submodule unchanged, read-only). Historical results in `logs/experiments/010-*.json` and `011-*.json` are not deleted or edited — corrected via their own `notes` fields, per this project's no-silent-rewrite practice. See `logs/experiments/012-selfplay-asu-import-free-smoke.json`.
 
-## 2026-08-12 — Pause same-replay update scaling; 500-update checkpoint is a nominal candidate only
+## 2026-08-11 (later still) — Pause same-replay update scaling; 500-update checkpoint is a nominal candidate only
+
+*Date corrected 2026-08-11: this entry (and several other "2026-08-12"
+labels across this project's docs/logs going back a couple of sessions)
+used a date one day ahead of the actual system clock. Not retroactively
+rewritten everywhere it appears — the underlying facts/data are unaffected,
+only the calendar label was wrong in places. Fixed going forward from here.*
 
 - Context: `016-monopolyzero-update-budget-sweep-paired-eval` trained three checkpoints (100/500/1000 updates) from the same pre-training baseline against the same fixed 37,772-position replay buffer (013's 32 games, zero new self-play), then paired-evaluated all four (0/100/500/1000) on held-out seeds `30000-30009`, 40 games each.
 - Decision: **Pause scaling training updates on this same fixed replay buffer further.** Result was NO-SIGNAL: no update budget showed a statistically supported win-rate improvement over another (`100 vs 500` and `500 vs 1000` both failed the non-overlapping-Wilson-interval test). 500 updates had the nominally highest win rate (7.5%, 3/40) of the four, but its interval `[2.6%, 19.9%]` overlaps all the others, and 1000 updates fell back to baseline's win rate (2.5%) despite having the lowest training loss by far — consistent with the value head overfitting the fixed dataset rather than the policy generalizing. **500 updates is therefore a nominal research candidate only, not a proven-best checkpoint** — it should not be treated as "the good one" in any future comparison without new evidence.
