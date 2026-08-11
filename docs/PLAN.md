@@ -135,9 +135,14 @@ as they are defined.
   `docs/RULES_SPEC.md` beyond even-building; that gap is independent of and
   blocks on top of every training/inference result recorded so far.
 - **Evaluation methodology is now governed by `docs/EVALUATION_PROTOCOL.md`**
-  (DEV / PROMOTION / FINAL_BLIND seed pools, paired McNemar/bootstrap stats
-  in `scripts/evaluation_protocol.py`) — any new paired evaluation should
-  use that protocol rather than a from-scratch Wilson-non-overlap check.
+  — DEV / PROMOTION / FINAL_BLIND seed pools with a scope-exclusive guard
+  (`require_seed_scope`), and cluster-aware paired statistics in
+  `scripts/evaluation_protocol.py`: a seed-block paired randomization test
+  + seed-block bootstrap as the **primary** paired-comparison evidence
+  (seat-level McNemar is kept only as a **secondary** diagnostic, since the
+  4 seats per seed are a cluster, not independent trials). Any new paired
+  evaluation should use that protocol rather than a from-scratch
+  Wilson-non-overlap check.
 
 ## MonopolyZero (`monopoly_bench`) — ASU-independent parts only
 
