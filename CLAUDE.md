@@ -19,6 +19,25 @@ These rules govern how work proceeds in this repo. They override default behavio
 - Prefer many small commits/pushes over few large ones, within a single session.
 - Keep the working tree clean at the end of a session.
 
+## Experiment Logging (mandatory)
+
+- Every training run, benchmark, reproducibility check, A/B test, or
+  replay-derived result **must** get a `logs/experiments/NNN-slug.json`
+  entry conforming to `logs/experiments/schema.json` — see
+  `logs/experiments/README.md` for the standard. This is required, not
+  optional, starting 2026-08-11.
+- Write the JSON log entry as part of the same commit that records the
+  experiment in `docs/EXPERIMENTS.md` — not a separate, later, or skipped
+  step.
+- Unknown or unmeasured values are `null` in the log — never guessed or
+  estimated into a field that should hold a measured number.
+- Never commit checkpoints, replay buffers, or other large/binary artifacts
+  into `logs/experiments/` (or anywhere else in this repo) — reference them
+  by SHA-256 and local path instead. Small raw stdout/stderr `.txt` logs are
+  fine and belong in `logs/experiments/raw/`.
+- `tests/test_experiment_logs_schema.py` validates every entry against the
+  schema — it must pass before a commit that adds or changes a log entry.
+
 ## Reference Usage
 
 - Check the `references/DeepRL_Monopoly` submodule before major design/algorithm decisions — it is the primary technical reference (not an authority on official competition rules).
