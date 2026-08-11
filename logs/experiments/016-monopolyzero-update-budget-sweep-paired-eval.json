@@ -1,0 +1,79 @@
+{
+  "experiment_id": "016-monopolyzero-update-budget-sweep-paired-eval",
+  "experiment_name": "Update-budget sweep paired evaluation: baseline (0), 100, 500, 1000 updates on held-out seeds 30000-30009",
+  "experiment_type": "paired_evaluation",
+  "date": "2026-08-11",
+  "code_commit_sha": "aa40a5c19b4cc04eca65331ea4a330c691cf6cd1",
+  "reference_submodule_sha": "afd9205761317e196d77f679921c35fb04c7ab96",
+  "exact_commands": [
+    "PYTHONHASHSEED=0 PYTHONIOENCODING=utf-8 python scripts/monopolyzero_update_budget_eval.py"
+  ],
+  "seeds": [30000, 30001, 30002, 30003, 30004, 30005, 30006, 30007, 30008, 30009],
+  "algorithm_config": {
+    "held_out_seeds": [30000, 30001, 30002, 30003, 30004, 30005, 30006, 30007, 30008, 30009],
+    "never_used_in_training": true,
+    "seat_rotation": "4 seats x 10 seeds = 40 games per checkpoint",
+    "opponents": ["fixed-a", "fixed-b", "fixed-c"],
+    "self_play": false,
+    "simulations": 4,
+    "max_depth": 16,
+    "max_rounds": 200,
+    "asu_involved": false,
+    "asu_benchmark_run": false
+  },
+  "model_checkpoint": {"sha256": null, "path": null, "format_version": null},
+  "counts": {
+    "checkpoints_evaluated": 4,
+    "games_per_checkpoint": 40,
+    "games_total": 160
+  },
+  "runtime": {"wall_time_s": 1306.37, "peak_rss_gib": 0.20959854125976562},
+  "metrics": {
+    "budget_0_baseline": {
+      "checkpoint_sha256": "22ae2abea60478355f61ce0404a31de3b52fb97769d4f99f7e04f4c673629370",
+      "wins": 1, "games": 40, "win_rate": 0.025,
+      "wilson_95": [0.004426831502681404, 0.1288136896347409],
+      "mean_net_worth": 2961.9375, "median_net_worth": 0.0, "bankruptcy_rate": 0.625,
+      "round_cap_rate": 0.4, "p95_search_latency_s": 0.013435500004561618,
+      "fixed_fallbacks": {"fixed_a": 0, "fixed_b": 19, "fixed_c": 37}, "fixed_fallbacks_total": 56,
+      "wins_by_seat": {"0": 0, "1": 0, "2": 0, "3": 1}
+    },
+    "budget_100": {
+      "checkpoint_sha256": "1a428b96629e29fa83a413e5ca30a181e8b79fd29ac98f3ef97cd800f9809884",
+      "wins": 1, "games": 40, "win_rate": 0.025,
+      "wilson_95": [0.004426831502681404, 0.1288136896347409],
+      "mean_net_worth": 3794.3375, "median_net_worth": 0.0, "bankruptcy_rate": 0.55,
+      "round_cap_rate": 0.5, "p95_search_latency_s": 0.013942599995061755,
+      "fixed_fallbacks": {"fixed_a": 0, "fixed_b": 14, "fixed_c": 29}, "fixed_fallbacks_total": 43,
+      "wins_by_seat": {"0": 0, "1": 1, "2": 0, "3": 0}
+    },
+    "budget_500": {
+      "checkpoint_sha256": "152c0a0f6136d1fc91e74973ac245b2f72774694c424d2a48854514ed2848383",
+      "wins": 3, "games": 40, "win_rate": 0.075,
+      "wilson_95": [0.025836025774588198, 0.19864233524310546],
+      "mean_net_worth": 3597.775, "median_net_worth": 0.0, "bankruptcy_rate": 0.625,
+      "round_cap_rate": 0.475, "p95_search_latency_s": 0.012497000017901883,
+      "fixed_fallbacks": {"fixed_a": 0, "fixed_b": 57, "fixed_c": 24}, "fixed_fallbacks_total": 81,
+      "wins_by_seat": {"0": 1, "1": 0, "2": 1, "3": 1}
+    },
+    "budget_1000": {
+      "checkpoint_sha256": "06f6569a30eec3511137c08223dc905059d9c1c837799391eef2f0ed581a19c7",
+      "wins": 1, "games": 40, "win_rate": 0.025,
+      "wilson_95": [0.004426831502681404, 0.1288136896347409],
+      "mean_net_worth": 4333.1, "median_net_worth": 2274.5, "bankruptcy_rate": 0.5,
+      "round_cap_rate": 0.55, "p95_search_latency_s": 0.012599200010299683,
+      "fixed_fallbacks": {"fixed_a": 0, "fixed_b": 47, "fixed_c": 29}, "fixed_fallbacks_total": 76,
+      "wins_by_seat": {"0": 1, "1": 0, "2": 0, "3": 0}
+    },
+    "paired_improvement_statistically_supported": {
+      "100_vs_500": false,
+      "500_vs_1000": false
+    },
+    "500_vs_1000_direction": "1000's win rate (2.5%) is nominally LOWER than 500's (7.5%) - not the improvement direction at all, and unsurprisingly the non-overlap test returns false. Not claimed as a statistically supported regression (Wilson intervals [2.58%,19.86%] for 500 and [0.44%,12.88%] for 1000 overlap substantially), but flagged explicitly rather than only reporting the negative 'not improved' result - see the round-cap correction earlier in this project's history for why this distinction matters."
+  },
+  "loss": null,
+  "integrity": {"illegal_actions": 0, "fallbacks": 256, "crashes": 0},
+  "result": "NO-SIGNAL across the board. None of the three trained checkpoints (100/500/1000 updates) show a statistically supported improvement over baseline or over each other: all four Wilson 95% intervals overlap heavily (baseline/100/1000 identical at [0.4%,12.9%] with 1/40 wins each; 500 highest at 3/40, [2.6%,19.9%], still overlapping the others). The 100-vs-500 and 500-vs-1000 non-overlap tests both return false. Notably, 500 updates had the nominally highest win rate (7.5%) of all four checkpoints, and 1000 updates fell back to baseline's win rate (2.5%) despite having by far the lowest training loss (see 015) - consistent with the value head overfitting the fixed 37,772-position replay buffer between 500 and 1000 updates without a corresponding policy improvement, though this is a descriptive observation, not a statistically tested claim. Mean/median net worth generally rose with more updates (2962 -> 3794 -> 3598 -> 4333 mean), but net worth alone is not a win-rate proxy and bankruptcy rates stayed high (50-62.5%) throughout. All four checkpoints: 0 illegal actions, 0 crashes, asu_modules_loaded count 0. ASU benchmark not run, per task instruction.",
+  "raw_logs": ["docs/baseline_runs/monopolyzero_update_budget_eval_stdout.txt"],
+  "notes": "Per-seed/per-seat results (160 individual games) are in the raw stdout log's per_game arrays for each checkpoint, not duplicated here. fixed_fallbacks rose noticeably with update budget (56 -> 43 -> 81 -> 76) - not investigated further here, plausibly because a more-trained search-seat model reaches different game states where the fixed opponents' scripted logic is more likely to propose an illegal action; this is about fixed-a/b/c's behavior in reached states, not a fault of our checkpoints (fixed-a/b/c fallback counting is unrelated to whether our own model acted illegally, which never happened - illegal_actions is 0 throughout)."
+}

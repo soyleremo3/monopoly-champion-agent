@@ -932,3 +932,127 @@ updates) with the same paired-seed evaluation protocol is the natural next
 step, and per this project's standing practice needs its own
 `docs/DECISIONS.md` entry with a reason to expect it'll move the needle,
 not just "more of the same."
+
+## 2026-08-12 — Update-budget sweep: does more training on the SAME data help?
+
+Correction first: the prior entry's "nothing got worse" claim was wrong —
+`round_cap_rate` moved from 45% (baseline) to 55% (trained), an adverse
+direction never tested for significance. Corrected in place above and in
+`logs/experiments/014-*.json`'s `notes`; the 45%/55% numbers themselves are
+unchanged.
+
+**Question**: with zero new self-play games, does training for longer on
+013's existing 32-game / 37,772-position replay buffer produce a measurably
+different policy? Isolates training-update budget as the single variable.
+
+### Integrity check (before touching anything)
+
+Built into `scripts/monopolyzero_update_budget_sweep.py`'s
+`verify_reused_artifacts()`, which runs before any training and refuses to
+proceed on a mismatch (no separate standalone command — it's the first
+thing the training command below does):
+
+- Replay buffer present, `metadata.json` size **37,772** — matches.
+- Baseline checkpoint present, SHA-256
+  `22ae2abea60478355f61ce0404a31de3b52fb97769d4f99f7e04f4c673629370` —
+  matches 013's recorded value exactly.
+- **PASSED** — proceeded to training. (Had either check failed, the script
+  raises `SystemExit` before any training call, so a mismatch would have
+  produced zero new checkpoints, not a silent fallback.)
+
+### Training: 100 / 500 / 1000 updates, zero new games
+
+```bash
+PYTHONHASHSEED=0 PYTHONIOENCODING=utf-8 python scripts/monopolyzero_update_budget_sweep.py
+```
+
+Each budget starts fresh from the same baseline checkpoint (never resumes
+from another budget's checkpoint) with the same sampling seed (42), so the
+first 100 updates are byte-identical across all three runs and the first
+500 identical between the 500- and 1000-update runs — verified directly:
+the interval-logged loss values at updates 25/50/75/100 are bit-identical
+across all three, and 125-500 identical between the 500 and 1000 runs.
+`batch_size=64`, `lr=3e-4`, `weight_decay=1e-4`, `gradient_clip=1.0` (the
+last three read directly from `TrainingConfig`'s defaults).
+
+| Budget | Final loss | Final policy_loss | Final value_loss | Checkpoint SHA-256 (short) |
+|---|---|---|---|---|
+| 100  | 2.4687 | 1.6583 | 0.8104 | `1a428b96...` |
+| 500  | 1.9708 | 1.6572 | 0.3136 | `152c0a0f...` |
+| 1000 | 1.6482 | 1.5406 | 0.1076 | `06f65...` |
+
+All updates finite across all three budgets — no stop condition triggered.
+Total wall time for all three combined: **12.98s** (no game generation, so
+dramatically faster than 013's 301.55s). `asu_modules_loaded_count: 0`.
+
+**Loss trend**: total and value loss both drop steadily; value_loss in
+particular falls sharply and close to monotonically (0.81 → 0.31 → 0.11).
+policy_loss barely moves (1.658 → 1.657 → 1.541). This pattern — value loss
+dropping fast on a *fixed*, *small* (37,772-position) dataset while policy
+loss stays roughly flat — is consistent with the value head increasingly
+fitting (or overfitting) the same 32 games' outcomes, not necessarily with
+the policy generalizing better. Flagged as a concern to watch in the
+evaluation below, not asserted as fact from the loss curve alone.
+
+Full structured record:
+[logs/experiments/015-monopolyzero-update-budget-sweep-training.json](../logs/experiments/015-monopolyzero-update-budget-sweep-training.json).
+
+### Paired evaluation: baseline (0), 100, 500, 1000 updates
+
+```bash
+PYTHONHASHSEED=0 PYTHONIOENCODING=utf-8 python scripts/monopolyzero_update_budget_eval.py
+```
+
+Held-out seeds `30000-30009` (10 seeds, never used in training), 4-seat
+rotation × 10 seeds = 40 games/checkpoint = **160 games total**, vs.
+`fixed-a/b/c`, `max_rounds=200`, `self_play=False`, same search config as
+training (4 simulations, depth 16). ASU benchmark not run.
+
+| | Baseline (0) | 100 updates | 500 updates | 1000 updates |
+|---|---|---|---|---|
+| Win rate | 1/40 = **2.5%** | 1/40 = **2.5%** | 3/40 = **7.5%** | 1/40 = **2.5%** |
+| Wilson 95% CI | [0.4%, 12.9%] | [0.4%, 12.9%] | [2.6%, 19.9%] | [0.4%, 12.9%] |
+| Mean net worth | 2,961.9 | 3,794.3 | 3,597.8 | 4,333.1 |
+| Median net worth | 0.0 | 0.0 | 0.0 | 2,274.5 |
+| Bankruptcy rate | 62.5% | 55.0% | 62.5% | 50.0% |
+| Round-cap rate | 40.0% | 50.0% | 47.5% | 55.0% |
+| p95 search latency | 0.0134s | 0.0139s | 0.0125s | 0.0126s |
+| Illegal / crash | 0 / 0 | 0 / 0 | 0 / 0 | 0 / 0 |
+| Fixed fallbacks | 56 | 43 | 81 | 76 |
+
+Wall time **1306.37s** (~21.8 min), peak RSS **0.210 GiB**.
+`asu_modules_loaded_count: 0` across all four checkpoints.
+
+**Paired comparisons** (non-overlapping-Wilson-interval test):
+`100 vs 500`: **not statistically supported**. `500 vs 1000`: **not
+statistically supported** — and worth stating plainly rather than just
+reporting the negative: 1000's win rate (2.5%) is nominally *lower* than
+500's (7.5%), the opposite of an improvement, even though 1000 had by far
+the lowest training loss of the three. Not claimed as a statistically
+supported regression either (the two Wilson intervals still overlap
+substantially) — same discipline as the round-cap correction above: report
+the direction honestly without overclaiming significance either way.
+
+**GO / NO-SIGNAL / REGRESSION: NO-SIGNAL.** No update budget in this sweep
+shows a statistically supported win-rate improvement over baseline or over
+another budget. 500 updates had the nominally best win rate of the four,
+but its interval overlaps all the others. Net worth trended upward with
+more updates, but net worth is not a win-rate proxy and bankruptcy rates
+stayed high (50-62.5%) throughout — most games are still lost outright, not
+won narrowly.
+
+Full structured record:
+[logs/experiments/016-monopolyzero-update-budget-sweep-paired-eval.json](../logs/experiments/016-monopolyzero-update-budget-sweep-paired-eval.json).
+
+### Conclusion / next step
+
+Training-update budget alone, on this same fixed 32-game dataset, does not
+produce a statistically detectable skill change in either direction across
+100-1000 updates. Combined with 015's loss-curve observation (value loss
+dropping sharply while policy loss stays flat, and 1000's win rate falling
+back to baseline despite the lowest loss), the more likely lever is **more
+self-play data**, not more updates on the same small replay buffer — larger
+update budgets on a fixed 37,772-position set risk overfitting the value
+head without improving the policy. Any next step scaling either games or
+updates further needs its own `docs/DECISIONS.md` entry with a reason to
+expect it'll help, per this project's standing practice — not assumed here.
