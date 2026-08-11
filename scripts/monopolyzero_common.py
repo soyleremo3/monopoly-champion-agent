@@ -304,6 +304,19 @@ def _scatter_visit_targets(actions_sparse, visit_counts_sparse, lengths, num_act
     return dense / row_totals
 
 
+def _dense_target_cross_entropy(logits, targets):
+    """Cross-entropy of a dense target distribution against `logits`, safe
+    when `logits` contains -inf at masked (illegal) positions: those are
+    always paired with a zero target, but `0 * -inf` is NaN in IEEE754, so
+    the -inf must be swapped out before multiplying rather than relied on
+    to cancel via the zero target."""
+    import torch
+
+    log_probs = torch.log_softmax(logits, dim=1)
+    safe_log_probs = torch.where(targets > 0, log_probs, torch.zeros_like(log_probs))
+    return -(targets * safe_log_probs).sum(dim=1).mean()
+
+
 def local_training_update(model, optimizer, batch: dict, *, gradient_clip: float) -> dict:
     """One gradient step: policy target from MCTS visit counts (dense
     cross-entropy, see _scatter_visit_targets), value target from the real
@@ -338,8 +351,7 @@ def local_training_update(model, optimizer, batch: dict, *, gradient_clip: float
     optimizer.zero_grad(set_to_none=True)
     policy_logits, value_probs = model(states, masks)
 
-    policy_log_probs = torch.log_softmax(policy_logits, dim=1)
-    policy_loss = -(policy_targets * policy_log_probs).sum(dim=1).mean()
+    policy_loss = _dense_target_cross_entropy(policy_logits, policy_targets)
 
     value_log_probs = torch.log(value_probs.clamp_min(1e-8))
     value_loss = -(value_targets * value_log_probs).sum(dim=1).mean()

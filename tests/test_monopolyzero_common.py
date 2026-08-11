@@ -156,6 +156,36 @@ def test_scatter_visit_targets_normalizes_sparse_counts():
     assert all(dense[0, i].item() == 0.0 for i in untouched)
 
 
+def test_dense_target_cross_entropy_is_finite_with_masked_inf_logits():
+    """Regression test: a first version of this function computed
+    targets * log_softmax(logits) directly, which produced NaN whenever a
+    masked (illegal) position had logit=-inf and target=0, since
+    0 * -inf = NaN in IEEE754. This reproduces that exact shape (most
+    positions masked out, matching a real legal_mask over a 2958-action
+    space) and asserts the loss is finite."""
+    import torch
+
+    num_actions = 12
+    logits = torch.full((1, num_actions), float("-inf"))
+    logits[0, 3] = 0.5
+    logits[0, 7] = 1.5
+    targets = torch.zeros((1, num_actions))
+    targets[0, 3] = 1.0
+
+    loss = common._dense_target_cross_entropy(logits, targets)
+    assert torch.isfinite(loss).item()
+
+
+def test_dense_target_cross_entropy_matches_hand_computed_value():
+    import torch
+
+    logits = torch.tensor([[0.0, float("-inf"), 1.0]])
+    targets = torch.tensor([[1.0, 0.0, 0.0]])
+    loss = common._dense_target_cross_entropy(logits, targets)
+    expected = -torch.log_softmax(logits, dim=1)[0, 0]
+    assert loss.item() == pytest.approx(expected.item())
+
+
 def test_scatter_visit_targets_raises_on_all_zero_row():
     import torch
 
