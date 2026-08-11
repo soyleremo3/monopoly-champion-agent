@@ -1205,3 +1205,82 @@ levers going forward are (a) a genuinely larger/fresh self-play dataset,
 and (b) a different learning objective/architecture that doesn't lean on
 search at inference time — neither is started by this entry; each needs
 its own proposed experiment and decision log.
+
+## 2026-08-11 (later still x2) — Horizon diagnostic: round-50 leader vs. round-200 winner, and a state-encoding ablation
+
+- Hypothesis: none pre-registered, purely descriptive. Two open questions
+  before proposing any new strength-training run on top of 013's replay: (1)
+  013's training data was generated at `max_rounds=50`, but the competition
+  target is `max_rounds=200` — does a round-50 net-worth leader actually
+  predict the round-200 (or terminal) winner well enough for a 50-round
+  training signal to be a reasonable proxy? (2) Separately, does the
+  `round/max_rounds` scalar baked into the state encoding itself change
+  model output at a fixed game state, independent of anything about actual
+  gameplay?
+- Setup: **Part 1** — 32 fresh games (16 self-play + 16 vs-fixed,
+  seat-balanced, `baseline_pretraining.pt`, 4 simulations, `self_play=True`,
+  the same search recipe 013 used to generate its training data), but at
+  `max_rounds=200` this time. Fresh seeds `40000-40015` /`41000-41015`, no
+  overlap with any seed pool used anywhere else in this project. Snapshots
+  every player's net worth the instant the round counter first reaches 50,
+  then lets the same game continue uninterrupted to round 200 or
+  elimination. **Part 2** — from the same 32 games, up to 200 non-forced
+  decision states from rounds 1-50 (deterministic: game order, then turn
+  order). Each state is cloned and only `env.max_rounds` is flipped
+  (200 → 50); the script asserts at runtime (not just assumes) that at most
+  one state-vector index changes, then compares `POLICY_ONLY` model output
+  between the two encodings, for `baseline_pretraining.pt` and
+  `trained_updates_500.pt` separately. No GO/KILL threshold was set for
+  either part — this is a measurement, not a test with a pass/fail bar.
+- Result:
+
+  **Part 1 — round-50 leader vs. final winner**
+
+  | | Games | Agreements | Agreement rate |
+  |---|---|---|---|
+  | Overall | 32 | 19 | 59.4% |
+  | Self-play | 16 | 6 | 37.5% |
+  | vs-fixed | 16 | 13 | 81.25% |
+
+  All 32 games were still live at round 50 (`games_finished_before_round_50:
+  0`), so every game is in the agreement sample. The round-50 leader's final
+  rank: 1st in 19/32, 2nd in 6, 3rd in 5, 4th in 2. Agreement tracks
+  round-50 margin size: 50.0% at margin `<500` and `<2000`, 68.75% at margin
+  `>=2000`; mean margin was 4061.6 when the round-50 leader went on to win
+  vs. 1590.5 when they didn't (median 3179.5 vs. 1196.0).
+
+  **Part 2 — state-encoding ablation (round/max_rounds only)**
+
+  | | baseline_pretraining | trained_updates_500 |
+  |---|---|---|
+  | States used | 200 | 200 |
+  | POLICY_ONLY action disagreement | 1.5% | 1.0% |
+  | Policy TV-distance (mean) | 0.00237 | 0.00497 |
+  | Value-head mean abs delta | 0.00136 | 0.01019 |
+  | State-vector indices that changed | `{278}` (every state) | `{278}` (every state) |
+
+  Isolation held on every one of the 400 state x checkpoint comparisons —
+  flipping `max_rounds` moved exactly index 278 (`min(round/max_rounds,
+  1.0)`, hand-traced in `monopoly_game_engine/state.py::build_state_vector`)
+  and nothing else, verified programmatically, not assumed. The trained
+  checkpoint's *value head* is noticeably more sensitive to this single
+  scalar than the untrained baseline's (~7.5x larger mean abs delta), even
+  though its *chosen action* changes slightly less often.
+
+  Zero illegal actions, zero crashes, zero ASU modules loaded
+  (`asu_modules_loaded_count: 0`). Fixed-opponent fallbacks: 90, all from
+  vs-fixed games' non-focus seats (self-play games have none). Wall time
+  960.2s, peak RSS 0.21 GiB.
+
+  Full structured record:
+  [logs/experiments/019-monopolyzero-horizon-diagnostic.json](../logs/experiments/019-monopolyzero-horizon-diagnostic.json).
+
+- Conclusion / next step: **No GO/KILL/NO-SIGNAL verdict is being called
+  here** — per the task instructions this experiment measures only; the
+  59.4% overall / 37.5% self-play / 81.25% vs-fixed agreement figures, and
+  the 500-update checkpoint's larger value-head sensitivity to the round/50
+  vs. round/200 encoding, are handed off as read results, not pre-judged. This
+  is exactly the measurement `docs/PLAN.md`'s "37,772-position replay not
+  approved for new strength training until a horizon/label audit passes"
+  gate was waiting on — the gate itself stays in place until that call is
+  made and logged separately.

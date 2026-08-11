@@ -1,0 +1,88 @@
+{
+  "experiment_id": "019-monopolyzero-horizon-diagnostic",
+  "experiment_name": "Horizon diagnostic: does a round-50 net-worth leader predict the round-200 winner, and does the round/max_rounds state encoding alone change model output",
+  "experiment_type": "benchmark",
+  "date": "2026-08-11",
+  "code_commit_sha": "fcf941130fce5dd8990fde43faa98243a365d377",
+  "reference_submodule_sha": "afd9205761317e196d77f679921c35fb04c7ab96",
+  "exact_commands": [
+    "PYTHONHASHSEED=0 PYTHONIOENCODING=utf-8 python scripts/monopolyzero_horizon_diagnostic.py"
+  ],
+  "seeds": [40000, 40001, 40002, 40003, 40004, 40005, 40006, 40007, 40008, 40009, 40010, 40011, 40012, 40013, 40014, 40015, 41000, 41001, 41002, 41003, 41004, 41005, 41006, 41007, 41008, 41009, 41010, 41011, 41012, 41013, 41014, 41015],
+  "algorithm_config": {
+    "part_1_horizon_agreement": {
+      "games_total": 32,
+      "opponent_mix": "16 self-play games (model controls all 4 seats) + 16 vs-fixed games (model rotates seats 0-3, 4 times each; fixed-a/b/c fill the other 3 seats)",
+      "checkpoint": "baseline_pretraining.pt (pre-training, same checkpoint 013 started from)",
+      "simulations": 4,
+      "max_depth": 16,
+      "max_rounds": 200,
+      "self_play_for_search_seats": true,
+      "round_snapshot": 50,
+      "seed_freshness": "self-play 40000-40015, vs-fixed 41000-41015 - no overlap with any prior DEV/eval seed pool in this project (013: self-play 10000-10015, vs-fixed 20000-20015; DDQN paired eval: 10000-10009; 017: 31000-31004; 018: 32000-32009)"
+    },
+    "part_2_state_encoding_ablation": {
+      "states_collected": "up to 200 non-forced decision states from rounds 1-50 of the same 32 games, deterministic order (game plan order, then turn order), first 200 encountered",
+      "method": "clone the frozen pre-decision game state, flip ONLY env.max_rounds (200 -> 50), verify programmatically that at most one state-vector index changes, then compare POLICY_ONLY model output (chosen action, policy distribution, value head) between the two encodings",
+      "state_vector_index_isolated": 278,
+      "index_derivation": "hand-traced monopoly_game_engine/state.py::build_state_vector's idx arithmetic: state[278] = min(round/max_rounds, 1.0), the only max_rounds-dependent scalar in the 300-dim vector",
+      "checkpoints_tested_separately": ["baseline_pretraining.pt", "trained_updates_500.pt"]
+    },
+    "no_training": true,
+    "no_arbitrary_go_kill_threshold": true,
+    "asu_involved": false
+  },
+  "model_checkpoint": {
+    "sha256": "22ae2abea60478355f61ce0404a31de3b52fb97769d4f99f7e04f4c673629370",
+    "path": "artifacts/monopolyzero_strength_pilot/baseline_pretraining.pt",
+    "format_version": 1
+  },
+  "counts": {
+    "games_played": 32,
+    "self_play_games": 16,
+    "vs_fixed_games": 16,
+    "ablation_states_collected": 200,
+    "games_finished_before_round_50": 0
+  },
+  "runtime": {"wall_time_s": 960.2325815999939, "peak_rss_gib": 0.21134567260742188},
+  "metrics": {
+    "horizon_agreement": {
+      "overall": {"games": 32, "agreements": 19, "agreement_rate": 0.59375},
+      "self_play": {"games": 16, "agreements": 6, "agreement_rate": 0.375},
+      "vs_fixed": {"games": 16, "agreements": 13, "agreement_rate": 0.8125},
+      "round50_leader_final_rank_distribution": {"1": 19, "2": 6, "3": 5, "4": 2},
+      "agreement_rate_by_margin_bucket": [
+        {"margin_range": "[0,500)", "games": 4, "agreements": 2, "agreement_rate": 0.5},
+        {"margin_range": "[500,2000)", "games": 12, "agreements": 6, "agreement_rate": 0.5},
+        {"margin_range": "[2000,inf)", "games": 16, "agreements": 11, "agreement_rate": 0.6875}
+      ],
+      "margin_mean_when_agree": 4061.6052631578946,
+      "margin_mean_when_disagree": 1590.5,
+      "margin_median_when_agree": 3179.5,
+      "margin_median_when_disagree": 1196.0
+    },
+    "state_encoding_ablation": {
+      "baseline_pretraining": {
+        "states_used": 200,
+        "action_disagreement_rate": 0.015,
+        "policy_tv_distance_mean": 0.0023721713304985315,
+        "value_mean_abs_delta_mean": 0.0013563619926571847,
+        "state_vector_diff_indices_union": [278],
+        "states_with_no_index_diff": 0
+      },
+      "trained_updates_500": {
+        "states_used": 200,
+        "action_disagreement_rate": 0.01,
+        "policy_tv_distance_mean": 0.004967261314886855,
+        "value_mean_abs_delta_mean": 0.010186625391361304,
+        "state_vector_diff_indices_union": [278],
+        "states_with_no_index_diff": 0
+      }
+    }
+  },
+  "loss": null,
+  "integrity": {"illegal_actions": 0, "fallbacks": 90, "crashes": 0},
+  "result": "Purely descriptive measurement, no GO/KILL threshold applied (none was pre-registered for this diagnostic - the calling decision is made separately). Part 1: across 32 fresh held-out games at max_rounds=200 (all 32 lived past round 50, so all are in the eligible/agreement sample), the round-50 net-worth leader matched the eventual round-200-or-terminal winner in 19/32 games (59.4% overall) - 6/16 (37.5%) in self-play, 13/16 (81.25%) in vs-fixed. Agreement rose with round-50 margin size (50% at margin <500 and <2000, 68.75% at margin >=2000; mean margin 4061.6 when the round-50 leader went on to win vs. 1590.5 when they didn't), and the round-50 leader ended up ranked 1st at the final tally in 19/32 games, 2nd in 6, 3rd in 5, 4th in 2. Part 2: on the same 200 non-forced rounds-1-50 states, flipping only env.max_rounds (200 vs 50) changed exactly state-vector index 278 in every one of the 200 x 2-checkpoint comparisons (isolation held, verified at runtime, never just assumed) - baseline_pretraining showed 1.5% POLICY_ONLY action disagreement (mean policy TV-distance 0.00237, mean value-head abs delta 0.00136) and trained_updates_500 showed 1.0% action disagreement but a larger policy TV-distance (0.00497) and a roughly 7.5x larger value-head delta (0.01019) than baseline at the identical states - i.e. the 500-update checkpoint's value head is more sensitive to the round/max_rounds encoding alone than the untrained baseline's, even though its final chosen action changes slightly less often. Zero illegal actions, zero crashes, zero ASU modules loaded across the full run.",
+  "raw_logs": ["docs/baseline_runs/monopolyzero_horizon_diagnostic_stdout.txt"],
+  "notes": "Full per-game round50_snapshot/final_net_worth/decisions breakdown (32 games) and per-checkpoint ablation aggregates are in the raw stdout log; per-state ablation records (400 = 200 states x 2 checkpoints) are intentionally not persisted anywhere (only their aggregates), consistent with this project's small-raw-stdout convention - each one only ever held small scalars (booleans/floats/an index-count), never the underlying state array. fixed_fallbacks integrity total (90) is entirely from vs-fixed games' non-focus fixed-agent seats (self-play games have none, since no fixed agent is ever seated in a self-play game) - not a fallback by the checkpoint under test itself, which had 0 illegal actions throughout. This experiment makes no GO/KILL call on the 013 replay/training-recipe gate recorded in docs/PLAN.md - it supplies the missing measurement that gate was waiting on; the decision itself is recorded separately once read."
+}
