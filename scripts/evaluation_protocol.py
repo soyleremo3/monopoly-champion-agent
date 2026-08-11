@@ -57,6 +57,7 @@ DEV_SEED_RANGES: tuple[tuple[int, int, str], ...] = (
     (32000, 32009, "018 - POLICY_ONLY vs PUCT_4 paired eval"),
     (40000, 40015, "019 - horizon diagnostic self-play games"),
     (41000, 41015, "019 - horizon diagnostic vs-fixed games"),
+    (42000, 42063, "020 - value-learnability probe: 64 clean POLICY_ONLY self-play games"),
 )
 
 # Fresh, disjoint from DEV_SEED_RANGES and from each other. Reserved here,

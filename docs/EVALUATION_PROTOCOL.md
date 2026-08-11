@@ -76,6 +76,7 @@ own `seeds` field, `logs/experiments/001-019`)
 | `31000`-`31004` | `017` | PUCT search-budget diagnostic |
 | `32000`-`32009` | `018` | POLICY_ONLY vs PUCT_4 paired eval |
 | `40000`-`40015`, `41000`-`41015` | `019` | horizon diagnostic (self-play / vs-fixed) |
+| `42000`-`42063` | `020` | value-learnability probe: 64 clean POLICY_ONLY self-play games (baseline checkpoint, all 4 seats, zero fixed agents) |
 
 All of the above are unioned into `evaluation_protocol.DEV_SEEDS`. Any new
 DEV-scope run should extend `DEV_SEED_RANGES` in that module (with a
