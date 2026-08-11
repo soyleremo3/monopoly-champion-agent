@@ -1,0 +1,55 @@
+{
+  "batch_size_sampled": 8,
+  "bootstrap": "ppo",
+  "elapsed_s": 11.10098790001939,
+  "games": [
+    {
+      "completed": true,
+      "crashes": 0,
+      "decisions": 407,
+      "error": null,
+      "illegal_actions": 0,
+      "label": "self_play_1",
+      "positions_collected": 333,
+      "seed": 501,
+      "winner": 0
+    },
+    {
+      "completed": true,
+      "crashes": 0,
+      "decisions": 390,
+      "error": null,
+      "illegal_actions": 0,
+      "label": "self_play_2",
+      "positions_collected": 325,
+      "seed": 502,
+      "winner": 1
+    },
+    {
+      "completed": true,
+      "crashes": 0,
+      "decisions": 270,
+      "error": null,
+      "illegal_actions": 0,
+      "label": "vs_fixed",
+      "positions_collected": 63,
+      "seed": 503,
+      "winner": 3
+    }
+  ],
+  "loss_finite": true,
+  "parameters_changed_count": 16,
+  "parameters_total_count": 16,
+  "peak_rss_gib": 0.29106903076171875,
+  "positions_collected_total": 721,
+  "replay_buffer_size_after_append": 721,
+  "replay_indices_written": 721,
+  "total_crashes": 0,
+  "total_illegal_actions": 0,
+  "train_step_stats": {
+    "gradient_norm": 8.63224983215332,
+    "loss": 3.2124853134155273,
+    "policy_loss": 1.9503673315048218,
+    "value_loss": 1.2621181011199951
+  }
+}

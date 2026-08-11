@@ -552,3 +552,119 @@ the DDQN training loop before scaling up. This needs its own
 `docs/DECISIONS.md` entry before starting, since it means writing new
 self-play wiring rather than calling an existing entry point (`Trainer.
 run_generation` is not usable as-is — see `docs/REFERENCE_AUDIT.md`).
+
+## 2026-08-11 — ASU-independent self-play training-plumbing smoke
+
+- Hypothesis: a hand-built self-play loop (never touching `Trainer`/
+  `population_jobs`, which hardcode ASU into every generation) can play a
+  handful of short games, collect their search-derived positions into a
+  `ReplayBuffer`, and run one real gradient update — proving training
+  plumbing works, with zero ASU involvement anywhere in the call graph.
+  Decision to attempt this logged first in `docs/DECISIONS.md` (2026-08-11,
+  "Try an ASU-independent custom self-play wiring smoke"), per this
+  session's instructions. **Goal was plumbing, not strength** — no claim
+  about policy quality is made or implied by any number below.
+- Setup: new
+  [scripts/selfplay_train_smoke.py](../scripts/selfplay_train_smoke.py) +
+  [tests/test_selfplay_train_smoke.py](../tests/test_selfplay_train_smoke.py)
+  (10 tests: hash-seed guard, no-ASU-import check, no-`Trainer`/
+  `population_jobs`-usage check, opponent-pool-is-limited check). Only
+  imports ASU-independent public building blocks:
+  `monopoly_bench.model.MonopolyZeroNet`,
+  `monopoly_bench.adapters.{SearchAdapter, FixedAdapter}` (search.py and
+  model.py both grepped clean of "asu" — see `docs/REFERENCE_AUDIT.md`),
+  `monopoly_bench.arena.play_game` (itself ASU-free; zero "asu" references),
+  `monopoly_bench.storage.ReplayBuffer`, `monopoly_bench.training.train_step`
+  (the plain self-play loss, not `expert_train_step`), and
+  `monopoly_game_engine.agents_fixed.FP_AGENT_CLASSES[:3]` (fixed-a/b/c).
+  Bootstrapped the model from the PPO-compatible checkpoint already
+  validated in the prior smoke entry (SHA-256
+  `1c825dcdd2c8d83651bd21100024ab2d0b8ce2ba276d701dceb3599536f615cb`).
+  `SearchConfig(simulations=4, max_depth=16)`, `max_rounds=5` per game (kept
+  short, per the task).
+
+### Games played (3, within the requested 2-4)
+
+Opponent pool used: **only** self-copy (our own model in every seat) and
+`fixed-a`/`fixed-b`/`fixed-c` — nothing else, verified by a dedicated test.
+
+```bash
+PYTHONHASHSEED=0 PYTHONIOENCODING=utf-8 python scripts/selfplay_train_smoke.py
+```
+
+| Game | Seed | Opponent pool | Decisions | Positions collected | Winner | Illegal | Crash |
+|---|---|---|---|---|---|---|---|
+| self_play_1 | 501 | self-copy (all 4 seats) | 407 | 333 | seat 0 | 0 | 0 |
+| self_play_2 | 502 | self-copy (all 4 seats) | 390 | 325 | seat 1 | 0 | 0 |
+| vs_fixed | 503 | fixed-a, fixed-b, fixed-c (seats 1-3) | 270 | 63 | seat 3 | 0 | 0 |
+
+- **721 training samples collected** total (333 + 325 + 63), all written to
+  a fresh `ReplayBuffer` (`replay_buffer_size_after_append: 721`,
+  `replay_indices_written: 721` — every position accepted, none rejected by
+  the buffer's own shape/finite/legal-action validation in
+  `ReplayBuffer._write`).
+- All 3 games `completed: true`. **0 illegal actions, 0 crashes**, across
+  all games (`arena.play_game` fails a game closed and records
+  `illegal_actions`/`crashes` on any problem — both stayed 0 the whole way).
+
+### One `train_step` update
+
+Sampled one batch of 8 positions (`np.random.default_rng(42)`,
+`ReplayBuffer.sample`, `batch_size_sampled: 8`) and called
+`monopoly_bench.training.train_step` **exactly once**:
+
+```json
+{
+  "loss": 3.2124853134155273,
+  "policy_loss": 1.9503673315048218,
+  "value_loss": 1.2621181011199951,
+  "gradient_norm": 8.63224983215332
+}
+```
+
+- **Loss finite**: yes (`loss_finite: true` — checked `torch.isfinite` on
+  loss, policy_loss, value_loss, gradient_norm before reporting).
+- **At least one parameter changed**: `parameters_changed_count: 16` out of
+  `parameters_total_count: 16` — **every** parameter tensor in the model
+  changed value after the single update (compared via `torch.equal` against
+  a pre-update clone of every named parameter), not just one.
+- No ASU output, label, or data was used anywhere in the batch —
+  `train_step` (not `expert_train_step`) trains the policy head from each
+  position's own MCTS visit counts and the value head from each game's real
+  winner, both produced entirely by our own model's search and the engine's
+  own rules.
+
+### Runtime and RAM
+
+- Elapsed (script-measured, games + buffer write + one update):
+  **11.10s**. Full process wall time (`time -p`, includes Python/torch
+  startup): **15.07s** real.
+- Peak RSS (background `psutil` polling thread, 20ms interval, whole run):
+  **0.291 GiB**.
+- A second run (not saved as the committed artifact) produced very similar
+  but not byte-identical numbers (721 vs. 697 positions, different winners) —
+  expected, not a new reproducibility bug: `self_play=True` deliberately
+  injects exploration randomness (temperature sampling / Dirichlet noise) as
+  part of `MaxNPUCT`'s designed self-play behavior, unlike the strict
+  per-step engine RNG isolation already documented for the fixed/DDQN/ASU
+  evaluation paths. Not investigated further — out of scope for a plumbing
+  smoke.
+
+### Conclusion / next step
+
+Training plumbing works end to end — games → positions → replay buffer →
+one real gradient update — with zero ASU involvement anywhere (confirmed by
+which functions were called, not just by absence of an import). No
+multi-generation training, no ASU collection, no large self-play volume, no
+Modal, no LLM — none of that was started, per this task's explicit scope.
+
+**Recommended next smallest strength experiment** (not started): extend this
+same script's pattern to noticeably more games (e.g. 50-100, still small)
+and more than one `train_step` update (e.g. a few dozen), then run the
+*existing* paired-seed evaluation protocol
+(`scripts/run_baseline_match.py --seed 10000-10009` against `fixed-a/b/c`,
+same Wilson-interval discipline already used for the DDQN checkpoints) to
+see whether the resulting MonopolyZero checkpoint shows any measurable skill
+signal yet — mirroring exactly how the DDQN checkpoint went from a 20-game
+smoke to a 500-game milestone with a paired held-out evaluation. Needs its
+own `docs/DECISIONS.md` entry first, per this project's standing practice.
