@@ -1,0 +1,108 @@
+{
+  "experiment_id": "028-pure-ppo-strength-screen-vs-untrained-baseline",
+  "experiment_name": "Direct win-rate sanity screen: 027's final PURE PPO (hybrid=False) candidate checkpoint vs. its own bit-exact-reconstructed untrained baseline, 20 seeds x 4 focus-seat rotation, deterministic masked-argmax, zero fixed/ASU opponents",
+  "experiment_type": "paired_evaluation",
+  "date": "2026-08-12",
+  "code_commit_sha": "34703581c8b4241bb16fc010598c78e60f138406",
+  "reference_submodule_sha": "afd9205761317e196d77f679921c35fb04c7ab96",
+  "exact_commands": [
+    "PYTHONHASHSEED=0 PYTHONIOENCODING=utf-8 python scripts/monopolyzero_pure_ppo_strength_screen.py --output docs/baseline_runs/monopolyzero_pure_ppo_strength_screen.json"
+  ],
+  "seeds": [46000, 46001, 46002, 46003, 46004, 46005, 46006, 46007, 46008, 46009, 46010, 46011, 46012, 46013, 46014, 46015, 46016, 46017, 46018, 46019],
+  "algorithm_config": {
+    "purpose": "027 remains KILL under its own pre-registered proxy rule (ACCEPT_TRADE mean-prior-rank/greedy-rate regressed on a fixed diagnostic set) - but a lower ACCEPT_TRADE rate is not intrinsically evidence of worse play (a rational policy declines bad trades). This screen asks the real question directly: did 32 games of pure PPO training make the checkpoint stronger in actual games, relative to its own starting point? No training, no reward/action-head/factorization changes, no MCTS, no ASU - a pure evaluation.",
+    "design": "One CANDIDATE focus seat + three identical copies of the UNTRAINED baseline per game, focus seat rotated across all 4 seats per seed - no scripted fixed agents anywhere, so there is no fixed-agent fallback-substitution path to contaminate results.",
+    "candidate": {
+      "source": "experiment 027's final checkpoint",
+      "checkpoint_path": "artifacts/monopolyzero_pure_ppo_learnability_gate/candidate_ppo.pt",
+      "checkpoint_sha256_expected": "85194f337182c2d698519966cb8c19d3c1e701102b5fb280cd69d4c23ed8a113",
+      "checkpoint_sha256_verified": "85194f337182c2d698519966cb8c19d3c1e701102b5fb280cd69d4c23ed8a113",
+      "full_actor_sha256_expected": "e6c142d143b5430d02b37cd3be34fa39a7d8d2f282bdb1eda8677a6109861b5b",
+      "full_actor_sha256_verified": "e6c142d143b5430d02b37cd3be34fa39a7d8d2f282bdb1eda8677a6109861b5b",
+      "load_path": "PPOAgent(player_id=0, hybrid=False, device='cpu').load(checkpoint_path) - reference, unmodified"
+    },
+    "baseline": {
+      "source": "027's own pre-training PPOAgent(hybrid=False) initialization, bit-exact reconstructed (not loaded from a saved file - 027 never saved a pre-training checkpoint) by replaying the identical random.seed(0)/np.random.seed(0)/torch.manual_seed(0) sequence 027's gate script ran immediately before constructing PPOAgent(player_id=0, hybrid=False, device='cpu')",
+      "full_actor_sha256_expected": "ce2ffeaf655ef5745ef8f835f3f999a5baa8beac93b5c70ed22d46f4fed1e64c",
+      "full_actor_sha256_verified": "ce2ffeaf655ef5745ef8f835f3f999a5baa8beac93b5c70ed22d46f4fed1e64c",
+      "reproducibility": "build_untrained_baseline_agent() re-run independently twice in this experiment's own test suite (tests/test_monopolyzero_pure_ppo_strength_screen.py::test_build_untrained_baseline_agent_is_bit_exact_reproducible) - identical hash both times, matching the pinned value above"
+    },
+    "hash_gate": "Both actor hashes and the checkpoint file hash were REQUIRED to match 027's own logged values BEFORE any game was played (scripts/monopolyzero_pure_ppo_strength_screen.py::load_candidate_agent / build_untrained_baseline_agent raise SystemExit on any mismatch, refusing to silently retrain/reconstruct) - all three matched on the first attempt, no retry/adjustment needed.",
+    "policy": "Deterministic legal-masked argmax over ActorNetwork.forward's log-softmax output for every seat (this project's own build_masked_argmax_policy wrapper, NOT PPOAgent.choose_action, which samples via torch.multinomial - appropriate for training exploration, not evaluation) - zero fixed BUY/TRADE rule, zero MCTS, zero DDQN, zero ASU.",
+    "state_pipeline": "monopolyzero_common.ensure_reference_on_path() installs the actor-relative property-owner state-encoding patch (docs/DECISIONS.md's 2026-08-12 entry) globally before any game, active for every seat's env._get_state(seat) call - not just seat 0.",
+    "max_rounds": 200,
+    "n_seeds": 20,
+    "seat_rotations_per_seed": 4,
+    "n_games": 80,
+    "opponent_pool": "3 copies of the untrained baseline per game - no scripted fixed agents (FPAgentA/B/C), no ASU",
+    "asu_involvement": "none - zero ASU imports anywhere in this run's import chain, verified at runtime via monopolyzero_common.loaded_asu_modules() (empty)",
+    "mcts_involvement": "none - single deterministic forward pass per decision, no search",
+    "ddqn_involvement": "none",
+    "seed_pool": "fresh DEV range 46000-46019, registered in scripts/evaluation_protocol.py before this run and validated via evaluation_protocol.require_seed_scope; disjoint from every prior experiment's seeds and from PROMOTION/FINAL_BLIND",
+    "pre_registered_decision_rule": {
+      "primary_statistic": "seed-block bootstrap 95% CI (2000 resamples, resampled at the SEED level - the 4 seat-rotation games sharing one seed share a board draw) for (candidate_win_rate - 0.25), via evaluation_protocol.seed_block_bootstrap_vs_null",
+      "GO": "lower bound of the CI is > 0",
+      "KILL": "upper bound of the CI is <= 0",
+      "otherwise": "INCONCLUSIVE",
+      "registered_before_running": true,
+      "rule_not_altered_after_seeing_results": true
+    }
+  },
+  "model_checkpoint": {
+    "sha256": "85194f337182c2d698519966cb8c19d3c1e701102b5fb280cd69d4c23ed8a113",
+    "path": "artifacts/monopolyzero_pure_ppo_learnability_gate/candidate_ppo.pt",
+    "format_version": 3
+  },
+  "counts": {
+    "games_played": 80,
+    "games_completed": 80,
+    "seed_blocks": 20,
+    "candidate_wins": 33,
+    "candidate_buy_property_opportunities": 3021,
+    "candidate_buy_property_chosen": 2977,
+    "candidate_accept_trade_opportunities": 32356,
+    "candidate_accept_trade_chosen": 23091,
+    "candidate_decline_trade_chosen": 0,
+    "candidate_trade_offers_total": 26427,
+    "baseline_buy_property_opportunities": 12786,
+    "baseline_buy_property_chosen": 76,
+    "baseline_accept_trade_opportunities": 80692,
+    "baseline_accept_trade_chosen": 60432,
+    "baseline_decline_trade_chosen": 0,
+    "baseline_trade_offers_total": 69063,
+    "round_cap_hits": 68
+  },
+  "runtime": {"wall_time_s": 725.5080353999947, "peak_rss_gib": 0.29354095458984375},
+  "metrics": {
+    "candidate_win_rate": 0.4125,
+    "candidate_wilson_95": [0.3110585761276187, 0.5219595965410984],
+    "null_win_rate": 0.25,
+    "primary_seed_block_bootstrap_win_rate_diff_from_null_point": 0.16249999999999998,
+    "primary_seed_block_bootstrap_win_rate_diff_from_null_ci_95": [0.0625, 0.25],
+    "verdict": "GO",
+    "seed_blocks_with_candidate_win_ge_null": 17,
+    "seed_blocks_with_zero_candidate_wins": 3,
+    "round_cap_rate": 0.85,
+    "candidate_mean_net_worth": 3591.60625,
+    "baseline_mean_net_worth": 1569.7,
+    "candidate_net_worth_advantage": 2021.9062499999998,
+    "candidate_bankruptcy_rate": 0.2375,
+    "baseline_bankruptcy_rate": 0.5416666666666666,
+    "candidate_buy_property_rate_when_legal": 0.9851042701092354,
+    "baseline_buy_property_rate_when_legal": 0.0059440012513686845,
+    "candidate_accept_trade_rate_when_legal": 0.7136852515762147,
+    "baseline_accept_trade_rate_when_legal": 0.7490705398304665,
+    "candidate_decline_trade_rate_when_legal": 0.0,
+    "baseline_decline_trade_rate_when_legal": 0.0,
+    "candidate_trade_offers_per_game": 330.3375,
+    "baseline_trade_offers_per_game": 287.7625
+  },
+  "loss": null,
+  "integrity": {"illegal_actions": 0, "fallbacks": 0, "crashes": 0},
+  "result": "GO: the seed-block bootstrap 95% CI for (candidate_win_rate - 25% null) is [0.0625, 0.25], entirely above zero (point estimate +16.25 points: candidate won 33/80 = 41.25% vs. the 25% symmetric-skill null, Wilson 95% [31.1%, 52.2%]). 17 of 20 seed blocks had a candidate win rate at or above the null (10 blocks at exactly 2/4=50%, 2 blocks at 3/4=75%), only 3 blocks had zero candidate wins - the signal is broad across seeds, not one outlier block. Candidate also carried a +2021.9 mean net-worth advantage and a lower bankruptcy rate (23.75% vs. 54.17%) than the untrained baseline. The dominant behavioral driver is BUY_PROPERTY: candidate bought 98.5% of legal opportunities vs. baseline's 0.59% - consistent with 027's own diagnostic finding that BUY_PROPERTY became strongly learnable. ACCEPT_TRADE did move in the direction 027 flagged (candidate 71.4% vs. baseline 74.9% accept-when-legal, i.e. candidate accepts trades slightly less often) but this did not cost the candidate real strength; per this task's framing, a lower accept rate is not intrinsically bad play (a rational policy should decline bad trades), and the real-game outcome confirms it did not hurt win rate here. Zero illegal actions, zero crashes, zero fixed-agent fallbacks (no scripted agents in this design), zero ASU modules loaded across all 80 games. This answers the specific question this screen was built for - the 32-game pure PPO update did create real, statistically supported game strength relative to its own initialization - it does not reverse 027's own KILL verdict under 027's different, pre-registered proxy rule (mean prior rank/greedy-choice rate on a fixed diagnostic set), and it is not a claim of strength against fixed agents, ASU, or any other opponent family - only against this checkpoint's own untrained starting point.",
+  "raw_logs": [
+    "logs/experiments/raw/028-pure-ppo-strength-screen_stdout.txt",
+    "docs/baseline_runs/monopolyzero_pure_ppo_strength_screen.json"
+  ],
+  "notes": "Checkpoint and reconstructed-baseline weights are not committed per CLAUDE.md - referenced by SHA-256 and local path only. round_cap_rate (85%, 68/80) is notably higher than prior paired evals in this project (e.g. 013/014's 45-55%) - plausibly because neither side here ever chooses DECLINE_TRADE (0% rate when legal for both candidate and baseline, seen already in a smaller 4-game dry run before this experiment) and both sides trade very actively (287-330 trade offers/game), which may extend games rather than driving faster bankruptcies; not investigated further here; this evaluation did not run against fixed agents or ASU, and no claim is made about strength against those opponent families. accept_trade/decline_trade opportunity counts are identical by construction (ACCEPT_TRADE and DECLINE_TRADE are always legal together whenever a trade response decision exists)."
+}

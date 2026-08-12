@@ -1919,3 +1919,103 @@ its own proposed experiment and decision log.
   specifically to prevent cherry-picking the action that happened to work.
   No reference code changed; `references/DeepRL_Monopoly` stays pinned at
   `afd9205761317e196d77f679921c35fb04c7ab96`, unchanged, read-only.
+
+## 2026-08-12 (later) — 028: pure-PPO strength screen, 027's final checkpoint vs. its own untrained baseline (GO)
+
+- Hypothesis: `027` KILLed further scaling of its exact PPO recipe under
+  its own pre-registered proxy rule, because `ACCEPT_TRADE`'s mean prior
+  rank/greedy-choice rate on a fixed diagnostic set regressed. That proxy
+  rule is not the same question as "did the checkpoint get stronger in
+  real games" - a rational policy declining more bad trades is not
+  evidence of worse play on its own. This screen asks that real-game
+  question directly: does 027's final checkpoint, playing a full game with
+  deterministic (non-sampled) action selection, beat its own untrained
+  starting point more often than chance?
+- Setup: new
+  [scripts/monopolyzero_pure_ppo_strength_screen.py](../scripts/monopolyzero_pure_ppo_strength_screen.py)
+  (+ `evaluation_protocol.seed_block_bootstrap_vs_null`, a new single-arm
+  seed-block bootstrap for designs with no separate baseline arm on the
+  same seeds - see `tests/test_evaluation_protocol.py`). One CANDIDATE
+  focus seat (027's final checkpoint, hash-gated before any game against
+  027's own logged `full_actor_sha256` `e6c142d1...9861b5b` and checkpoint
+  SHA-256 `85194f33...4c23ed8a113`) + three copies of the UNTRAINED
+  baseline (027's own pre-training `PPOAgent(hybrid=False)` init,
+  bit-exact reconstructed by replaying 027's exact
+  `random.seed(0)`/`np.random.seed(0)`/`torch.manual_seed(0)` sequence,
+  hash-gated against 027's logged `ce2ffeaf...46f4fed1e64c` before any
+  game) - focus seat rotated across all 4 seats per seed. No scripted
+  fixed agents anywhere (so no fallback-substitution contamination path
+  exists at all), zero ASU, zero MCTS. Every seat uses a new deterministic
+  legal-masked-argmax policy wrapper over `ActorNetwork.forward` (NOT
+  `PPOAgent.choose_action`, which samples via `torch.multinomial` -
+  appropriate for training exploration, wrong for deterministic
+  evaluation). A fresh DEV seed range `46000-46019` (20 seeds) was
+  registered in `evaluation_protocol.py` before running, disjoint from
+  every prior experiment and from PROMOTION/FINAL_BLIND. Pre-registered
+  decision rule (before running, not adjusted after): **GO** if the
+  seed-block bootstrap 95% CI for `candidate_win_rate - 0.25` (the
+  symmetric 4-player null) has a lower bound `> 0`; **KILL** if the upper
+  bound is `<= 0`; otherwise **INCONCLUSIVE**.
+
+  ```bash
+  PYTHONHASHSEED=0 PYTHONIOENCODING=utf-8 python scripts/monopolyzero_pure_ppo_strength_screen.py \
+    --output docs/baseline_runs/monopolyzero_pure_ppo_strength_screen.json
+  ```
+
+- Result: both candidate and baseline actor hashes, and the checkpoint file
+  hash, matched 027's logged provenance exactly on the first attempt (no
+  retry/reconstruction needed). **80/80 games completed, 0 illegal
+  actions, 0 crashes, 0 ASU modules loaded.** Wall time 725.5s (~12.1 min),
+  peak RSS 0.29 GiB.
+
+  | | Candidate (027 final) | Untrained baseline |
+  |---|---|---|
+  | Win rate | 33/80 = **41.25%** | (3 seats/game, not a single comparable rate) |
+  | Wilson 95% | [31.1%, 52.2%] | - |
+  | Mean net worth | 3,591.6 | 1,569.7 |
+  | Bankruptcy rate | 23.75% | 54.17% |
+  | `BUY_PROPERTY` rate when legal | **98.51%** (2,977/3,021) | 0.59% (76/12,786) |
+  | `ACCEPT_TRADE` rate when legal | 71.37% | 74.91% |
+  | `DECLINE_TRADE` rate when legal | 0.0% | 0.0% |
+  | Trade offers/game | 330.3 | 287.8 |
+
+  **Primary: seed-block bootstrap (2000 resamples) for
+  `candidate_win_rate - 25%`: point +16.25 points, 95% CI `[+6.25, +25.0]`
+  points - entirely above zero.** 17 of the 20 seed blocks had a candidate
+  win rate at or above the 25% null (10 blocks exactly 2/4=50%, 2 blocks
+  3/4=75%); only 3 blocks had zero candidate wins out of their 4 rotations
+  - the signal is broad across seeds, not carried by one outlier block.
+  Round-cap rate was high (68/80 = 85%) - both sides trade very actively
+  (287-330 offers/game) and neither side ever chose the explicit
+  `DECLINE_TRADE` action when legal (a genuine behavioral finding, not a
+  bug: a trade response decision offers many legal actions beyond
+  accept/decline, and both policies evidently prefer something else over
+  an explicit decline often enough that the action is never argmax-chosen
+  in this run) - plausibly related to the longer games, not confirmed.
+
+  Full structured record:
+  [logs/experiments/028-pure-ppo-strength-screen-vs-untrained-baseline.json](../logs/experiments/028-pure-ppo-strength-screen-vs-untrained-baseline.json).
+
+- Conclusion / next step: **GO** - the 32-game pure PPO update in `027`
+  did create real, statistically supported game strength relative to its
+  own untrained starting point, driven overwhelmingly by `BUY_PROPERTY`
+  (never-buys → buys 98.5% of legal opportunities), with `ACCEPT_TRADE`
+  moving in the direction `027` flagged (accepts slightly less often) but
+  **not** costing real win rate here - confirming this task's framing that
+  a lower accept rate is not intrinsically weaker play. This does **not**
+  reverse `027`'s own KILL verdict under `027`'s different, pre-registered
+  proxy rule (mean prior rank/greedy-choice rate on a fixed diagnostic
+  set) - the two screens measure different things and both stand on their
+  own terms. This is **only** a strength claim relative to this
+  checkpoint's own untrained initialization - it says nothing about
+  strength against fixed agents, ASU, or any other opponent family, none
+  of which were part of this screen's design. Per the task that
+  commissioned this screen: no further PPO training, reward-shaping,
+  action-head, factorization, MCTS, or ASU work was started here, and
+  `FINAL_BLIND` was not touched.
+
+  Reference checked: `references/DeepRL_Monopoly` at
+  `afd9205761317e196d77f679921c35fb04c7ab96` (submodule unchanged,
+  read-only). No reference code edited; the deterministic-argmax policy
+  and per-seat instrumentation are this project's own, built on the
+  already-independent `monopolyzero_common.play_local_game`.
