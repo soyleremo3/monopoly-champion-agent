@@ -146,6 +146,126 @@ def test_masked_argmax_policy_picks_highest_prob_legal_action():
     assert policy.kind == "policy_only"
 
 
+def test_masked_argmax_policy_exclude_families_removes_trade_offer_from_mask():
+    """The highest-scoring legal action is a buy_trade-family offer -
+    excluding that family must make the policy fall back to the next-best
+    NON-excluded legal action (BUY_PROPERTY here), not raise, not silently
+    still pick the excluded action."""
+    import torch
+
+    common.ensure_reference_on_path()
+    from monopoly_bench.engine import action_family
+    from monopoly_game_engine.actions import ACTION_SPACE_SIZE, ActionType, OFFSETS
+
+    buy_id = int(ActionType.BUY_PROPERTY)
+    trade_offer_action = OFFSETS["buy_trade"]
+    assert action_family(trade_offer_action) == "buy_trade"
+
+    row = [0.0] * ACTION_SPACE_SIZE
+    row[trade_offer_action] = 10.0  # would win argmax if not excluded
+    row[buy_id] = 5.0  # next-best legal, non-excluded
+    actor = _FakeActor(row)
+
+    legal = (trade_offer_action, buy_id, 1)
+    env = _FakeEnv(legal)
+    game = _FakeGame(env)
+
+    policy = module.build_masked_argmax_policy(
+        actor, torch.device("cpu"), counters=None, env_holder=None,
+        exclude_families=("buy_trade", "sell_trade", "exch_trade"),
+    )
+    result = policy.choose(game, seat=0, decision_seed=0)
+    assert result.chosen_action == buy_id
+
+
+def test_masked_argmax_policy_exclude_families_never_empties_the_mask():
+    """If EVERY legal action belongs to an excluded family, the original
+    (unfiltered) legal set must be used instead of an empty mask - a
+    ValueError from ActorNetwork.forward on a fully-masked row would be a
+    real bug, not acceptable diagnostic behavior."""
+    import torch
+
+    common.ensure_reference_on_path()
+    from monopoly_game_engine.actions import ACTION_SPACE_SIZE, OFFSETS
+
+    only_trade_offer = OFFSETS["buy_trade"]
+    row = [0.0] * ACTION_SPACE_SIZE
+    row[only_trade_offer] = 1.0
+    actor = _FakeActor(row)
+
+    env = _FakeEnv((only_trade_offer,))
+    game = _FakeGame(env)
+    policy = module.build_masked_argmax_policy(
+        actor, torch.device("cpu"), counters=None, env_holder=None,
+        exclude_families=("buy_trade", "sell_trade", "exch_trade"),
+    )
+    result = policy.choose(game, seat=0, decision_seed=0)
+    assert result.chosen_action == only_trade_offer  # forced fallback to the only legal action
+
+
+def test_masked_argmax_policy_exclude_families_does_not_change_opportunity_counters():
+    """Opportunity/chosen counters must reflect the TRUE legal set, not the
+    post-exclusion masked one - excluding trade-offer families must never
+    make BUY_PROPERTY/ACCEPT_TRADE opportunity counting look different."""
+    import torch
+
+    common.ensure_reference_on_path()
+    from monopoly_game_engine.actions import ACTION_SPACE_SIZE, ActionType
+
+    buy_id = int(ActionType.BUY_PROPERTY)
+    row = [0.0] * ACTION_SPACE_SIZE
+    row[buy_id] = 5.0
+    actor = _FakeActor(row)
+
+    legal = (buy_id, 1)
+    env = _FakeEnv(legal)
+    game = _FakeGame(env)
+    counters = module._new_counters()
+    policy = module.build_masked_argmax_policy(
+        actor, torch.device("cpu"), counters, env_holder=None,
+        exclude_families=("buy_trade", "sell_trade", "exch_trade"),
+    )
+    policy.choose(game, seat=0, decision_seed=0)
+    assert counters["buy_property_opportunities"] == 1
+    assert counters["buy_property_chosen"] == 1
+
+
+def test_play_one_game_applies_exclude_families_to_candidate_seat_only(monkeypatch):
+    """Spies on build_masked_argmax_policy calls made by play_one_game and
+    confirms candidate_exclude_families is threaded ONLY to the focus
+    seat's policy - the three baseline seats must always get ()."""
+    import torch
+
+    common.ensure_reference_on_path()
+    from monopoly_game_engine.networks import ActorNetwork
+
+    seen = {}
+    real_builder = module.build_masked_argmax_policy
+
+    def _spy(actor, device, counters, env_holder, exclude_families=()):
+        seen.setdefault("calls", []).append(exclude_families)
+        return real_builder(actor, device, counters, env_holder, exclude_families=exclude_families)
+
+    monkeypatch.setattr(module, "build_masked_argmax_policy", _spy)
+
+    torch.manual_seed(0)
+    candidate_actor = ActorNetwork(hidden_dim=8)
+    torch.manual_seed(1)
+    baseline_actor = ActorNetwork(hidden_dim=8)
+    candidate_actor.eval()
+    baseline_actor.eval()
+
+    module.play_one_game(
+        game_id=1, seed=46000, candidate_actor=candidate_actor, baseline_actor=baseline_actor,
+        focus_seat=2, device=torch.device("cpu"), max_rounds=3,
+        candidate_exclude_families=("buy_trade", "sell_trade", "exch_trade"),
+    )
+
+    assert len(seen["calls"]) == 4
+    assert seen["calls"][2] == ("buy_trade", "sell_trade", "exch_trade")  # focus_seat=2
+    assert seen["calls"][0] == () and seen["calls"][1] == () and seen["calls"][3] == ()
+
+
 def test_masked_argmax_policy_updates_counters_and_env_holder():
     import torch
 

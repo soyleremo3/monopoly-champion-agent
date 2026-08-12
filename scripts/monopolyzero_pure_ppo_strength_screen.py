@@ -105,7 +105,9 @@ def _file_sha256(path: Path) -> str:
 # ── deterministic masked-argmax policy (no sampling, no fixed rule) ────────
 
 
-def build_masked_argmax_policy(actor, device, counters: dict | None, env_holder: list | None):
+def build_masked_argmax_policy(
+    actor, device, counters: dict | None, env_holder: list | None, exclude_families: tuple = (),
+):
     """One seat's inference policy: legal-masked argmax over `actor`'s own
     `forward` log-softmax - the deterministic-evaluation analogue of
     `ActorNetwork.get_action` (which instead samples via
@@ -117,6 +119,12 @@ def build_masked_argmax_policy(actor, device, counters: dict | None, env_holder:
     chosen counts for BUY_PROPERTY/ACCEPT_TRADE/DECLINE_TRADE and any
     trade-offer-family action (`monopoly_bench.engine.action_family`, so no
     action-space magic numbers are duplicated here).
+
+    `exclude_families`, when non-empty, removes those `action_family` names
+    from the LEGAL-ACTION MASK only (never falls back to an empty mask -
+    the original legal set is used if exclusion would remove everything)
+    - opportunity/chosen counters still use the true, unfiltered `legal`
+    set, so this never changes what counts as an "opportunity".
 
     `env_holder`, when given, is a shared single-element list all seats in
     one game write into on every call - since `SharedGame.env` is mutated
@@ -149,7 +157,11 @@ def build_masked_argmax_policy(actor, device, counters: dict | None, env_holder:
             state = env._get_state(seat)
             state_t = torch.as_tensor(state, dtype=torch.float32, device=device).unsqueeze(0)
             mask_t = torch.zeros(1, ACTION_SPACE_SIZE, dtype=torch.bool, device=device)
-            mask_t[0, list(legal)] = True
+            maskable_legal = legal
+            if exclude_families:
+                filtered = tuple(a for a in legal if action_family(a) not in exclude_families)
+                maskable_legal = filtered or legal  # never mask out every legal action
+            mask_t[0, list(maskable_legal)] = True
             with torch.inference_mode():
                 log_probs = actor(state_t, mask_t)
             chosen_action = int(torch.argmax(log_probs, dim=-1).item())
@@ -192,13 +204,18 @@ def _new_counters() -> dict:
 
 def play_one_game(
     *, game_id: int, seed: int, candidate_actor, baseline_actor, focus_seat: int, device, max_rounds: int,
+    candidate_exclude_families: tuple = (),
 ) -> dict:
+    """`candidate_exclude_families`, when given, is applied to the CANDIDATE
+    seat's own legal-action mask only (see build_masked_argmax_policy) - the
+    three baseline seats are never affected."""
     counters_by_seat = {seat: _new_counters() for seat in range(NUM_SEATS)}
     env_holder: list = [None]
     policies = {
         seat: build_masked_argmax_policy(
             candidate_actor if seat == focus_seat else baseline_actor,
             device, counters_by_seat[seat], env_holder,
+            exclude_families=candidate_exclude_families if seat == focus_seat else (),
         )
         for seat in range(NUM_SEATS)
     }
