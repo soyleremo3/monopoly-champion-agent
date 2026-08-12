@@ -1810,3 +1810,112 @@ its own proposed experiment and decision log.
   properly powered clean native replay now exists (1,605/12,847/12,847
   opportunities vs. `025`'s 14/40) for a future learnability sweep - that
   sweep itself is not run here.
+
+## 2026-08-12 (later) — First corrected-state, ASU-free PURE PPO learnability gate: KILL
+
+- Context: `023`/`024`/`025`/`026` all measured a checkpoint whose actor was
+  bootstrapped from a **hybrid** PPO run - one where `BUY_PROPERTY`/
+  `ACCEPT_TRADE` were always handled by fixed rules
+  (`agent_ppo.py`'s `fixed_action_mask`) and therefore never received a PPO
+  gradient update at all. `023` proved that mismatch costs real strength
+  (+21.25pp win rate from restoring the fixed carve-out over plain
+  `POLICY_ONLY`). This gate asks the more basic prerequisite question those
+  findings never actually tested: with `hybrid=False` from the start (both
+  actions fully neural, no fixed-rule carve-out ever), does PPO gradient
+  descent move `BUY_PROPERTY`/`ACCEPT_TRADE` at all over a small number of
+  games? **Environment gate first**: the prior session's Python interpreter
+  had `numpy.random`/`_mt19937` blocked by a local Application Control
+  policy, unrelated to this project. Found an existing, already-configured
+  project interpreter (`C:\mpvenv\Scripts\python.exe` - numpy/torch/pytest
+  all working, full project suite green) without installing anything new or
+  touching any security setting - gate **PASS**.
+- Setup: smallest project-owned runner
+  (`scripts/monopolyzero_pure_ppo_learnability_gate.py`) around the
+  reference's own unmodified, ASU-free `PPOAgent`/`train()`
+  (`monopoly_game_engine.agent_ppo`/`.train`) - zero MCTS, zero DDQN, zero
+  HYBRID_COMPAT, zero fixed BUY/TRADE rule, zero ASU import anywhere in the
+  chain (grepped clean at every module, plus a runtime
+  `loaded_asu_modules()` check). `PPOAgent(player_id=0, hybrid=False,
+  device="cpu")`, 32 full games (`max_rounds=200`, hardcoded inside
+  `train()` itself) against the reference's unmodified `FPAgentA`/
+  `FPAgentB`/`FPAgentC`, one fixed DEV seed base (`45000`, `train()`'s own
+  deterministic per-game derivation covers `45000`-`45031` - newly
+  registered in `evaluation_protocol.DEV_SEED_RANGES`, validated via
+  `require_seed_scope` before training). `monopolyzero_common.ensure_reference_on_path()`
+  (the actor-relative owner-encoding fix) called first, for pipeline
+  consistency - `player_id=0`'s own live states are provably unaffected by
+  that fix either way. Before/after diagnostic reads used a masked
+  `ActorNetwork` forward pass (no sampling, no backward) over ONLY
+  `actor_id==0` positions from `026`'s replay (13,961 of its 55,215
+  positions) - safe despite `026` being pre-fix training data, because
+  `actor_id=0`'s state encoding is byte-for-byte identical before/after the
+  fix (proven by `tests/test_monopolyzero_actor_relative_owner_fix.py`).
+  Two small pieces of project-owned instrumentation, both reversible
+  wrappers around unmodified reference code (never editing
+  `references/DeepRL_Monopoly` in place): `instrument_agent` wraps the
+  `PPOAgent` instance's own `choose_action`/`store` to record real
+  exclusion/storage behavior; `install_fallback_counting_fixed_agents`
+  monkeypatches `train.py`'s own `FPAgentA`/`FPAgentB`/`FPAgentC`
+  module-globals (restored immediately after) to count opponent fallback
+  substitutions, which the vanilla reference `train()` doesn't expose on
+  its own.
+- **Decision rule (pre-registered before running)**: GO to a real strength
+  A/B only if (1) both output rows actually changed, (2) neither action is
+  structurally excluded from neural training, (3) held-out mean prior rank
+  improves for BOTH actions overall, (4) the improvement direction holds in
+  a majority of the 8 held-out `game_id` blocks for BOTH actions, (5) no
+  integrity failure/ASU use/illegal action/crash. Otherwise KILL.
+- Result: **items 1, 2, and 5 passed; items 3 and 4 failed, cleanly and
+  asymmetrically between the two actions:**
+
+  | | `BUY_PROPERTY` | `ACCEPT_TRADE` |
+  |---|---|---|
+  | Output row changed | yes (L2 Δ 0.253) | yes (L2 Δ 0.121) |
+  | Structurally excluded from neural training | never (0/402 opportunities) | never (0/1,476 opportunities) |
+  | Stored into a PPO transition with non-null log_prob | yes, 153 times | yes, 354 times |
+  | Mean prior rank, before → after | 5.57 → **1.20** | 2.51 → **5.11** |
+  | Greedy-choice rate, before → after | 1.8% → **81.5%** | 63.7% → **55.2%** |
+  | Held-out `game_id` blocks improved | **8/8** | **0/8** |
+
+  `BUY_PROPERTY` shows a real, structural, unanimous learnability signal -
+  every one of the 8 held-out game blocks improved, and its greedy-choice
+  rate went from essentially "never chosen" to "chosen 4 times out of 5
+  when legal." `ACCEPT_TRADE` moved the **opposite** direction, unanimously
+  across every held-out block, despite also being fully neural with zero
+  structural exclusion and its output row also genuinely changing (not a
+  frozen/untouched row - the training signal reached it, just pushed it the
+  wrong way here). All 32 games completed, 0 illegal actions from the
+  learning agent, 0 crashes, 0 ASU modules loaded. `train.py`'s own
+  scripted-opponent fallback-substitution mechanism fired 152 times across
+  32 games (a pre-existing reference behavior for `FPAgentA`/`B`/`C`,
+  unrelated to this run's own code or to `hybrid=False` - not previously
+  measured by the vanilla reference `train()`, measured here for the first
+  time). `loss` is not reported: the reference `train()`'s own history dict
+  doesn't aggregate `PPOAgent.update()`'s per-call actor/critic/entropy
+  stats, and no extra instrumentation was added to capture them - the
+  decision rule doesn't need them, and this result does **not** reinterpret
+  training loss as success (none was even captured).
+
+  Full structured record:
+  [logs/experiments/027-pure-ppo-buy-trade-learnability-gate.json](../logs/experiments/027-pure-ppo-buy-trade-learnability-gate.json).
+
+- Conclusion / next step: **KILL scaling this exact PPO recipe**
+  (32→more games) as a blanket direction - the pre-registered rule required
+  improvement for BOTH actions and `ACCEPT_TRADE` regressed unanimously,
+  not marginally. **Not INCONCLUSIVE**: both the overall figures and all 8
+  held-out blocks point the same direction for each action, this is a
+  clean, decisive (if asymmetric) result. The `BUY_PROPERTY`-vs-
+  `ACCEPT_TRADE` split itself is a genuine, non-obvious finding worth
+  carrying forward - unlike every prior hybrid-bootstrapped checkpoint in
+  this project, `BUY_PROPERTY` is now demonstrated learnable by plain PPO
+  from an untrained start. Root-causing why `ACCEPT_TRADE` moved the wrong
+  way (reward shaping, opponent trade-offer distribution, the much larger
+  legal-action-count context trades sit in) is explicitly out of scope for
+  this gate - no new hypothesis is proposed here per this project's own "no
+  unverified assumptions" discipline. Proceeding straight to a larger
+  self-play/strength run on the theory that `BUY_PROPERTY`'s strong signal
+  alone justifies it was considered and rejected: the pre-registered rule
+  required both actions, set deliberately before seeing results
+  specifically to prevent cherry-picking the action that happened to work.
+  No reference code changed; `references/DeepRL_Monopoly` stays pinned at
+  `afd9205761317e196d77f679921c35fb04c7ab96`, unchanged, read-only.

@@ -1,0 +1,120 @@
+{
+  "experiment_id": "027-pure-ppo-buy-trade-learnability-gate",
+  "experiment_name": "Pure PPO (hybrid=False) BUY_PROPERTY/ACCEPT_TRADE learnability gate: 32-game training, player_id=0 vs FPAgentA/B/C, corrected-state pipeline",
+  "experiment_type": "training_run",
+  "date": "2026-08-12",
+  "code_commit_sha": "65b0976e7c5b49a36b294dfe2c5b906a4a321cb7",
+  "reference_submodule_sha": "afd9205761317e196d77f679921c35fb04c7ab96",
+  "exact_commands": [
+    "PYTHONHASHSEED=0 python scripts/monopolyzero_pure_ppo_learnability_gate.py --output docs/baseline_runs/monopolyzero_pure_ppo_learnability_gate.json"
+  ],
+  "seeds": [45000, 45001, 45002, 45003, 45004, 45005, 45006, 45007, 45008, 45009, 45010, 45011, 45012, 45013, 45014, 45015, 45016, 45017, 45018, 45019, 45020, 45021, 45022, 45023, 45024, 45025, 45026, 45027, 45028, 45029, 45030, 45031],
+  "algorithm_config": {
+    "environment_gate": {
+      "problem": "The prior session's Python interpreter (AppData\\Local\\Programs\\Python\\Python312) had numpy.random/_mt19937 blocked by a local Application Control policy - unrelated to this project's code, but blocking any np.random.default_rng() call.",
+      "resolution": "Found an existing, already-set-up project interpreter at C:\\mpvenv\\Scripts\\python.exe (numpy 2.5.2, torch 2.13.0+cpu, pytest 9.1.1) with fully working numpy.random and a clean full project test suite (616 passed before this run's own additions, 635 after) - no environment changes, no new installs, no security-policy changes made.",
+      "gate_result": "PASS"
+    },
+    "algorithm": "PPO (PPOAgent, monopoly_game_engine.agent_ppo - reference, unmodified), hybrid=False",
+    "learner": {"player_id": 0, "device": "cpu", "hidden_dim": 256, "n_steps": 1024, "n_epochs": 4, "batch_size": 64, "gamma": 0.99, "lam": 0.95, "clip_eps": 0.2, "entropy_coef": 0.05, "value_coef": 0.5, "max_grad_norm": 0.5, "win_loss_bonus": 1.0},
+    "opponents": "FPAgentA/FPAgentB/FPAgentC (monopoly_game_engine.agents_fixed, reference, unmodified) - hardcoded inside train()'s own opponent pool, not overridden",
+    "n_games": 32,
+    "max_rounds": 200,
+    "seed_scheme": "one base seed (45000) passed to train(); train() derives episode_seed = base + game_index deterministically for games 1..32 (its own unmodified logic) - all 32 derived seeds pre-registered as DEV pool 45000-45031 in scripts/evaluation_protocol.py before this run, validated via evaluation_protocol.require_seed_scope before any training happened",
+    "hybrid_mode": false,
+    "why_hybrid_false": "Every prior BUY_PROPERTY/ACCEPT_TRADE finding in this project (023/024/025/026) measured a checkpoint whose actor was bootstrapped from a HYBRID PPO run where these two actions were always fixed-ruled and therefore never received a PPO gradient update at all (023's core finding). This run asks the more basic prerequisite question: with hybrid=False from the start (both actions fully neural, agent_ppo.py's fixed_action_mask entirely False), does PPO gradient descent move them at all?",
+    "state_pipeline": "monopolyzero_common.ensure_reference_on_path() called before any reference import - installs the actor-relative property-owner encoding patch (see docs/DECISIONS.md's 2026-08-12 entry) so training and the diagnostic read share one consistent state pipeline. player_id=0's own live game states are provably unaffected by that fix either way (actor_order(0) is the identity ordering) - this is about pipeline consistency, not a live correctness requirement for this specific learner.",
+    "asu_involvement": "none - zero ASU imports anywhere in this run's import chain (agent_ppo.py, train.py, networks.py, agents_fixed.py, env.py, state.py, actions.py, constants.py all independently grepped clean of \"asu\"/\"ASU\"; common.loaded_asu_modules() also checked at runtime and returned empty)",
+    "mcts_involvement": "none - pure single-forward-pass PPO action selection (ActorNetwork.get_action), no search, no MaxNPUCT, no MCTS visit targets anywhere in this run",
+    "ddqn_involvement": "none",
+    "diagnostic_set": {
+      "source": "experiment 026's 55,215-position replay, filtered to actor_id==0 ONLY (13,961 positions)",
+      "replay_dir": "artifacts/monopolyzero_native_train_candidate/buy_trade_learnability_v2/replay",
+      "why_026_is_safe_here_despite_being_pre_fix": "026 is PRE-FIX diagnostic-only data for TRAINING purposes (both its stored states and its MCTS visit targets used the old, pre-owner-encoding-fix physical-id ownership indexing for actor_id 1-3). This run never trains on 026 - it is used ONLY as a static, read-only set of realistic board positions for masked forward-pass measurement. Critically, actor_id==0's state encoding is byte-for-byte IDENTICAL before and after the owner-encoding fix (actor_order(0) == (0,1,2,3), the identity ordering the bug coincidentally already produced for physical id 0 - proven by tests/test_monopolyzero_actor_relative_owner_fix.py::test_agent_id_zero_encoding_byte_for_byte_unchanged_by_fix), so the actor_id==0 subset used here is unaffected by which side of the fix 026 was generated on.",
+      "game_ids_present": [43000, 43001, 43002, 43003, 43004, 43005, 43006, 43007],
+      "buy_property_opportunities": 384,
+      "accept_trade_opportunities": 3692
+    },
+    "instrumentation": {
+      "instrument_agent": "wraps the PPOAgent instance's own bound choose_action/store methods (new instance attributes, reference PPOAgent class untouched) to record real runtime data: whether BUY_PROPERTY/ACCEPT_TRADE were ever excluded from the neural candidate set when legal, and how many times each was actually stored into a PPO transition (which agent_ppo.py's own Bug-1 fix guarantees only happens with a non-None log_prob)",
+      "install_fallback_counting_fixed_agents": "monkeypatches monopoly_game_engine.train's own FPAgentA/FPAgentB/FPAgentC module-global bindings (not the reference classes) to subclasses that additionally count when train.py's own run_episode had to substitute the fixed opponent's proposed action - the vanilla reference train() does not expose this number on its own. Restored immediately after the run."
+    },
+    "pre_registered_decision_rule": "GO to a real strength A/B only if: (1) BUY and ACCEPT output rows both actually changed; (2) neither action is structurally excluded from neural training; (3) held-out mean prior rank improves for BOTH BUY and ACCEPT overall; (4) improvement direction occurs in a majority of available held-out game_id blocks for BOTH actions; (5) no integrity failure, ASU use, illegal action, or crash. Otherwise KILL PPO scaling for now. Registered before this run was executed.",
+    "decision_rule_evaluation": {
+      "item1_both_rows_changed": {"result": true, "buy_property_row_l2_delta": 0.25310276233951845, "accept_trade_row_l2_delta": 0.12079695023878853, "full_actor_changed": true},
+      "item2_neither_structurally_excluded": {"result": true, "buy_property_excluded_from_nn_at_runtime": 0, "accept_trade_excluded_from_nn_at_runtime": 0, "fixed_action_mask_any_true": false},
+      "item3_mean_prior_rank_improves_both_overall": {
+        "result": false,
+        "buy_property_mean_prior_rank_before_after": [5.567708333333333, 1.2005208333333333],
+        "buy_property_result": "IMPROVED",
+        "accept_trade_mean_prior_rank_before_after": [2.5140845070422535, 5.113488624052004],
+        "accept_trade_result": "REGRESSED",
+        "note": "BUY_PROPERTY improved sharply; ACCEPT_TRADE regressed - item 3 requires BOTH, so this item fails on ACCEPT_TRADE alone"
+      },
+      "item4_majority_of_game_id_blocks_improve_both": {
+        "result": false,
+        "buy_property_blocks_improved": 8, "buy_property_blocks_total": 8,
+        "accept_trade_blocks_improved": 0, "accept_trade_blocks_total": 8,
+        "note": "BUY_PROPERTY improved in 8/8 held-out game_id blocks (unanimous). ACCEPT_TRADE improved in 0/8 (unanimous regression, not a marginal/ambiguous split) - item 4 fails on ACCEPT_TRADE alone"
+      },
+      "item5_no_integrity_failure": {
+        "result": true,
+        "asu_modules_loaded": [],
+        "illegal_actions_by_learning_agent": 0,
+        "crashes": 0,
+        "games_completed": 32,
+        "stopped_early": false,
+        "opponent_fixed_agent_fallback_substitutions": 152,
+        "opponent_fallback_note": "This is the reference train()'s own long-standing silent-substitution behavior for scripted fixed opponents (FPAgentA/B/C proposing something momentarily illegal, substituted with END_TURN/allowed[0] by train.py's own run_episode) - present regardless of hybrid mode or this gate's own code, and not an ASU/illegal-action/crash event for the PPO learner under test. Not previously measured by the vanilla reference train() (unlike monopoly_bench.play_local_game's fallback_count) - measured here for the first time via install_fallback_counting_fixed_agents."
+      }
+    },
+    "overall_verdict": "KILL PPO scaling for now (items 3 and 4 both fail, cleanly and unanimously, on ACCEPT_TRADE specifically - not a marginal or ambiguous result). No training loss was reinterpreted as success."
+  },
+  "model_checkpoint": {
+    "sha256": "85194f337182c2d698519966cb8c19d3c1e701102b5fb280cd69d4c23ed8a113",
+    "path": "artifacts/monopolyzero_pure_ppo_learnability_gate/candidate_ppo.pt",
+    "format_version": 3
+  },
+  "counts": {
+    "games_played": 32,
+    "games_completed": 32,
+    "total_wins": 0,
+    "diagnostic_positions": 13961,
+    "buy_property_opportunities_in_diagnostic_set": 384,
+    "accept_trade_opportunities_in_diagnostic_set": 3692,
+    "buy_property_opportunities_seen_during_training": 402,
+    "accept_trade_opportunities_seen_during_training": 1476,
+    "buy_property_stored_with_log_prob_during_training": 153,
+    "accept_trade_stored_with_log_prob_during_training": 354,
+    "total_ppo_buffer_store_calls": 16449,
+    "opponent_fallback_substitutions": 152,
+    "avg_properties_acquired_per_game_mean": 8.90625,
+    "avg_trades_initiated_per_game_mean": 128.71875,
+    "avg_trades_accepted_per_game_mean": 11.6875,
+    "avg_trades_declined_per_game_mean": 7.9375
+  },
+  "runtime": {"wall_time_s": 39.369404099998064, "peak_rss_gib": 0.7372512817382812},
+  "metrics": {
+    "before_diagnostic": {
+      "buy_property_opportunities": 384, "buy_property_greedy_rate": 0.018229166666666668,
+      "buy_property_mean_raw_prior": 0.14224297498488644, "buy_property_mean_prior_rank": 5.567708333333333,
+      "accept_trade_opportunities": 3692, "accept_trade_greedy_rate": 0.6367822318526544,
+      "accept_trade_mean_raw_prior": 0.32151308880800045, "accept_trade_mean_prior_rank": 2.5140845070422535
+    },
+    "after_diagnostic": {
+      "buy_property_opportunities": 384, "buy_property_greedy_rate": 0.8151041666666666,
+      "buy_property_mean_raw_prior": 0.45842934112685424, "buy_property_mean_prior_rank": 1.2005208333333333,
+      "accept_trade_opportunities": 3692, "accept_trade_greedy_rate": 0.5517334777898159,
+      "accept_trade_mean_raw_prior": 0.3133401141527441, "accept_trade_mean_prior_rank": 5.113488624052004
+    },
+    "note": "Full per-game_id (43000-43007) before/after breakdown is in the raw JSON payload referenced in raw_logs, not duplicated here."
+  },
+  "loss": null,
+  "integrity": {"illegal_actions": 0, "fallbacks": 152, "crashes": 0},
+  "result": "PURE PPO (hybrid=False) learnability gate over 32 games: BUY_PROPERTY moved sharply and consistently toward being learnable (mean legal-action rank 5.57->1.20 overall, improved in all 8/8 held-out game_id blocks, greedy-choice rate 1.8%->81.5%) - a real, structural, non-null-log_prob neural signal, unlike every prior hybrid-bootstrapped checkpoint measured in this project. ACCEPT_TRADE moved the opposite direction (mean rank 2.51->5.11 overall, regressed in all 8/8 held-out game_id blocks, greedy-choice rate 63.7%->55.2%), despite also being fully neural (0 structural exclusions) and its output row also genuinely changing. Both output rows changed, neither action was structurally excluded, zero ASU/crashes/illegal actions from the learning agent, all 32 games completed. Per the pre-registered decision rule (GO requires items 1-5 ALL true), items 3 and 4 fail because they require improvement for BOTH actions and ACCEPT_TRADE regressed unanimously - verdict is KILL for scaling this exact PPO recipe as a blanket direction, not GO to a strength A/B. This is not reinterpreted as a loss-curve success claim (no loss was even captured - see the loss field). The BUY_PROPERTY-vs-ACCEPT_TRADE asymmetry itself is a genuine, non-obvious finding worth carrying forward, but root-causing it (reward shaping, opponent trade-behavior distribution, action-space size difference) is out of scope for this gate.",
+  "raw_logs": [
+    "logs/experiments/raw/027-pure-ppo-learnability-gate_stdout.txt",
+    "docs/baseline_runs/monopolyzero_pure_ppo_learnability_gate.json"
+  ],
+  "notes": "loss is null: the reference train()'s own history dict does not aggregate per-update actor_loss/critic_loss/entropy into its returned history (run_episode receives them from PPOAgent.update() but train() never stores result['stats'] into history) - this gate did not add extra instrumentation to capture them, since the task's own decision rule is explicitly about held-out prior-rank movement and structural change proof, not loss. Checkpoint (~a few MB) is not committed per CLAUDE.md - referenced by SHA-256 and local path only. Environment: run under C:\\mpvenv\\Scripts\\python.exe (an existing, already-configured project interpreter found this session - not newly installed), not the AppData\\Local\\Programs\\Python\\Python312 interpreter used in the immediately preceding session, which has a local Application Control policy blocking numpy.random/_mt19937 unrelated to this project's code."
+}
