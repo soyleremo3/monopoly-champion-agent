@@ -2019,3 +2019,89 @@ its own proposed experiment and decision log.
   read-only). No reference code edited; the deterministic-argmax policy
   and per-seat instrumentation are this project's own, built on the
   already-independent `monopolyzero_common.play_local_game`.
+
+## 2026-08-12 (later) — 029: trade-offer-spam causal diagnostic (INCONCLUSIVE, inference-only, algorithm frozen)
+
+- Hypothesis: `028` found the candidate averaging ~330 trade offers/game at
+  an 85% round-cap rate - does that trade-offer explosion actively cost
+  the candidate win rate (pathological spam), or is it incidental? Purely
+  an inference-time diagnostic: **no PPOAgent/ActorNetwork/reward/state/
+  action-space/env/MCTS change, no training** - does not authorize
+  shipping the masked policy under any outcome, only decides whether a
+  future architecture intervention (e.g. a factorized trade head) is
+  worth pursuing.
+- Setup: reused `028`'s exact `play_one_game`/`summarize` and
+  `evaluation_protocol.paired_evaluation_summary` (unmodified,
+  `evaluation_protocol.py` itself was NOT edited, per this task's scope).
+  Only change to `monopolyzero_pure_ppo_strength_screen.py`: an optional
+  `exclude_families` kwarg on its masked-argmax policy, threaded to the
+  **candidate seat only** (`+19/-2` lines). New 102-line
+  [scripts/monopolyzero_trade_spam_diagnostic.py](../scripts/monopolyzero_trade_spam_diagnostic.py)
+  orchestrates two arms on the same frozen `027` checkpoint: **Arm A**
+  (original, identical to `028`'s policy) vs. **Arm B** (same checkpoint,
+  same policy, candidate's own `buy_trade`/`sell_trade`/`exch_trade`
+  families removed from its legal mask only - `ACCEPT_TRADE`/
+  `DECLINE_TRADE`/`BUY_PROPERTY` untouched, baseline seats never masked).
+  12 seeds (reused from `028`'s already-registered DEV range
+  `46000-46019`, per that pool's documented "safe to reuse freely"
+  status - no new registration needed or made) x 4 seat rotations x 2
+  arms = 96 games. Pre-registered rule: **GO** only if trade spam is
+  materially reduced AND the paired seed-block bootstrap CI for
+  `win_rate(B) - win_rate(A)` has a lower bound `> 0`; **KILL** if the
+  upper bound is `<= 0`; otherwise **INCONCLUSIVE**.
+
+  ```bash
+  PYTHONHASHSEED=0 PYTHONIOENCODING=utf-8 python scripts/monopolyzero_trade_spam_diagnostic.py
+  ```
+
+- Result: both actor hashes matched `027`'s logged provenance
+  (`e6c142d1...9861b5b` candidate, `ce2ffeaf...46f4fed1e64c` baseline).
+  96/96 games completed, 0 illegal actions, 0 crashes, 0 ASU modules
+  loaded. Wall time 360.6s (~6 min).
+
+  | | Arm A (original) | Arm B (no trade-offer) |
+  |---|---|---|
+  | Candidate win rate | 21/48 = 43.75% | 21/48 = **43.75%** (identical count) |
+  | Trade offers/game | 355.5 | **0.0** (mask worked exactly as designed) |
+  | Bankruptcy rate | 20.8% | **41.7%** (nearly doubled) |
+  | Mean net worth | 3,613.2 | 3,234.6 |
+  | Round-cap rate | 87.5% | 79.2% |
+  | `ACCEPT_TRADE` rate when legal | 68.6% | **92.8%** |
+  | `BUY_PROPERTY` rate when legal | 99.1% | 93.2% |
+
+  **Paired seed-block bootstrap for `win_rate(B) - win_rate(A)`: point
+  0.0, 95% CI `[-18.75, +18.75]` points** - straddles zero completely
+  (seed-block paired randomization `p=1.0`, the least significant
+  possible result). Trade spam WAS materially eliminated (355.5 → 0.0),
+  satisfying the GO rule's first condition, but the CI lower bound is not
+  `> 0` and the upper bound is not `<= 0` either - **INCONCLUSIVE** per
+  the pre-registered rule, exactly as written, not adjusted after seeing
+  results. Paired net-worth diff: point -378.6, CI `[-1313.7, +534.7]`
+  (also not significant, but directionally adverse for arm B). Not
+  pre-registered but notable: candidate bankruptcy nearly doubled when
+  trade offers were masked, and `ACCEPT_TRADE`-when-legal jumped from
+  68.6% to 92.8% - consistent with the candidate substituting incoming-
+  trade acceptance for its now-unavailable outgoing offers, not simply
+  "trading less overall." This pattern reads more like trade offers
+  serving a real liquidity/negotiation function for this checkpoint than
+  like pure, functionless spam, though this diagnostic's win-rate-only
+  pre-registered rule doesn't itself distinguish those explanations.
+
+  Full structured record:
+  [logs/experiments/029-trade-offer-spam-causal-diagnostic.json](../logs/experiments/029-trade-offer-spam-causal-diagnostic.json).
+
+- Conclusion / next step: **INCONCLUSIVE - do not proceed to a
+  factorized trade-action head on this evidence.** The specific
+  hypothesis under test (outgoing trade-offer volume alone is
+  pathological spam costing win rate) is not supported: removing it
+  entirely produced an exactly-flat win-rate outcome with no directional
+  signal, and came with a directionally adverse (though not statistically
+  significant) bankruptcy/net-worth cost. This does not rule out a future
+  architecture intervention on other grounds, but this diagnostic gives
+  no evidence FOR one. No agent/training/architecture code changed for
+  this task - `PPOAgent`, `ActorNetwork`, reward shaping, state encoding,
+  the action space, the environment, MCTS, `monopolyzero_common.py`, and
+  `references/DeepRL_Monopoly` (pinned at
+  `afd9205761317e196d77f679921c35fb04c7ab96`) were all confirmed
+  unchanged before running (`git diff --stat` showed only the two script
+  files above). `FINAL_BLIND` was not touched.

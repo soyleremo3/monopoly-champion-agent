@@ -1,0 +1,98 @@
+{
+  "experiment_id": "029-trade-offer-spam-causal-diagnostic",
+  "experiment_name": "Causal diagnostic: does masking 027's frozen checkpoint's own outgoing trade-offer action families (buy_trade/sell_trade/exch_trade) change win rate vs. 028's exact policy? 12 DEV seeds x 4 focus-seat rotation x 2 inference-only arms",
+  "experiment_type": "paired_evaluation",
+  "date": "2026-08-12",
+  "code_commit_sha": "cdbba1ddbd2a782df5b7683cf068e9508c82c56f",
+  "reference_submodule_sha": "afd9205761317e196d77f679921c35fb04c7ab96",
+  "exact_commands": [
+    "PYTHONHASHSEED=0 PYTHONIOENCODING=utf-8 python scripts/monopolyzero_trade_spam_diagnostic.py"
+  ],
+  "seeds": [46000, 46001, 46002, 46003, 46004, 46005, 46006, 46007, 46008, 46009, 46010, 46011],
+  "algorithm_config": {
+    "purpose": "028 found the candidate averaging ~330 trade offers/game with an 85% round-cap rate. Hypothesis under test: this trade-offer explosion is pathological spam that costs the candidate real strength. This diagnostic is INFERENCE-ONLY - no PPOAgent/ActorNetwork/reward/state/action-space/env/MCTS change, no training - and does NOT authorize shipping the masked policy either way.",
+    "algorithm_frozen": "PPOAgent, ActorNetwork/model architecture, reward shaping, state encoding, action IDs/action space, the Monopoly environment, MCTS, monopolyzero_common.py, and the reference submodule were all untouched for this task - git diff --stat before running showed changes confined to scripts/monopolyzero_pure_ppo_strength_screen.py (+19/-2, an optional exclude_families kwarg threaded to ONLY the candidate seat's own legal-action mask) and a new scripts/monopolyzero_trade_spam_diagnostic.py orchestration script (102 lines) - both reuse 028's existing play_one_game/summarize and evaluation_protocol.py's existing paired_evaluation_summary unmodified (evaluation_protocol.py itself was not edited).",
+    "arm_a_original": "027's final checkpoint under 028's EXACT deterministic masked-argmax policy, unmodified - identical mechanism to experiment 028, re-run here on a fresh 12-seed slice for a same-run paired comparison against arm B.",
+    "arm_b_no_trade_offer": "Same exact checkpoint, same deterministic policy, with ONLY the candidate seat's own legal mask further restricted to exclude the buy_trade/sell_trade/exch_trade action families (via monopoly_bench.engine.action_family classification, not new magic numbers) - falls back to the unfiltered legal set if exclusion would ever empty it. ACCEPT_TRADE, DECLINE_TRADE, BUY_PROPERTY, and every other action stay untouched. The three baseline opponent seats are NEVER masked in either arm.",
+    "candidate_provenance": {
+      "source": "experiment 027's final checkpoint (same one used in 028)",
+      "checkpoint_path": "artifacts/monopolyzero_pure_ppo_learnability_gate/candidate_ppo.pt",
+      "full_actor_sha256_expected": "e6c142d143b5430d02b37cd3be34fa39a7d8d2f282bdb1eda8677a6109861b5b",
+      "full_actor_sha256_verified": "e6c142d143b5430d02b37cd3be34fa39a7d8d2f282bdb1eda8677a6109861b5b",
+      "hash_gate": "load_candidate_agent() (reused unmodified from 028's script) REQUIRES the loaded actor's own full_actor_sha256 to match 027's logged value before returning - matched on the first attempt.",
+      "note_on_scope": "This run calls load_candidate_agent() directly rather than going through strength_screen.py's own main(), so the raw checkpoint FILE SHA-256 (028's separate EXPECTED_CHECKPOINT_SHA256 gate) was not independently re-checked here - the loaded actor's own state_dict hash (the stronger, more direct signal of what weights are actually in memory) was checked and matched, which is what this diagnostic's inference behavior actually depends on."
+    },
+    "baseline_provenance": {
+      "source": "027's bit-exact-reconstructed untrained PPOAgent(hybrid=False) initialization (same reconstruction as 028, reused unmodified via build_untrained_baseline_agent())",
+      "full_actor_sha256_expected": "ce2ffeaf655ef5745ef8f835f3f999a5baa8beac93b5c70ed22d46f4fed1e64c",
+      "full_actor_sha256_verified": "ce2ffeaf655ef5745ef8f835f3f999a5baa8beac93b5c70ed22d46f4fed1e64c"
+    },
+    "opponent_pool": "3 copies of the untrained baseline per game in both arms - identical to 028, no scripted fixed agents, no ASU",
+    "max_rounds": 200,
+    "n_seeds": 12,
+    "seat_rotations_per_seed": 4,
+    "n_games_per_arm": 48,
+    "n_games_total": 96,
+    "seed_pool": "Reused the first 12 of the already-registered DEV range 46000-46019 (registered for experiment 028) - evaluation_protocol.py's own DEV-pool docstring documents these as 'safe to reuse freely during ordinary development'. This task explicitly forbade editing evaluation_protocol.py, so no new range was registered; require_seed_scope(seeds, SEED_CLASS_DEV) still validated all 12 before any game was played.",
+    "asu_involvement": "none - zero ASU imports anywhere in this script's import chain, verified at runtime via monopolyzero_common.loaded_asu_modules() (empty)",
+    "mcts_involvement": "none",
+    "ddqn_involvement": "none",
+    "pre_registered_decision_rule": {
+      "primary_statistic": "seed-block paired bootstrap 95% CI (evaluation_protocol.paired_seed_block_bootstrap via paired_evaluation_summary, reused unmodified) for (arm_b_win_rate - arm_a_win_rate), paired by (seed, focus_seat)",
+      "GO": "trade spam is materially reduced (arm B trade-offers/game < arm A) AND the paired CI lower bound is > 0",
+      "KILL": "paired CI upper bound is <= 0",
+      "otherwise": "INCONCLUSIVE",
+      "registered_before_running": true,
+      "rule_not_altered_after_seeing_results": true,
+      "scope_note": "This diagnostic does not authorize shipping the masked policy under any verdict - it only decides whether outgoing trade-action explosion is worth a future architecture intervention (e.g. a factorized trade head), which is NOT implemented here regardless of outcome."
+    }
+  },
+  "model_checkpoint": {
+    "sha256": null,
+    "path": "artifacts/monopolyzero_pure_ppo_learnability_gate/candidate_ppo.pt",
+    "format_version": 3
+  },
+  "counts": {
+    "games_played_arm_a": 48,
+    "games_played_arm_b": 48,
+    "games_total": 96,
+    "seed_blocks": 12,
+    "arm_a_candidate_wins": 21,
+    "arm_b_candidate_wins": 21,
+    "arm_a_candidate_trade_offers_total": 17062,
+    "arm_b_candidate_trade_offers_total": 0
+  },
+  "runtime": {"wall_time_s": 360.62827220000327, "peak_rss_gib": 0.2823524475097656},
+  "metrics": {
+    "arm_a_candidate_win_rate": 0.4375,
+    "arm_b_candidate_win_rate": 0.4375,
+    "arm_a_candidate_trade_offers_per_game": 355.4583333333333,
+    "arm_b_candidate_trade_offers_per_game": 0.0,
+    "trade_spam_reduced": true,
+    "paired_win_rate_diff_point_B_minus_A": 0.0,
+    "paired_win_rate_diff_ci_95_B_minus_A": [-0.1875, 0.1875],
+    "seed_block_paired_randomization_p_value": 1.0,
+    "paired_net_worth_diff_point_B_minus_A": -378.6041666666665,
+    "paired_net_worth_diff_ci_95_B_minus_A": [-1313.7085937499999, 534.7018229166667],
+    "arm_a_candidate_bankruptcy_rate": 0.20833333333333334,
+    "arm_b_candidate_bankruptcy_rate": 0.4166666666666667,
+    "arm_a_candidate_mean_net_worth": 3613.2291666666665,
+    "arm_b_candidate_mean_net_worth": 3234.625,
+    "arm_a_round_cap_rate": 0.875,
+    "arm_b_round_cap_rate": 0.7916666666666666,
+    "arm_a_candidate_buy_property_rate_when_legal": 0.9913373037357878,
+    "arm_b_candidate_buy_property_rate_when_legal": 0.932404181184669,
+    "arm_a_candidate_accept_trade_rate_when_legal": 0.6863629748217145,
+    "arm_b_candidate_accept_trade_rate_when_legal": 0.9281354051054383,
+    "arm_a_candidate_decline_trade_rate_when_legal": 0.0,
+    "arm_b_candidate_decline_trade_rate_when_legal": 0.0,
+    "verdict": "INCONCLUSIVE"
+  },
+  "loss": null,
+  "integrity": {"illegal_actions": 0, "fallbacks": 0, "crashes": 0},
+  "result": "INCONCLUSIVE. Trade spam WAS materially reduced as expected (arm A candidate: 355.5 trade offers/game -> arm B: exactly 0.0 - the mask worked as designed, 0 illegal actions/crashes across all 96 games), but the paired seed-block bootstrap 95% CI for (arm_b_win_rate - arm_a_win_rate) is [-18.75, +18.75] points, straddling zero (point estimate exactly 0.0: both arms won 21/48 games; seed-block paired randomization p=1.0 - no directional signal at all in the win-rate outcome). Per the pre-registered rule, GO requires the CI lower bound > 0, which fails; KILL requires the upper bound <= 0, which also fails (upper bound is +0.1875) - the rule correctly lands on INCONCLUSIVE rather than forcing a call either direction. A secondary, non-pre-registered but notable finding: masking outgoing trade offers nearly DOUBLED the candidate's own bankruptcy rate (20.8% -> 41.7%) and moved mean net worth down (3613.2 -> 3234.6, paired CI [-1313.7, +534.7] - also not statistically significant, but the point estimate is directionally adverse, not neutral). ACCEPT_TRADE-when-legal jumped sharply (68.6% -> 92.8%), consistent with the candidate substituting incoming-trade acceptance for its now-unavailable outgoing offers rather than simply 'trading less overall'. This pattern is more consistent with outgoing trade offers serving some real liquidity/negotiation function for this checkpoint than with them being pure, functionless spam - though this diagnostic's design (win-rate-only pre-registered rule) does not by itself distinguish those two explanations, and no root-cause claim is made here.",
+  "raw_logs": [
+    "logs/experiments/raw/029-trade-spam-diagnostic_stdout.txt"
+  ],
+  "notes": "Per this task's logging-size constraint, no full per-game breakdown was written to docs/baseline_runs/ this time (unlike 027/028) - the committed raw stdout above is the complete, compact payload (5.8KB, 197 lines - summary-level only, no per-game array) and is small enough to commit directly per this project's existing raw/ convention, not just referenced by hash. Production code added/modified for this task: scripts/monopolyzero_pure_ppo_strength_screen.py +19/-2 lines (an optional exclude_families kwarg on build_masked_argmax_policy, threaded to the candidate seat only in play_one_game); scripts/monopolyzero_trade_spam_diagnostic.py, a new 102-line orchestration script reusing existing helpers, no new stats framework. evaluation_protocol.py was not modified - paired_evaluation_summary/paired_seed_block_bootstrap/wilson_95_interval were called exactly as they already exist. references/DeepRL_Monopoly stays pinned and untouched at afd9205761317e196d77f679921c35fb04c7ab96. This result does NOT authorize a factorized trade-action head or any other architecture change - it is a KILL-leaning-INCONCLUSIVE read on the specific hypothesis that outgoing-trade-offer volume alone is costing win rate; the bankruptcy-rate finding above is flagged as a reason to be cautious about assuming masking trade offers would help even if a larger sample later tightened the win-rate CI."
+}
