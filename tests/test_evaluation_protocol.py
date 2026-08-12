@@ -41,7 +41,7 @@ def test_dev_promotion_final_blind_pools_are_pairwise_disjoint():
         10000, 10009, 10015, 20015,
         30000, 30009, 31000, 31004, 32000, 32009,
         40000, 40015, 41000, 41015,
-        45000, 45031, 46000, 46019,
+        45000, 45031, 46000, 46019, 47000, 47095, 48000, 48019,
     ],
 )
 def test_previously_used_seeds_classified_as_dev(seed):

@@ -63,6 +63,8 @@ DEV_SEED_RANGES: tuple[tuple[int, int, str], ...] = (
     (44000, 44999, "Colab infra (docs/COLAB_RUNBOOK.md, scripts/colab_shard_runner.py) - reserved pool for future Colab-run shards; not yet consumed by a specific experiment as of registration"),
     (45000, 45031, "027 - pure PPO (hybrid=False) BUY_PROPERTY/ACCEPT_TRADE learnability gate: 32-game training run, player_id=0 vs FPAgentA/B/C"),
     (46000, 46019, "028 - pure PPO (hybrid=False) 027-candidate-vs-own-untrained-baseline strength screen: 20 seeds x 4 focus-seat rotation, deterministic masked-argmax PPO actor, candidate vs 3 copies of the untrained baseline (no fixed/ASU opponents)"),
+    (47000, 47095, "030 - 027 checkpoint resumed 32->128 games: 96 additional training episode seeds (train()'s own episode_seed=seed_arg+absolute_game-1 formula, seed_arg=46968 chosen so this range results exactly)"),
+    (48000, 48019, "030 - 128-game candidate vs 32-game baseline strength test: 20 seeds x 4 focus-seat rotation"),
 )
 
 # Fresh, disjoint from DEV_SEED_RANGES and from each other. Reserved here,
