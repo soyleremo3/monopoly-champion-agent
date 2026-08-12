@@ -2189,3 +2189,83 @@ its own proposed experiment and decision log.
   `references/DeepRL_Monopoly` (pinned at
   `afd9205761317e196d77f679921c35fb04c7ab96`) were all confirmed
   unchanged before running. `FINAL_BLIND` was not touched.
+
+## 2026-08-12 (later) — 031: 32->128 early-stop checkpoint search (GO, champion updates to 80 games)
+
+- Hypothesis: `030` found continuing PPO training 32->128 games
+  INCONCLUSIVE on win rate, with a large non-pre-registered behavioral
+  collapse (`BUY_PROPERTY` 98.5%+ -> 0.0%) by game 128. Is there a useful
+  EARLY-STOP point strictly between 32 and 128 games, before that collapse
+  fully sets in?
+- Setup: new
+  [scripts/monopolyzero_pure_ppo_early_stop_search.py](../scripts/monopolyzero_pure_ppo_early_stop_search.py)
+  (117 production lines + a 2-line DEV seed registration - no core
+  algorithm file or the reference submodule touched, confirmed via
+  `git diff --stat` before running). **Phase 1**: resumed `027`/`030`'s
+  hash-gated frozen 32-game checkpoint along the exact same continuation
+  trajectory as `030` (episode seeds `47000-47095`, base seed arg `46968`),
+  but split into 6 sequential `train()` calls of 16 games each
+  (32->48->64->80->96->112->128) on the SAME in-memory `PPOAgent` - no disk
+  reload between segments - saving a SEPARATE checkpoint file after each
+  segment, never overwriting the 32-game champion or each other.
+  **Reproducibility gate**: the resulting 128-game actor SHA-256 was
+  checked against `030`'s own logged value before any strength conclusion
+  - **PASSED exactly** (`ad4e9a6d...8985dd224`), confirming the
+  checkpointed-segment trajectory is bit-exact equivalent to `030`'s single
+  continuous 96-game run (the reference's own per-game full RNG reseed,
+  `episode_seed = seed_arg + absolute_game - 1`, makes checkpoint
+  granularity irrelevant to the resulting weights). **Phase 2 (selection
+  screen)**: reused `028`/`030`'s exact `play_one_game`/`summarize`
+  wholesale - each of the five intermediate checkpoints (48/64/80/96/112)
+  vs. three frozen copies of the 32-game champion, deterministic masked
+  argmax, SAME fresh 8 seeds (`49000-49007`) x 4 seat rotations = 32 games
+  for every candidate. **Phase 3 (confirmation)**: identical protocol,
+  ONLY the selected checkpoint, 20 fresh seeds (`49100-49119`) x 4
+  rotations = 80 games. Both seed ranges registered in
+  `evaluation_protocol.py` before running, disjoint from training seeds,
+  every prior experiment, and `FINAL_BLIND`.
+
+  ```bash
+  PYTHONHASHSEED=0 PYTHONIOENCODING=utf-8 python scripts/monopolyzero_pure_ppo_early_stop_search.py
+  ```
+
+- Result: hash gate passed, 0 illegal actions, 0 crashes, 0 ASU modules
+  loaded. Wall time 931.1s (~15.5 min).
+
+  | Candidate | Win rate (8-seed selection, /32) | 95% CI vs. 25% null | Verdict | Mean net worth | Bankruptcy |
+  |---|---|---|---|---|---|
+  | 48 games | 46.9% (15/32) | [0.0, +40.6] pts | INCONCLUSIVE | 6,278.7 | 25.0% |
+  | 64 games | 43.75% (14/32) | [+6.25, +34.4] pts | GO | 5,935.1 | 21.9% |
+  | **80 games** | **62.5% (20/32)** | **[+18.75, +53.1] pts** | **GO (highest)** | 7,729.8 | 18.75% |
+  | 96 games | 12.5% (4/32) | [-21.9, -3.1] pts | KILL | 2,708.7 | 46.9% |
+  | 112 games | 9.4% (3/32) | [-21.9, -6.25] pts | KILL | 2,263.0 | 34.4% |
+
+  The 96/112 collapse matches `030`'s documented `BUY_PROPERTY`/policy-drift
+  finding exactly - by 80 games `BUY_PROPERTY` was already down to 8.2% of
+  legal opportunities (vs. the 32-game champion's ~99.9-100%), but win rate
+  had not yet collapsed the way it had by 96/112. **80 games selected**
+  (highest win rate, no tie-break needed) and confirmed on the fresh
+  20-seed set: **38/80 = 47.5% win rate**, Wilson 95% `[36.9%, 58.3%]`.
+  **Primary: seed-block bootstrap for `win_rate - 25%`: point +22.5, 95% CI
+  `[+11.25, +33.75]` points - entirely above zero.** **GO** per the
+  pre-registered rule (CI lower bound > 0). Net worth and bankruptcy both
+  moved sharply in the candidate's favor (+4,898.3 mean net worth, 11.25%
+  vs. 63.75% bankruptcy champion-side) - directional, not the primary
+  statistic, but consistent with the win-rate result.
+
+  Full structured record:
+  [logs/experiments/031-pure-ppo-32-to-128-early-stop-checkpoint-search.json](../logs/experiments/031-pure-ppo-32-to-128-early-stop-checkpoint-search.json).
+
+- Conclusion / next step: **GO - champion updates from the 32-game
+  checkpoint (`candidate_ppo.pt`) to the 80-game checkpoint
+  (`candidate_ppo_80.pt`)**, on pre-registered confirmation evidence, not
+  just the selection screen (selection-set performance was explicitly not
+  treated as final evidence, per this task's instruction). This is a
+  materially different outcome from `030`'s flat, exactly-25% result at
+  128 games - the improvement lives specifically in the 48-80 game window,
+  before the behavioral collapse documented in `030` takes hold at 96+.
+  Per this task's explicit scope, this GO is terminal here: no automatic
+  further scaling, no finer-grained checkpoint re-scan (e.g. every 4-8
+  games), and no reward/architecture follow-up without a new task. No
+  core algorithm file or `references/DeepRL_Monopoly` (pinned at
+  `afd9205761317e196d77f679921c35fb04c7ab96`) was touched.

@@ -1,0 +1,105 @@
+{
+  "experiment_id": "031-pure-ppo-32-to-128-early-stop-checkpoint-search",
+  "experiment_name": "Resume 027's frozen 32-game PURE PPO checkpoint along 030's exact continuation trajectory (episode seeds 47000-47095), checkpointing every 16 games (48/64/80/96/112/128), then select and confirm whether any early-stop point beats the 32-game champion",
+  "experiment_type": "training_run",
+  "date": "2026-08-12",
+  "code_commit_sha": "9fc86d5de2635ab085a26f2fdb62c923e7c9662f",
+  "reference_submodule_sha": "afd9205761317e196d77f679921c35fb04c7ab96",
+  "exact_commands": [
+    "PYTHONHASHSEED=0 PYTHONIOENCODING=utf-8 python scripts/monopolyzero_pure_ppo_early_stop_search.py"
+  ],
+  "seeds": [47000, 47001, 47002, 47003, 47004, 47005, 47006, 47007, 47008, 47009, 47010, 47011, 47012, 47013, 47014, 47015, 47016, 47017, 47018, 47019, 47020, 47021, 47022, 47023, 47024, 47025, 47026, 47027, 47028, 47029, 47030, 47031, 47032, 47033, 47034, 47035, 47036, 47037, 47038, 47039, 47040, 47041, 47042, 47043, 47044, 47045, 47046, 47047, 47048, 47049, 47050, 47051, 47052, 47053, 47054, 47055, 47056, 47057, 47058, 47059, 47060, 47061, 47062, 47063, 47064, 47065, 47066, 47067, 47068, 47069, 47070, 47071, 47072, 47073, 47074, 47075, 47076, 47077, 47078, 47079, 47080, 47081, 47082, 47083, 47084, 47085, 47086, 47087, 47088, 47089, 47090, 47091, 47092, 47093, 47094, 47095, 49000, 49001, 49002, 49003, 49004, 49005, 49006, 49007, 49100, 49101, 49102, 49103, 49104, 49105, 49106, 49107, 49108, 49109, 49110, 49111, 49112, 49113, 49114, 49115, 49116, 49117, 49118, 49119],
+  "algorithm_config": {
+    "purpose": "030 found continuing PPO training 32->128 games INCONCLUSIVE on win rate, with a large non-pre-registered behavioral collapse (BUY_PROPERTY 98.5%+ -> 0.0%) by game 128. This experiment asks whether an EARLIER stop point (48/64/80/96/112) is stronger than the 32-game champion, before that collapse fully sets in.",
+    "algorithm_frozen": "PPOAgent, ActorNetwork/architecture, PPO hyperparameters, reward shaping, action space, state pipeline, and the reference submodule were all identical to 027/028/030 - only the reference's own unmodified train()/PPOAgent.load/save were called.",
+    "phase_1_checkpointed_resume": {
+      "starting_checkpoint": "artifacts/monopolyzero_pure_ppo_learnability_gate/candidate_ppo.pt (027/030's frozen 32-game checkpoint, hash-gated - never overwritten)",
+      "starting_checkpoint_sha256_expected": "85194f337182c2d698519966cb8c19d3c1e701102b5fb280cd69d4c23ed8a113",
+      "starting_actor_sha256_expected": "e6c142d143b5430d02b37cd3be34fa39a7d8d2f282bdb1eda8677a6109861b5b",
+      "method": "Same base_seed_arg (46968) and episode_seed formula as 030, but train() called 6 times in sequence (16 games each: 32->48->64->80->96->112->128) on the SAME in-memory PPOAgent, saving a SEPARATE checkpoint file after each segment. No disk reload between segments. The reference's own per-game full RNG reseed (episode_seed = seed_arg + absolute_game - 1, inside the game loop) makes this bit-exact equivalent to 030's single continuous 96-game call - verified, not assumed, by the reproducibility gate below.",
+      "reproducibility_gate": "128-game actor SHA-256 checked against 030's own logged value (ad4e9a6d066aab3b2ff5c8414b40669cae51b4bde6d49c42a1ce8128985dd224) before any strength conclusion. RESULT: PASS - matched exactly on the first attempt (hash_gate_128_pass=true). The checkpointed-segment training trajectory is confirmed bit-exact identical to 030's continuous run.",
+      "checkpoints_saved": "candidate_ppo_48.pt, _64.pt, _80.pt, _96.pt, _112.pt, _128.pt - all separate files under the same directory as the 32-game champion, none overwriting it or each other."
+    },
+    "phase_2_selection_screen": {
+      "candidates": "the five intermediate checkpoints (48/64/80/96/112 games)",
+      "baseline": "three frozen copies of the 32-game champion per game (hash-gated fresh for every candidate evaluation)",
+      "design": "reuses 028/030's play_one_game/summarize wholesale (deterministic legal-masked argmax for both sides, no new evaluation framework) - one candidate focus seat rotated across all 4 seats per seed",
+      "seed_pool": "fresh DEV range 49000-49007 (8 seeds), registered in scripts/evaluation_protocol.py before this run; disjoint from training seeds, all prior experiment seeds, and FINAL_BLIND. SAME 8 seeds x 4 rotations = 32 games used for every one of the 5 candidates.",
+      "pre_registered_selection_rule": "choose the candidate with the highest win rate on the common selection set; tie-break 1) higher seed-block mean net worth, 2) earlier checkpoint. If no candidate exceeds 25% win rate, stop and keep the 32-game champion (KILL). Behavior metrics (BUY/ACCEPT/DECLINE rates) are diagnostic only, never used to select."
+    },
+    "phase_3_confirmation": {
+      "condition": "only run if the selected candidate's selection-set win rate exceeded 25%",
+      "design": "identical protocol to phase 2, but the ONE selected checkpoint only, 20 fresh DEV seeds x 4 rotations = 80 games",
+      "seed_pool": "fresh DEV range 49100-49119 (20 seeds), registered before this run; disjoint from training seeds, selection seeds, all prior experiment seeds, and FINAL_BLIND",
+      "pre_registered_decision_rule": {
+        "primary_statistic": "seed-block bootstrap 95% CI for (selected_candidate_win_rate - 0.25), via evaluation_protocol.seed_block_bootstrap_vs_null (same primary statistic as 028/030)",
+        "GO": "lower bound of the CI is > 0",
+        "KILL": "upper bound of the CI is <= 0",
+        "otherwise": "INCONCLUSIVE, keep the 32-game champion",
+        "registered_before_running": true,
+        "rule_not_altered_after_seeing_results": true
+      }
+    }
+  },
+  "model_checkpoint": {
+    "sha256": "e47c8d4559c1d74cfceffe114fa069a8e7a2845ba60af68be0b0ae4bd37e1dae",
+    "path": "artifacts/monopolyzero_pure_ppo_learnability_gate/candidate_ppo_80.pt",
+    "format_version": 3
+  },
+  "counts": {
+    "additional_training_games": 96,
+    "games_trained_start": 32,
+    "games_trained_end": 128,
+    "checkpoint_stages": [48, 64, 80, 96, 112, 128],
+    "selection_games_per_candidate": 32,
+    "selection_candidates": 5,
+    "selection_games_total": 160,
+    "confirmation_games": 80,
+    "total_games_this_run": 336,
+    "selected_checkpoint_games": 80
+  },
+  "runtime": {"wall_time_s": 931.1472589999976, "peak_rss_gib": 0.3236885070800781},
+  "metrics": {
+    "hash_gate_128_pass": true,
+    "champion_before": "32-game (candidate_ppo.pt)",
+    "champion_after": "80-game (candidate_ppo_80.pt)",
+    "selection_win_rates": {
+      "48": {"wins": 15, "n_games": 32, "win_rate": 0.46875, "ci_95_vs_25pct_null": [0.0, 0.40625], "verdict": "INCONCLUSIVE", "mean_net_worth": 6278.671875, "bankruptcy_rate": 0.25},
+      "64": {"wins": 14, "n_games": 32, "win_rate": 0.4375, "ci_95_vs_25pct_null": [0.0625, 0.34375], "verdict": "GO", "mean_net_worth": 5935.125, "bankruptcy_rate": 0.21875},
+      "80": {"wins": 20, "n_games": 32, "win_rate": 0.625, "ci_95_vs_25pct_null": [0.1875, 0.53125], "verdict": "GO", "mean_net_worth": 7729.828125, "bankruptcy_rate": 0.1875},
+      "96": {"wins": 4, "n_games": 32, "win_rate": 0.125, "ci_95_vs_25pct_null": [-0.21875, -0.03125], "verdict": "KILL", "mean_net_worth": 2708.671875, "bankruptcy_rate": 0.46875},
+      "112": {"wins": 3, "n_games": 32, "win_rate": 0.09375, "ci_95_vs_25pct_null": [-0.21875, -0.0625], "verdict": "KILL", "mean_net_worth": 2263.015625, "bankruptcy_rate": 0.34375}
+    },
+    "selected_checkpoint": 80,
+    "selection_tie_break_used": false,
+    "confirmation": {
+      "candidate_wins": 38,
+      "n_games": 80,
+      "candidate_win_rate": 0.475,
+      "candidate_wilson_95": [0.36924733297407564, 0.5830435735027005],
+      "primary_seed_block_bootstrap_diff_from_25pct_null_point": 0.22499999999999998,
+      "primary_seed_block_bootstrap_diff_from_25pct_null_ci_95": [0.11249999999999999, 0.3375],
+      "verdict": "GO",
+      "candidate_mean_net_worth": 7262.7375,
+      "baseline_mean_net_worth": 2364.45,
+      "candidate_net_worth_advantage": 4898.2875,
+      "candidate_bankruptcy_rate": 0.1125,
+      "baseline_bankruptcy_rate": 0.6375,
+      "round_cap_rate": 0.6375
+    },
+    "behavior_diagnostic_only_80game_confirmation": {
+      "candidate_buy_property_rate_when_legal": 0.0823045267489712,
+      "candidate_accept_trade_rate_when_legal": 0.0,
+      "candidate_decline_trade_rate_when_legal": 0.021088095832293485,
+      "candidate_trade_offers_per_game": 210.1875,
+      "baseline_buy_property_rate_when_legal": 1.0,
+      "baseline_accept_trade_rate_when_legal": 0.5609941806711264,
+      "baseline_trade_offers_per_game": 196.72916666666666
+    }
+  },
+  "loss": null,
+  "integrity": {"illegal_actions": 0, "fallbacks": null, "crashes": 0},
+  "result": "GO - the 80-game checkpoint is a real, statistically supported early-stopping improvement over the 32-game champion. Reproducibility gate passed (128-game actor hash matched 030's logged value exactly, confirming the 6-segment checkpointed resume is bit-exact equivalent to 030's continuous run). On the 8-seed selection screen (same 32 games for all 5 candidates), win rates were non-monotonic: 48g 46.9% (INCONCLUSIVE), 64g 43.75% (GO), 80g 62.5% (GO, highest), 96g 12.5% (KILL), 112g 9.4% (KILL) - the 96/112 collapse is consistent with 030's documented BUY_PROPERTY/policy-drift finding, and the 80-game checkpoint sits just before that collapse takes hold. The 80-game checkpoint was selected (highest win rate, no tie-break needed) and confirmed on 20 fresh DEV seeds x 4 rotations = 80 games: 38/80 = 47.5% win rate, seed-block bootstrap 95% CI for (win_rate - 25%) = [+11.25, +33.75] points, entirely above zero -> GO per the pre-registered rule. Net worth and bankruptcy both moved sharply in the candidate's favor (+4898.3 mean net worth, 11.25% vs 63.75% bankruptcy) though neither is the primary statistic. Champion updates from the 32-game checkpoint to the 80-game checkpoint. Behavior metrics (BUY_PROPERTY collapsed to 8.2% of legal opportunities, well below the 32-game champion's ~99.9-100%) were diagnostic only and were not used in selection, per this task's explicit instruction - the win-rate result stands despite this checkpoint no longer favoring BUY_PROPERTY the way the 32-game champion does.",
+  "raw_logs": null,
+  "notes": "Raw stdout (546 lines - training console log for 96 games plus the full nested JSON payload) exceeds this project's 500-line commit threshold, so it stays LOCAL ONLY (not committed): artifacts/monopolyzero_pure_ppo_learnability_gate/031_early_stop_search_stdout.txt (gitignored under artifacts/), SHA-256 d71176db68b10294b41758ae16a524170d88ef9fb2fc2fdff209e23fe40e535d, 546 lines. All six new checkpoints (candidate_ppo_48/64/80/96/112/128.pt, ~14MB each) are likewise local-only/gitignored under artifacts/, referenced by SHA-256 in algorithm_config/metrics above; the 32-game champion (candidate_ppo.pt) was never overwritten. integrity.fallbacks is null rather than 0: the evaluation phases (selection+confirmation) are structurally fallback-free by construction (both seats use deterministic masked-argmax over an ActorNetwork, never a scripted FixedPolicyAgent, matching 028/030's design), but the TRAINING phase plays against the reference's own FPAgentA/FPAgentB/FPAgentC, which can trigger train.py's internal scripted-opponent-fallback substitution (027 measured 152 such events across a 32-game run via dedicated instrumentation) - this run did not add that instrumentation (matching 030's script, which also omitted it), so the true training-phase fallback count is genuinely unmeasured, not zero. Production code added for this task: scripts/monopolyzero_pure_ppo_early_stop_search.py (117 non-blank/non-comment/non-docstring lines) + a 2-line DEV seed-range registration in evaluation_protocol.py = 119 total, under the 120-line task limit; no core algorithm file (PPOAgent, ActorNetwork, reward shaping, action space, environment, MCTS, monopolyzero_common.py) or the reference submodule was modified, confirmed via git diff --stat before running. Per this task's instructions, GO is terminal here - no automatic further scaling or re-scan of a finer checkpoint grid follows from this entry without a new task."
+}
