@@ -1,0 +1,270 @@
+
+============================================================
+Training Standard PPO agent (player 0)
+Total games: 16  |  Log every: 1
+============================================================
+  Game    81 | Win%:   0.0% | Props: 5.0 | Trades init/acc/dec: 230.0/3.0/32.0
+  Game    82 | Win%:   0.0% | Props: 5.0 | Trades init/acc/dec: 178.0/3.0/42.0
+  Game    83 | Win%:   0.0% | Props: 7.0 | Trades init/acc/dec: 102.0/4.0/17.0
+  Game    84 | Win%:   0.0% | Props: 8.0 | Trades init/acc/dec: 121.0/2.0/16.0
+  Game    85 | Win%:   0.0% | Props: 3.0 | Trades init/acc/dec: 255.0/2.0/8.0
+  Game    86 | Win%:   0.0% | Props: 7.0 | Trades init/acc/dec: 113.0/0.0/4.0
+  Game    87 | Win%:   0.0% | Props: 6.0 | Trades init/acc/dec: 191.0/9.0/23.0
+  Game    88 | Win%:   0.0% | Props: 8.0 | Trades init/acc/dec: 238.0/3.0/9.0
+  Game    89 | Win%:   0.0% | Props: 1.0 | Trades init/acc/dec: 63.0/3.0/47.0
+  Game    90 | Win%:   0.0% | Props: 5.0 | Trades init/acc/dec: 67.0/16.0/42.0
+  Game    91 | Win%:   0.0% | Props: 13.0 | Trades init/acc/dec: 54.0/23.0/37.0
+  Game    92 | Win%:   0.0% | Props: 10.0 | Trades init/acc/dec: 204.0/3.0/5.0
+  Game    93 | Win%:   0.0% | Props: 7.0 | Trades init/acc/dec: 207.0/1.0/11.0
+  Game    94 | Win%:   0.0% | Props: 5.0 | Trades init/acc/dec: 48.0/6.0/30.0
+  Game    95 | Win%:   0.0% | Props: 2.0 | Trades init/acc/dec: 87.0/8.0/36.0
+  Game    96 | Win%:   0.0% | Props: 5.0 | Trades init/acc/dec: 181.0/7.0/27.0
+
+============================================================
+Training Standard PPO agent (player 0)
+Total games: 16  |  Log every: 1
+============================================================
+  Game    81 | Win%:   0.0% | Props: 5.0 | Trades init/acc/dec: 230.0/3.0/32.0
+  Game    82 | Win%:   0.0% | Props: 13.0 | Trades init/acc/dec: 118.0/1.0/7.0
+  Game    83 | Win%:   0.0% | Props: 5.0 | Trades init/acc/dec: 136.0/2.0/24.0
+  Game    84 | Win%:   0.0% | Props: 8.0 | Trades init/acc/dec: 166.0/5.0/22.0
+  Game    85 | Win%:   0.0% | Props: 5.0 | Trades init/acc/dec: 154.0/1.0/8.0
+  Game    86 | Win%:   0.0% | Props: 6.0 | Trades init/acc/dec: 294.0/1.0/6.0
+  Game    87 | Win%:   0.0% | Props: 8.0 | Trades init/acc/dec: 100.0/1.0/10.0
+  Game    88 | Win%:   0.0% | Props: 5.0 | Trades init/acc/dec: 90.0/0.0/3.0
+  Game    89 | Win%:   0.0% | Props: 4.0 | Trades init/acc/dec: 56.0/3.0/22.0
+  Game    90 | Win%:   0.0% | Props: 8.0 | Trades init/acc/dec: 113.0/9.0/64.0
+  Game    91 | Win%:   0.0% | Props: 15.0 | Trades init/acc/dec: 66.0/16.0/49.0
+  Game    92 | Win%:   0.0% | Props: 10.0 | Trades init/acc/dec: 206.0/1.0/5.0
+  Game    93 | Win%:   0.0% | Props: 14.0 | Trades init/acc/dec: 150.0/3.0/6.0
+  Game    94 | Win%:   0.0% | Props: 5.0 | Trades init/acc/dec: 39.0/4.0/33.0
+  Game    95 | Win%:   0.0% | Props: 12.0 | Trades init/acc/dec: 80.0/7.0/43.0
+  Game    96 | Win%:   0.0% | Props: 11.0 | Trades init/acc/dec: 175.0/8.0/27.0
+{
+  "asu_modules_loaded": [],
+  "candidates": {
+    "A_lr1e-4": {
+      "actor_sha256": "2bd1e9bad3d6e0100e033507f72f15b5088d8f8fb2f04dba1ae9d759b5a34a40",
+      "checkpoint_sha256": "78585ed4e2400d024633ee2878d8b88243f7f4a9f498d9019a73e44b3a830f51",
+      "path": "C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\monopolyzero_pure_ppo_learnability_gate\\candidate_ppo_80_lr_ablation_A_lr1e-4_96.pt"
+    },
+    "B_lr3e-5": {
+      "actor_sha256": "4ee99e0941324c6d2daa1c42fdf3d8654446a85a9c405bc471acfba31c6f9a13",
+      "checkpoint_sha256": "9c27ece8f13b6fe925fd494f7d492a0a5f683b88d93a81f0213b8308dbe1f60d",
+      "path": "C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\monopolyzero_pure_ppo_learnability_gate\\candidate_ppo_80_lr_ablation_B_lr3e-5_96.pt"
+    }
+  },
+  "champion_remains": "A_lr1e-4-96-game",
+  "confirm_seeds": [
+    52200,
+    52201,
+    52202,
+    52203,
+    52204,
+    52205,
+    52206,
+    52207,
+    52208,
+    52209,
+    52210,
+    52211,
+    52212,
+    52213,
+    52214,
+    52215,
+    52216,
+    52217,
+    52218,
+    52219
+  ],
+  "confirmation": {
+    "baseline_action_behavior": {
+      "accept_trade_opportunities": 82013,
+      "accept_trade_rate_when_legal": 0.0,
+      "buy_property_opportunities": 4217,
+      "buy_property_rate_when_legal": 0.23381550865544226,
+      "decline_trade_opportunities": 82013,
+      "decline_trade_rate_when_legal": 0.009352175874556473,
+      "trade_offers_total": 83738
+    },
+    "baseline_bankruptcy_rate": 0.37083333333333335,
+    "baseline_mean_net_worth": 4082.3645833333335,
+    "baseline_trade_offers_per_game": 348.90833333333336,
+    "candidate_action_behavior": {
+      "accept_trade_opportunities": 33970,
+      "accept_trade_rate_when_legal": 0.0,
+      "buy_property_opportunities": 715,
+      "buy_property_rate_when_legal": 0.0,
+      "decline_trade_opportunities": 33970,
+      "decline_trade_rate_when_legal": 0.02802472770091257,
+      "trade_offers_total": 30713
+    },
+    "candidate_bankruptcy_rate": 0.0875,
+    "candidate_mean_net_worth": 6870.5625,
+    "candidate_net_worth_advantage": 2788.1979166666665,
+    "candidate_trade_offers_per_game": 383.9125,
+    "candidate_wilson_95": [
+      0.3341386091614381,
+      0.5465886570305027
+    ],
+    "candidate_win_rate": 0.4375,
+    "candidate_wins": 35,
+    "integrity": {
+      "crashes": 0,
+      "illegal_actions": 0
+    },
+    "n_games": 80,
+    "n_seed_blocks": 20,
+    "null_win_rate": 0.25,
+    "primary_seed_block_bootstrap_vs_25pct_null": {
+      "bootstrap_seed": 0,
+      "n_records": 80,
+      "n_resamples": 2000,
+      "n_seed_blocks": 20,
+      "null_rate": 0.25,
+      "win_rate_diff_from_null": {
+        "ci_95": [
+          0.07500000000000001,
+          0.30000000000000004
+        ],
+        "point": 0.1875
+      }
+    },
+    "round_cap_hits": 75,
+    "round_cap_rate": 0.9375,
+    "verdict": "GO"
+  },
+  "elapsed_s": 733.0478788,
+  "git_head_sha": "a6fd8a9e394987c1d2386bfc333e52e409601a1d",
+  "peak_rss_gib": 0.33368682861328125,
+  "selected_candidate": "A_lr1e-4",
+  "selection": {
+    "A_lr1e-4": {
+      "baseline_action_behavior": {
+        "accept_trade_opportunities": 33379,
+        "accept_trade_rate_when_legal": 0.0,
+        "buy_property_opportunities": 1864,
+        "buy_property_rate_when_legal": 0.2194206008583691,
+        "decline_trade_opportunities": 33379,
+        "decline_trade_rate_when_legal": 0.007040354714041763,
+        "trade_offers_total": 36901
+      },
+      "baseline_bankruptcy_rate": 0.3125,
+      "baseline_mean_net_worth": 4324.541666666667,
+      "baseline_trade_offers_per_game": 384.3854166666667,
+      "candidate_action_behavior": {
+        "accept_trade_opportunities": 14461,
+        "accept_trade_rate_when_legal": 0.0,
+        "buy_property_opportunities": 269,
+        "buy_property_rate_when_legal": 0.0,
+        "decline_trade_opportunities": 14461,
+        "decline_trade_rate_when_legal": 0.024133877325219558,
+        "trade_offers_total": 13124
+      },
+      "candidate_bankruptcy_rate": 0.125,
+      "candidate_mean_net_worth": 6301.03125,
+      "candidate_net_worth_advantage": 1976.489583333333,
+      "candidate_trade_offers_per_game": 410.125,
+      "candidate_wilson_95": [
+        0.2293388730945421,
+        0.5474559264692255
+      ],
+      "candidate_win_rate": 0.375,
+      "candidate_wins": 12,
+      "integrity": {
+        "crashes": 0,
+        "illegal_actions": 0
+      },
+      "n_games": 32,
+      "n_seed_blocks": 8,
+      "null_win_rate": 0.25,
+      "primary_seed_block_bootstrap_vs_25pct_null": {
+        "bootstrap_seed": 0,
+        "n_records": 32,
+        "n_resamples": 2000,
+        "n_seed_blocks": 8,
+        "null_rate": 0.25,
+        "win_rate_diff_from_null": {
+          "ci_95": [
+            -0.03125,
+            0.28125
+          ],
+          "point": 0.125
+        }
+      },
+      "round_cap_hits": 32,
+      "round_cap_rate": 1.0,
+      "verdict": "INCONCLUSIVE"
+    },
+    "B_lr3e-5": {
+      "baseline_action_behavior": {
+        "accept_trade_opportunities": 28024,
+        "accept_trade_rate_when_legal": 0.0,
+        "buy_property_opportunities": 1090,
+        "buy_property_rate_when_legal": 0.42752293577981654,
+        "decline_trade_opportunities": 28024,
+        "decline_trade_rate_when_legal": 0.009777333713959464,
+        "trade_offers_total": 28348
+      },
+      "baseline_bankruptcy_rate": 0.4166666666666667,
+      "baseline_mean_net_worth": 4172.760416666667,
+      "baseline_trade_offers_per_game": 295.2916666666667,
+      "candidate_action_behavior": {
+        "accept_trade_opportunities": 12219,
+        "accept_trade_rate_when_legal": 0.0,
+        "buy_property_opportunities": 258,
+        "buy_property_rate_when_legal": 0.5697674418604651,
+        "decline_trade_opportunities": 12219,
+        "decline_trade_rate_when_legal": 0.02774367787871348,
+        "trade_offers_total": 11528
+      },
+      "candidate_bankruptcy_rate": 0.25,
+      "candidate_mean_net_worth": 5906.921875,
+      "candidate_net_worth_advantage": 1734.161458333333,
+      "candidate_trade_offers_per_game": 360.25,
+      "candidate_wilson_95": [
+        0.17952541633609734,
+        0.48566678300955407
+      ],
+      "candidate_win_rate": 0.3125,
+      "candidate_wins": 10,
+      "integrity": {
+        "crashes": 0,
+        "illegal_actions": 0
+      },
+      "n_games": 32,
+      "n_seed_blocks": 8,
+      "null_win_rate": 0.25,
+      "primary_seed_block_bootstrap_vs_25pct_null": {
+        "bootstrap_seed": 0,
+        "n_records": 32,
+        "n_resamples": 2000,
+        "n_seed_blocks": 8,
+        "null_rate": 0.25,
+        "win_rate_diff_from_null": {
+          "ci_95": [
+            -0.0625,
+            0.21875
+          ],
+          "point": 0.0625
+        }
+      },
+      "round_cap_hits": 29,
+      "round_cap_rate": 0.90625,
+      "verdict": "INCONCLUSIVE"
+    }
+  },
+  "selection_seeds": [
+    52100,
+    52101,
+    52102,
+    52103,
+    52104,
+    52105,
+    52106,
+    52107
+  ],
+  "status": "GO_PROMOTE_LR_ABLATION_CANDIDATE",
+  "train_seed_first": 52000,
+  "train_seed_last": 52015
+}

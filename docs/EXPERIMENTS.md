@@ -2269,3 +2269,89 @@ its own proposed experiment and decision log.
   games), and no reward/architecture follow-up without a new task. No
   core algorithm file or `references/DeepRL_Monopoly` (pinned at
   `afd9205761317e196d77f679921c35fb04c7ab96`) was touched.
+
+## 2026-08-12 (later) — 032: LR ablation, 80-game champion resumed at lr=1e-4 vs lr=3e-5 (GO on win rate, collapse NOT prevented)
+
+- Hypothesis: `030`/`031` found continuing PPO training past 80 games
+  collapses `BUY_PROPERTY`/`ACCEPT_TRADE` to ~0% at the default
+  `lr=3e-4`. Does a lower LR (smaller per-game policy updates) avoid or
+  delay that collapse over the same 80->96 game window?
+- Setup: new
+  [scripts/monopolyzero_lr_ablation_80_resume.py](../scripts/monopolyzero_lr_ablation_80_resume.py)
+  (96 production lines + a 3-line DEV seed-range registration - no core
+  algorithm file or the reference submodule touched, confirmed via
+  `git diff --stat` before running). Two conditions each independently
+  resume the hash-gated frozen 80-game champion (`candidate_ppo_80.pt`,
+  checkpoint SHA-256 `e47c8d45...37e1dae`) for 16 more games: **A**
+  `lr=1e-4`, **B** `lr=3e-5`, both below the PPOAgent default `3e-4`
+  every prior run used. LR is changed ONLY by mutating the loaded
+  agent's own `opt.param_groups` in the runner, after `PPOAgent.load()`
+  restores the checkpoint's Adam optimizer state (moment estimates carry
+  over unchanged) - `PPOAgent` itself is never edited. Both conditions
+  use the identical `seed_arg` (`51920`), so `train()`'s own
+  `episode_seed=seed_arg+absolute_game-1` formula lands on the SAME 16
+  episode seeds (`52000-52015`) for A and B - LR is the only difference,
+  verified at runtime against the exact logged episode-seed sequence.
+  **Selection**: reused `028`/`030`/`031`'s exact
+  `play_one_game`/`summarize` wholesale - both candidates vs. three
+  frozen copies of the 80-game champion, 8 fresh DEV seeds (`52100-52107`)
+  x 4 seat rotations = 32 games each (common set). Pre-registered rule:
+  select the higher-win-rate candidate; if its win rate doesn't exceed
+  25%, stop and keep the 80-game champion. **Confirmation**: identical
+  protocol, the selected candidate only, 20 fresh DEV seeds
+  (`52200-52219`) x 4 rotations = 80 games. Pre-registered rule: **GO**
+  if the seed-block bootstrap CI for `win_rate - 25%` has a lower bound
+  `> 0`; otherwise keep the 80-game champion.
+
+  ```bash
+  PYTHONHASHSEED=0 PYTHONIOENCODING=utf-8 python scripts/monopolyzero_lr_ablation_80_resume.py
+  ```
+
+- Result: 0 illegal actions, 0 crashes, 0 ASU modules loaded across all
+  176 games. Wall time 733.0s (~12.2 min). **Both LR conditions still
+  collapsed `BUY_PROPERTY`/`ACCEPT_TRADE` to ~0% of legal opportunities
+  during their 16 training games** - the same signature `030`/`031`
+  documented at the default LR. The lower LR did **not** prevent the
+  collapse this experiment set out to test.
+
+  | Candidate | Win rate (8-seed selection, /32) | 95% CI vs. 25% null | Verdict | Mean net worth | Bankruptcy |
+  |---|---|---|---|---|---|
+  | A (lr=1e-4) | 37.5% (12/32) | [-3.1, +28.1] pts | INCONCLUSIVE | 6,301.0 | 12.5% |
+  | B (lr=3e-5) | 31.25% (10/32) | [-6.3, +21.9] pts | INCONCLUSIVE | 5,906.9 | 25.0% |
+
+  Both selection-screen results were individually INCONCLUSIVE by the
+  bootstrap CI - **A was selected only because its raw win rate (37.5%)
+  exceeded the pre-registered 25% threshold and was higher than B's**,
+  per this task's explicit raw-win-rate selection rule (not the CI).
+  Confirmed on the fresh 20-seed set: **35/80 = 43.75% win rate**, Wilson
+  95% `[33.4%, 54.7%]`. **Primary: seed-block bootstrap for
+  `win_rate - 25%`: point +18.75, 95% CI `[+7.5, +30.0]` points -
+  entirely above zero.** **GO** per the pre-registered rule. Net worth
+  and bankruptcy both moved in the candidate's favor (+2,788.2 mean net
+  worth, 8.75% vs. 37.1% bankruptcy champion-side).
+
+  Full structured record:
+  [logs/experiments/032-lr-ablation-80-resume-1e-4-vs-3e-5.json](../logs/experiments/032-lr-ablation-80-resume-1e-4-vs-3e-5.json).
+
+- Conclusion / next step: **Mixed result, GO on win rate but the
+  hypothesis itself is NOT supported.** A lower LR did not stop or even
+  visibly delay the `BUY_PROPERTY`/`ACCEPT_TRADE` collapse - both
+  conditions collapsed it just as completely as the default-LR runs in
+  `030`/`031`. Despite that, the selected 96-game candidate (`A`,
+  `lr=1e-4`) beat the 80-game champion on the pre-registered confirmation
+  statistic. This should **not** be read as "lower LR fixes the
+  collapse" - it only reinforces `028`'s earlier finding that this
+  collapse does not necessarily cost win rate on its own, this time in a
+  head-to-head-with-itself (candidate vs. copies of its own un-collapsed
+  starting point) setting rather than vs. an untrained baseline. Whether
+  to adopt the 96-game `A_lr1e-4` checkpoint as the new champion is left
+  to the user given this mixed result - this task's own scope was
+  measurement, not an automatic champion swap. This run's first attempt
+  crashed with `ModuleNotFoundError` before any game was played
+  (`ensure_reference_on_path()` wasn't called before the top-level
+  champion load) - fixed in commit `a6fd8a9`, re-verified with a smoke
+  import and a full green test suite (710 passed) before the real run
+  reported above. No core algorithm file or `references/DeepRL_Monopoly`
+  (pinned at `afd9205761317e196d77f679921c35fb04c7ab96`) was touched.
+  `FINAL_BLIND`/`PROMOTION` were not touched - DEV seeds only, per this
+  task's explicit instruction.

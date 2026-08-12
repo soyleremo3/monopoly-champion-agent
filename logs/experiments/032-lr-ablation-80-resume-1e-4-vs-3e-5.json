@@ -1,0 +1,101 @@
+{
+  "experiment_id": "032-lr-ablation-80-resume-1e-4-vs-3e-5",
+  "experiment_name": "Resume the hash-gated frozen 80-game PURE PPO champion (candidate_ppo_80.pt) for 16 more games under two lower optimizer-LR conditions (A: 1e-4, B: 3e-5, vs. the PPOAgent default 3e-4 every prior run used), identical episode seeds for both conditions, to test whether a lower LR prevents the post-80-game BUY_PROPERTY/ACCEPT_TRADE policy collapse documented in 030/031",
+  "experiment_type": "training_run",
+  "date": "2026-08-12",
+  "code_commit_sha": "a6fd8a9e394987c1d2386bfc333e52e409601a1d",
+  "reference_submodule_sha": "afd9205761317e196d77f679921c35fb04c7ab96",
+  "exact_commands": [
+    "PYTHONHASHSEED=0 PYTHONIOENCODING=utf-8 python scripts/monopolyzero_lr_ablation_80_resume.py"
+  ],
+  "seeds": [52000, 52001, 52002, 52003, 52004, 52005, 52006, 52007, 52008, 52009, 52010, 52011, 52012, 52013, 52014, 52015, 52100, 52101, 52102, 52103, 52104, 52105, 52106, 52107, 52200, 52201, 52202, 52203, 52204, 52205, 52206, 52207, 52208, 52209, 52210, 52211, 52212, 52213, 52214, 52215, 52216, 52217, 52218, 52219],
+  "algorithm_config": {
+    "purpose": "030/031 found continuing PPO training past 80 games collapses BUY_PROPERTY (98.5%+ -> 0.0%) and ACCEPT_TRADE (to ~0%) at the default lr=3e-4. This asks whether a lower LR (which should make smaller policy updates per game) avoids or delays that collapse over the SAME 16-game window (80->96 games).",
+    "algorithm_frozen": "PPOAgent, ActorNetwork/architecture, PPO hyperparameters other than lr, reward shaping, action space, state pipeline, and the reference submodule were all identical to 027/028/030/031 - only the reference's own unmodified train()/PPOAgent.load/save were called. LR was changed ONLY by mutating the loaded agent's own opt.param_groups[i]['lr'] in the experiment runner (scripts/monopolyzero_lr_ablation_80_resume.py) after PPOAgent.load() restored the checkpoint's Adam optimizer state (moment estimates carried over unchanged) - PPOAgent's own __init__/save/load were never edited.",
+    "starting_checkpoint": "artifacts/monopolyzero_pure_ppo_learnability_gate/candidate_ppo_80.pt (031's selected 80-game champion, hash-gated - never overwritten)",
+    "starting_checkpoint_sha256_expected": "e47c8d4559c1d74cfceffe114fa069a8e7a2845ba60af68be0b0ae4bd37e1dae",
+    "phase_1_training": {
+      "conditions": {"A_lr1e-4": 1e-4, "B_lr3e-5": 3e-5},
+      "method": "Each condition independently reloads and hash-verifies the frozen 80-game checkpoint (fresh PPOAgent instance per condition, never sharing state), sets only opt.param_groups lr, then calls the reference's own train(is_ppo=True, hybrid=False, n_games=16, seed=51920) for 16 games (games_trained 80->96). Both conditions use the IDENTICAL seed_arg (51920), so train()'s own per-game episode_seed=seed_arg+absolute_game-1 formula lands on the SAME 16 episode seeds (52000-52015) for A and B - LR is the only difference between the two runs, verified at runtime against the exact logged episode-seed sequence, not merely asserted.",
+      "checkpoints_saved": "candidate_ppo_80_lr_ablation_A_lr1e-4_96.pt, candidate_ppo_80_lr_ablation_B_lr3e-5_96.pt - separate files under the same directory as the 80-game champion, neither overwriting it or each other."
+    },
+    "phase_2_selection_screen": {
+      "candidates": "A_lr1e-4, B_lr3e-5",
+      "baseline": "three frozen copies of the 80-game champion per game (same hash-gated checkpoint used for both conditions' starting point, loaded fresh and never trained)",
+      "design": "reuses 028/030/031's exact play_one_game/summarize wholesale (deterministic legal-masked argmax for both sides, no new evaluation framework) - one candidate focus seat rotated across all 4 seats per seed, 8 fresh DEV seeds x 4 rotations = 32 games, common set for both candidates",
+      "seed_pool": "fresh DEV range 52100-52107 (8 seeds), registered in scripts/evaluation_protocol.py before this run",
+      "pre_registered_selection_rule": "choose the candidate with the higher win rate on the common selection set; tie-break on higher seed-block mean net worth. If the best candidate's win rate does not exceed 25%, stop and keep the 80-game champion (KILL) - no confirmation run."
+    },
+    "phase_3_confirmation": {
+      "condition": "only run if the selected candidate's selection-set win rate exceeded 25%",
+      "design": "identical protocol to phase 2, the ONE selected checkpoint only, 20 fresh DEV seeds x 4 rotations = 80 games",
+      "seed_pool": "fresh DEV range 52200-52219 (20 seeds), registered before this run",
+      "pre_registered_decision_rule": {
+        "primary_statistic": "seed-block bootstrap 95% CI for (selected_candidate_win_rate - 0.25), via evaluation_protocol.seed_block_bootstrap_vs_null (same primary statistic as 028/030/031)",
+        "GO": "lower bound of the CI is > 0",
+        "otherwise": "keep the 80-game champion (not GO)",
+        "registered_before_running": true,
+        "rule_not_altered_after_seeing_results": true
+      }
+    }
+  },
+  "model_checkpoint": {
+    "sha256": "78585ed4e2400d024633ee2878d8b88243f7f4a9f498d9019a73e44b3a830f51",
+    "path": "artifacts/monopolyzero_pure_ppo_learnability_gate/candidate_ppo_80_lr_ablation_A_lr1e-4_96.pt",
+    "format_version": 3
+  },
+  "counts": {
+    "conditions": 2,
+    "training_games_per_condition": 16,
+    "total_training_games": 32,
+    "games_trained_start": 80,
+    "games_trained_end": 96,
+    "selection_games_per_candidate": 32,
+    "selection_candidates": 2,
+    "selection_games_total": 64,
+    "confirmation_games": 80,
+    "total_games_this_run": 176,
+    "selected_checkpoint_games": 96
+  },
+  "runtime": {"wall_time_s": 733.0478788, "peak_rss_gib": 0.33368682861328125},
+  "metrics": {
+    "champion_before": "80-game (candidate_ppo_80.pt)",
+    "champion_after": "A_lr1e-4-96-game (candidate_ppo_80_lr_ablation_A_lr1e-4_96.pt)",
+    "selection_win_rates": {
+      "A_lr1e-4": {"wins": 12, "n_games": 32, "win_rate": 0.375, "ci_95_vs_25pct_null": [-0.03125, 0.28125], "verdict": "INCONCLUSIVE", "mean_net_worth": 6301.03125, "bankruptcy_rate": 0.125},
+      "B_lr3e-5": {"wins": 10, "n_games": 32, "win_rate": 0.3125, "ci_95_vs_25pct_null": [-0.0625, 0.21875], "verdict": "INCONCLUSIVE", "mean_net_worth": 5906.921875, "bankruptcy_rate": 0.25}
+    },
+    "selected_checkpoint": "A_lr1e-4",
+    "selection_tie_break_used": false,
+    "confirmation": {
+      "candidate_wins": 35,
+      "n_games": 80,
+      "candidate_win_rate": 0.4375,
+      "candidate_wilson_95": [0.3341386091614381, 0.5465886570305027],
+      "primary_seed_block_bootstrap_diff_from_25pct_null_point": 0.1875,
+      "primary_seed_block_bootstrap_diff_from_25pct_null_ci_95": [0.07500000000000001, 0.30000000000000004],
+      "verdict": "GO",
+      "candidate_mean_net_worth": 6870.5625,
+      "baseline_mean_net_worth": 4082.3645833333335,
+      "candidate_net_worth_advantage": 2788.1979166666665,
+      "candidate_bankruptcy_rate": 0.0875,
+      "baseline_bankruptcy_rate": 0.37083333333333335,
+      "round_cap_rate": 0.9375
+    },
+    "behavior_diagnostic_only": {
+      "note": "Both LR conditions still collapsed BUY_PROPERTY/ACCEPT_TRADE to ~0% during training, same signature 030/031 documented at the default LR - a lower LR did NOT prevent the behavioral collapse this experiment set out to test.",
+      "confirmation_candidate_buy_property_rate_when_legal": 0.0,
+      "confirmation_candidate_accept_trade_rate_when_legal": 0.0,
+      "confirmation_candidate_decline_trade_rate_when_legal": 0.02802472770091257,
+      "confirmation_candidate_trade_offers_per_game": 383.9125,
+      "confirmation_baseline_buy_property_rate_when_legal": 0.23381550865544226,
+      "confirmation_baseline_accept_trade_rate_when_legal": 0.0,
+      "confirmation_baseline_trade_offers_per_game": 348.90833333333336
+    }
+  },
+  "loss": null,
+  "integrity": {"illegal_actions": 0, "fallbacks": null, "crashes": 0},
+  "result": "GO on the primary win-rate statistic, but the experiment's actual hypothesis (does a lower LR prevent the post-80-game collapse) is NOT supported - both A (lr=1e-4) and B (lr=3e-5) still collapsed BUY_PROPERTY and ACCEPT_TRADE to essentially 0% of legal opportunities during their 16 training games, the same signature 030/031 documented at the default lr=3e-4. Despite that, the selected candidate (A, lr=1e-4) beat three frozen copies of the 80-game champion on the pre-registered confirmation set: 35/80 = 43.75% win rate, seed-block bootstrap 95% CI for (win_rate - 25%) = [+7.5, +30.0] points, entirely above zero -> GO per the pre-registered rule. Selection-screen win rates for both candidates were individually INCONCLUSIVE by the seed-block bootstrap CI (A: [-3.1,+28.1] pts, B: [-6.3,+21.9] pts) - A was selected only because its raw win rate (37.5%) exceeded the pre-registered 25% selection threshold and was higher than B's (31.25%), per this task's explicit selection rule (raw win rate, not the CI). Net worth and bankruptcy both moved in the candidate's favor (+2788.2 mean net worth, 8.75% vs 37.1% bankruptcy) though neither is the primary statistic. This result should NOT be read as 'lower LR fixes the collapse' - it demonstrates only that a 96-game checkpoint trained this way can still out-play the 80-game champion in real games even while exhibiting the same collapsed BUY_PROPERTY/ACCEPT_TRADE behavior, consistent with 028's earlier finding that this collapse does not necessarily cost win rate on its own.",
+  "raw_logs": ["logs/experiments/raw/032-lr-ablation-80-resume-1e-4-vs-3e-5_stdout.txt"],
+  "notes": "Raw stdout (270 lines, training console log for 32 games plus the full nested JSON payload) is under this project's 500-line commit threshold, committed at logs/experiments/raw/032-lr-ablation-80-resume-1e-4-vs-3e-5_stdout.txt, SHA-256 8a827915f026f706e833b4dc647949442bbd541f69887a5252439c5509401a28. Both new checkpoints (candidate_ppo_80_lr_ablation_A_lr1e-4_96.pt sha256 78585ed4e2400d024633ee2878d8b88243f7f4a9f498d9019a73e44b3a830f51, candidate_ppo_80_lr_ablation_B_lr3e-5_96.pt sha256 9c27ece8f13b6fe925fd494f7d492a0a5f683b88d93a81f0213b8308dbe1f60d, ~14MB each) are local-only/gitignored under artifacts/, referenced by SHA-256 above; the 80-game champion (candidate_ppo_80.pt) was never overwritten. integrity.fallbacks is null rather than 0 for the same reason as 027/030/031: the evaluation phases are structurally fallback-free by construction (deterministic masked-argmax over an ActorNetwork on both sides, never a scripted FixedPolicyAgent), but the TRAINING phase plays against the reference's own FPAgentA/FPAgentB/FPAgentC, whose fallback-substitution count this run did not separately instrument. This run's first attempt crashed with ModuleNotFoundError before any game was played (main()'s top-level champion load ran before ensure_reference_on_path() had been called anywhere) - fixed in commit a6fd8a9 (moved the call into load_verified_champion() itself), re-verified with a smoke import and a full green test suite (710 passed) before this real run; code_commit_sha above is the post-fix clean HEAD the run actually executed against. Production code for this task: scripts/monopolyzero_lr_ablation_80_resume.py (96 non-blank/non-comment/non-docstring lines) + a 3-line DEV seed-range registration in evaluation_protocol.py = 99 total, under the 100-line task limit; no core algorithm file (PPOAgent, ActorNetwork, reward shaping, action space, environment, MCTS, monopolyzero_common.py) or the reference submodule was modified, confirmed via git diff --stat before running. Champion promotion decision (keep 80-game champion vs. adopt the 96-game A_lr1e-4 candidate) is left to the user given the mixed hypothesis result documented above - this task's own scope was measurement, not an automatic champion swap."
+}
