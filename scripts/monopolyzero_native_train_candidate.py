@@ -36,17 +36,32 @@ the 023 seed pool - nothing here is a large/long invocation by default):
 `--seed-start`/`--seed-count` (paired, DEV-pool-only via
 `evaluation_protocol.require_seed_scope` - same guard for a custom range as
 the default one), `--simulations` (default 32), `--max-rounds` (default
-200), `--updates` (default 10 native training-update steps over a fresh
-replay buffer built from the collected positions), `--output` (structured
-JSON path), `--checkpoint-output` (where to save the trained candidate
-checkpoint; default `artifacts/monopolyzero_native_train_candidate/candidate.pt`,
-gitignored like every other checkpoint in this repo).
+200), `--updates` (default 10 native training-update steps), `--output`
+(structured JSON path), `--checkpoint-output` (where to save the trained
+candidate checkpoint; default
+`artifacts/monopolyzero_native_train_candidate/candidate.pt`, gitignored
+like every other checkpoint in this repo), `--input-checkpoint` (which
+checkpoint to start training from; default `baseline_pretraining.pt`, but
+any other checkpoint - e.g. a prior run's `--checkpoint-output` - can be
+given to continue training it further).
+
+`--reuse-replay`: training-only mode. Skips self-play entirely (no new
+games, no new search, no seed consumed/validated) and instead loads
+positions from an EXISTING replay buffer directory (`--replay-dir`,
+default the same path a prior self-play run wrote to) via
+`monopoly_bench.storage.ReplayBuffer(..., create=False)` - lets a training
+run be continued/repeated over the exact same collected positions without
+paying self-play's cost again. Everything else (native training update,
+before/after greedy stats, checkpoint save) is identical to the self-play
+mode's.
 
 No resume, no sharding - out of scope for this first small run (see the
 Colab shard runner if that's ever needed for a much larger training pass).
 Refuses to run unless PYTHONHASHSEED=0 is set, the git tree is clean, the
-baseline checkpoint SHA-256 matches, and every self-play seed is registered
-in the DEV pool.
+input checkpoint SHA-256 matches (when it's the default baseline path -
+any other `--input-checkpoint` is loaded as-is and its actual SHA-256 is
+just recorded, not checked against a fixed expected value), and (self-play
+mode only) every seed is registered in the DEV pool.
 """
 
 from __future__ import annotations
@@ -115,33 +130,66 @@ def _greedy_action(model, state, legal: tuple[int, ...], actor_id: int) -> int:
     return max(priors, key=priors.get)
 
 
+def _prior_rank(action: int, legal: tuple[int, ...], priors: dict[int, float]) -> int:
+    """1-indexed rank of `action`'s raw prior among `legal`'s priors
+    (rank 1 = highest), ties broken by lower action id - same convention
+    the BUY/TRADE gradient diagnostic's own `_prior_rank` uses."""
+    ordered = sorted(legal, key=lambda candidate: (-priors[candidate], candidate))
+    return ordered.index(action) + 1
+
+
+def _mean(values: list[float]) -> float | None:
+    return sum(values) / len(values) if values else None
+
+
 def opportunity_greedy_stats(positions, model, *, buy_id: int, accept_id: int) -> dict:
     """For every collected self-play position where BUY_PROPERTY/
-    ACCEPT_TRADE was legal, checks whether `model`'s current greedy choice
-    is that action. Called once before training and once after (same model
-    object, same positions) to measure whether the update moved greedy
-    behavior at all on the states it was actually trained on."""
+    ACCEPT_TRADE was legal: whether `model`'s current greedy (argmax, no
+    search) choice is that action, its raw predicted probability, and its
+    rank among that position's legal actions by prior. Called once before
+    training and once after (same model object, same positions) to measure
+    whether the update moved greedy behavior/prior mass/rank at all on the
+    states it was actually trained on. One `model.predict()` call per
+    position (not per family), reused for both BUY_PROPERTY and
+    ACCEPT_TRADE checks when a position happens to offer both."""
     buy_total = 0
     buy_chosen = 0
+    buy_priors: list[float] = []
+    buy_ranks: list[int] = []
     accept_total = 0
     accept_chosen = 0
+    accept_priors: list[float] = []
+    accept_ranks: list[int] = []
+
     for position in positions:
         legal = _legal_from_mask(position.legal_mask)
+        priors, _ = model.predict(position.state, legal, position.actor_id)
+        greedy = max(priors, key=priors.get)
+
         if buy_id in legal:
             buy_total += 1
-            if _greedy_action(model, position.state, legal, position.actor_id) == buy_id:
+            buy_priors.append(priors[buy_id])
+            buy_ranks.append(_prior_rank(buy_id, legal, priors))
+            if greedy == buy_id:
                 buy_chosen += 1
         if accept_id in legal:
             accept_total += 1
-            if _greedy_action(model, position.state, legal, position.actor_id) == accept_id:
+            accept_priors.append(priors[accept_id])
+            accept_ranks.append(_prior_rank(accept_id, legal, priors))
+            if greedy == accept_id:
                 accept_chosen += 1
+
     return {
         "buy_property_opportunities": buy_total,
         "buy_property_greedy_chosen": buy_chosen,
         "buy_property_greedy_rate": (buy_chosen / buy_total) if buy_total else None,
+        "buy_property_mean_raw_prior": _mean(buy_priors),
+        "buy_property_mean_prior_rank": _mean(buy_ranks),
         "accept_trade_opportunities": accept_total,
         "accept_trade_greedy_chosen": accept_chosen,
         "accept_trade_greedy_rate": (accept_chosen / accept_total) if accept_total else None,
+        "accept_trade_mean_raw_prior": _mean(accept_priors),
+        "accept_trade_mean_prior_rank": _mean(accept_ranks),
     }
 
 
@@ -180,23 +228,16 @@ def generate_self_play_positions(seeds, model, search_config, max_rounds: int) -
     }
 
 
-def train_candidate(model, positions, *, updates: int, batch_size: int, seed: int) -> list[dict]:
+def run_training_updates(model, replay, *, updates: int, batch_size: int, seed: int) -> list[dict]:
     """Runs `updates` native training-update steps
-    (`monopolyzero_common.local_training_update`) over a fresh replay
-    buffer built from `positions`. Mutates `model` in place; returns each
+    (`monopolyzero_common.local_training_update`) sampling from an
+    already-open `monopoly_bench.storage.ReplayBuffer` - freshly built from
+    new self-play positions (`train_candidate`), or opened read-existing
+    for `--reuse-replay` training-only mode
+    (`load_existing_replay`/`main`). Mutates `model` in place; returns each
     update's stats dict."""
     import numpy as np
     import torch
-
-    from monopoly_bench.storage import ReplayBuffer
-
-    if REPLAY_DIR.exists():
-        for child in REPLAY_DIR.glob("*"):
-            child.unlink()
-    else:
-        REPLAY_DIR.mkdir(parents=True, exist_ok=True)
-    replay = ReplayBuffer(REPLAY_DIR, capacity=max(len(positions), 1), create=True)
-    replay.append_many(positions)
 
     optimizer = torch.optim.AdamW(model.parameters(), lr=LEARNING_RATE, weight_decay=WEIGHT_DECAY)
     rng = np.random.default_rng(seed)
@@ -206,6 +247,54 @@ def train_candidate(model, positions, *, updates: int, batch_size: int, seed: in
         batch = replay.sample(min(batch_size, len(replay)), rng)
         stats.append(common.local_training_update(model, optimizer, batch, gradient_clip=GRADIENT_CLIP))
     return stats
+
+
+def train_candidate(
+    model, positions, *, updates: int, batch_size: int, seed: int, replay_dir: Path = REPLAY_DIR,
+) -> list[dict]:
+    """Clears/recreates `replay_dir`, writes `positions` into a fresh
+    `ReplayBuffer` there, then trains over it via `run_training_updates`.
+    Mutates `model` in place; returns each update's stats dict."""
+    from monopoly_bench.storage import ReplayBuffer
+
+    if replay_dir.exists():
+        for child in replay_dir.glob("*"):
+            child.unlink()
+    else:
+        replay_dir.mkdir(parents=True, exist_ok=True)
+    replay = ReplayBuffer(replay_dir, capacity=max(len(positions), 1), create=True)
+    replay.append_many(positions)
+    return run_training_updates(model, replay, updates=updates, batch_size=batch_size, seed=seed)
+
+
+def _resolve_input_checkpoint(input_checkpoint_arg: Path | None) -> tuple[Path, str]:
+    """Returns (input_checkpoint_path, its_sha256). The default path
+    (`baseline_pretraining.pt`) is verified against
+    `BASELINE_CHECKPOINT_SHA256` (via `verify_baseline_checkpoint`); any
+    other explicit `--input-checkpoint` is loaded as-is (must exist) and
+    its actual SHA-256 is simply recorded - there is no fixed 'expected'
+    hash for an evolving trained candidate checkpoint."""
+    input_checkpoint = input_checkpoint_arg if input_checkpoint_arg is not None else CHECKPOINT_PATH
+    if input_checkpoint == CHECKPOINT_PATH:
+        return input_checkpoint, verify_baseline_checkpoint()
+    if not input_checkpoint.is_file():
+        raise SystemExit(f"--input-checkpoint {input_checkpoint} does not exist")
+    return input_checkpoint, _sha256(input_checkpoint)
+
+
+def load_existing_replay(replay_dir: Path):
+    """Opens an EXISTING replay buffer directory (create=False) - never
+    clears or rewrites it. Used by `--reuse-replay` training-only mode to
+    train again over positions from a prior self-play run without playing
+    any new games."""
+    if not (replay_dir / "metadata.json").is_file():
+        raise SystemExit(
+            f"--reuse-replay given but no replay buffer found at {replay_dir} "
+            "(missing metadata.json) - run a self-play generation first."
+        )
+    from monopoly_bench.storage import ReplayBuffer
+
+    return ReplayBuffer(replay_dir, create=False)
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
@@ -233,17 +322,33 @@ def build_arg_parser() -> argparse.ArgumentParser:
         help="path to also write the raw structured JSON payload to (stdout is always printed regardless).",
     )
     parser.add_argument("--checkpoint-output", type=Path, default=DEFAULT_CHECKPOINT_OUTPUT)
+    parser.add_argument(
+        "--input-checkpoint", type=Path, default=None,
+        help="checkpoint to start training from (default: baseline_pretraining.pt). "
+        "Pass a prior run's --checkpoint-output to continue training it further.",
+    )
+    parser.add_argument(
+        "--reuse-replay", action="store_true",
+        help="training-only mode: skip self-play entirely, load positions from an existing "
+        "replay buffer (--replay-dir) instead. --seed-start/--seed-count/--simulations are "
+        "ignored in this mode (no new games are played).",
+    )
+    parser.add_argument("--replay-dir", type=Path, default=REPLAY_DIR)
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
     args = build_arg_parser().parse_args(argv)
-    seeds = _resolve_seeds(args.seed_start, args.seed_count)
 
     common.require_pinned_hash_seed(Path(__file__).name)
     git_head_sha = common.require_clean_git_tree(Path(__file__).name)
-    ep.require_seed_scope(seeds, ep.SEED_CLASS_DEV, context="monopolyzero_native_train_candidate.py")
-    baseline_checkpoint_sha256 = verify_baseline_checkpoint()
+
+    input_checkpoint, input_checkpoint_sha256 = _resolve_input_checkpoint(args.input_checkpoint)
+
+    seeds: list[int] | None = None
+    if not args.reuse_replay:
+        seeds = _resolve_seeds(args.seed_start, args.seed_count)
+        ep.require_seed_scope(seeds, ep.SEED_CLASS_DEV, context="monopolyzero_native_train_candidate.py")
 
     common.ensure_reference_on_path()
     import random
@@ -263,9 +368,8 @@ def main(argv: list[str] | None = None) -> int:
     np.random.seed(0)
     torch.manual_seed(0)
 
-    model = MonopolyZeroNet.load_inference(CHECKPOINT_PATH)
+    model = MonopolyZeroNet.load_inference(input_checkpoint)
     model.eval()
-    search_config = SearchConfig(simulations=args.simulations)
     buy_id = int(ActionType.BUY_PROPERTY)
     accept_id = int(ActionType.ACCEPT_TRADE)
 
@@ -278,32 +382,54 @@ def main(argv: list[str] | None = None) -> int:
 
     started = time.perf_counter()
     with common.RssMonitor() as rss:
-        generation = generate_self_play_positions(seeds, model, search_config, args.max_rounds)
-
-        if generation["total_illegal"] or generation["total_crashed"] or generation["incomplete"]:
-            payload = {
-                "status": "FAILED_DURING_SELF_PLAY",
-                "git_head_sha": git_head_sha,
-                "total_illegal_actions": generation["total_illegal"],
-                "total_crashed": generation["total_crashed"],
-                "incomplete_games": generation["incomplete"],
-                "per_game": generation["per_game"],
+        if args.reuse_replay:
+            replay = load_existing_replay(args.replay_dir)
+            positions = replay.records()
+            if not positions:
+                payload = {
+                    "status": "NO_POSITIONS_IN_REPLAY", "git_head_sha": git_head_sha,
+                    "replay_dir": str(args.replay_dir),
+                }
+                _emit(payload)
+                raise RuntimeError(f"Stopping before training: {args.replay_dir} has no stored positions")
+            mode_report = {
+                "mode": "reuse_replay", "replay_dir": str(args.replay_dir), "positions_loaded": len(positions),
             }
-            _emit(payload)
-            raise RuntimeError("Stopping before training: self-play game(s) failed - see payload")
+        else:
+            search_config = SearchConfig(simulations=args.simulations)
+            generation = generate_self_play_positions(seeds, model, search_config, args.max_rounds)
 
-        positions = generation["positions"]
-        if not positions:
-            payload = {
-                "status": "NO_POSITIONS_COLLECTED", "git_head_sha": git_head_sha,
-                "per_game": generation["per_game"],
+            if generation["total_illegal"] or generation["total_crashed"] or generation["incomplete"]:
+                payload = {
+                    "status": "FAILED_DURING_SELF_PLAY",
+                    "git_head_sha": git_head_sha,
+                    "total_illegal_actions": generation["total_illegal"],
+                    "total_crashed": generation["total_crashed"],
+                    "incomplete_games": generation["incomplete"],
+                    "per_game": generation["per_game"],
+                }
+                _emit(payload)
+                raise RuntimeError("Stopping before training: self-play game(s) failed - see payload")
+
+            positions = generation["positions"]
+            if not positions:
+                payload = {
+                    "status": "NO_POSITIONS_COLLECTED", "git_head_sha": git_head_sha,
+                    "per_game": generation["per_game"],
+                }
+                _emit(payload)
+                raise RuntimeError("Stopping before training: no self-play positions collected")
+            mode_report = {
+                "mode": "self_play", "per_game": generation["per_game"],
+                "positions_collected": len(positions), "search_config": asdict(search_config),
             }
-            _emit(payload)
-            raise RuntimeError("Stopping before training: no self-play positions collected")
 
         before_stats = opportunity_greedy_stats(positions, model, buy_id=buy_id, accept_id=accept_id)
 
-        train_stats = train_candidate(model, positions, updates=args.updates, batch_size=BATCH_SIZE, seed=0)
+        if args.reuse_replay:
+            train_stats = run_training_updates(model, replay, updates=args.updates, batch_size=BATCH_SIZE, seed=0)
+        else:
+            train_stats = train_candidate(model, positions, updates=args.updates, batch_size=BATCH_SIZE, seed=0)
 
         model.eval()
         after_stats = opportunity_greedy_stats(positions, model, buy_id=buy_id, accept_id=accept_id)
@@ -313,7 +439,9 @@ def main(argv: list[str] | None = None) -> int:
             args.checkpoint_output,
             {
                 "source": "monopolyzero_native_train_candidate.py",
-                "base_checkpoint_sha256": baseline_checkpoint_sha256,
+                "mode": mode_report["mode"],
+                "input_checkpoint": str(input_checkpoint),
+                "input_checkpoint_sha256": input_checkpoint_sha256,
                 "seeds": seeds,
                 "updates": args.updates,
             },
@@ -323,25 +451,43 @@ def main(argv: list[str] | None = None) -> int:
         asu_modules_loaded = common.loaded_asu_modules()
     elapsed_s = time.perf_counter() - started
 
+    config: dict = {
+        "mode": mode_report["mode"],
+        "updates": args.updates,
+        "batch_size": BATCH_SIZE,
+        "input_checkpoint": str(input_checkpoint),
+        "input_checkpoint_sha256": input_checkpoint_sha256,
+    }
+    if args.reuse_replay:
+        config.update(
+            {
+                "replay_dir": mode_report["replay_dir"],
+                "positions_loaded": mode_report["positions_loaded"],
+                "policy": "training-only (reuse-replay) - no new self-play, no new search, "
+                "zero ASU, zero HYBRID_COMPAT, zero fixed rule",
+            }
+        )
+    else:
+        config.update(
+            {
+                "seeds": seeds,
+                "seed_count": len(seeds),
+                "seeds_reused_from": (
+                    "023 (43000-43019) - no new DEV seeds consumed"
+                    if seeds == list(SEEDS) else "custom seed range - validated against the registered DEV pool"
+                ),
+                "max_rounds": args.max_rounds,
+                "search_config": mode_report["search_config"],
+                "policy": "pure MaxNPUCT self-play, all 4 seats, zero ASU, zero HYBRID_COMPAT, zero fixed rule",
+            }
+        )
+
     payload = {
         "status": "OK",
         "git_head_sha": git_head_sha,
-        "config": {
-            "seeds": seeds,
-            "seed_count": len(seeds),
-            "seeds_reused_from": (
-                "023 (43000-43019) - no new DEV seeds consumed"
-                if seeds == list(SEEDS) else "custom seed range - validated against the registered DEV pool"
-            ),
-            "max_rounds": args.max_rounds,
-            "search_config": asdict(search_config),
-            "updates": args.updates,
-            "batch_size": BATCH_SIZE,
-            "policy": "pure MaxNPUCT self-play, all 4 seats, zero ASU, zero HYBRID_COMPAT, zero fixed rule",
-        },
-        "base_checkpoint_sha256": baseline_checkpoint_sha256,
-        "per_game": generation["per_game"],
-        "positions_collected": len(positions),
+        "config": config,
+        "per_game": mode_report.get("per_game"),
+        "positions_used": len(positions),
         "greedy_selection_before_training": before_stats,
         "greedy_selection_after_training": after_stats,
         "train_stats": train_stats,
