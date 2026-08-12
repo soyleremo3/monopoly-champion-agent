@@ -62,6 +62,7 @@ DEV_SEED_RANGES: tuple[tuple[int, int, str], ...] = (
     (43000, 43019, "023 - hybrid-PPO BUY_PROPERTY/ACCEPT_TRADE fixed-action isolation screen: 20 seeds x 4 focus-seat rotation, POLICY_ONLY vs HYBRID_COMPAT paired games"),
     (44000, 44999, "Colab infra (docs/COLAB_RUNBOOK.md, scripts/colab_shard_runner.py) - reserved pool for future Colab-run shards; not yet consumed by a specific experiment as of registration"),
     (45000, 45031, "027 - pure PPO (hybrid=False) BUY_PROPERTY/ACCEPT_TRADE learnability gate: 32-game training run, player_id=0 vs FPAgentA/B/C"),
+    (46000, 46019, "028 - pure PPO (hybrid=False) 027-candidate-vs-own-untrained-baseline strength screen: 20 seeds x 4 focus-seat rotation, deterministic masked-argmax PPO actor, candidate vs 3 copies of the untrained baseline (no fixed/ASU opponents)"),
 )
 
 # Fresh, disjoint from DEV_SEED_RANGES and from each other. Reserved here,
@@ -395,6 +396,78 @@ def paired_seed_block_bootstrap(
             "point": point_nw_diff,
             "ci_95": [float(np.percentile(nw_diffs, 2.5)), float(np.percentile(nw_diffs, 97.5))],
         },
+        "n_seed_blocks": n_blocks,
+        "n_records": len(records),
+        "n_resamples": n_resamples,
+        "bootstrap_seed": bootstrap_seed,
+    }
+
+
+# ── PRIMARY (single-arm designs): seed-block bootstrap vs. a fixed null ─
+#
+# For designs where there is no separate baseline ARM played on the same
+# seeds (e.g. one candidate seat embedded in a game otherwise filled with
+# copies of a reference policy, rotated across all 4 seats) - there is
+# nothing to pair against per `pair_records`. The natural comparison point
+# instead is a fixed null win rate (1/num_seats for a symmetric-skill null),
+# and the seed is still the correct resampling block: the 4 seat-rotation
+# games sharing one seed share a board draw and are not independent trials,
+# same reasoning as `paired_seed_block_bootstrap` above.
+
+
+def seed_block_bootstrap_vs_null(
+    records: Sequence[dict],
+    *, null_rate: float, n_resamples: int = 2000, bootstrap_seed: int = 0,
+) -> dict:
+    """Seed-block bootstrap for (win_rate - null_rate), single arm.
+
+    `records`: one row per physical game, each needs {"seed", "win" (bool)}
+    - e.g. one row per focus-seat rotation. Resampling is done at the SEED
+    level (all records sharing a seed are resampled together as one block,
+    with replacement), matching `paired_seed_block_bootstrap`'s rationale.
+
+    Deterministic: same `records` + same `bootstrap_seed` always produces
+    the same CI (uses numpy's Generator, not global RNG state).
+    """
+    import numpy as np
+
+    if not records:
+        return {
+            "win_rate_diff_from_null": {"point": None, "ci_95": None},
+            "null_rate": null_rate,
+            "n_seed_blocks": 0,
+            "n_records": 0,
+            "n_resamples": n_resamples,
+            "bootstrap_seed": bootstrap_seed,
+        }
+
+    blocks: dict[int, list[dict]] = {}
+    for record in records:
+        blocks.setdefault(record["seed"], []).append(record)
+    seed_list = sorted(blocks)
+    n_blocks = len(seed_list)
+
+    def _win_rate_diff(recs: list[dict]) -> float:
+        n = len(recs)
+        return sum(1 for r in recs if r["win"]) / n - null_rate
+
+    point_diff = _win_rate_diff(list(records))
+
+    rng = np.random.default_rng(bootstrap_seed)
+    diffs = np.empty(n_resamples)
+    for i in range(n_resamples):
+        sampled_indices = rng.integers(0, n_blocks, size=n_blocks)
+        resampled: list[dict] = []
+        for idx in sampled_indices:
+            resampled.extend(blocks[seed_list[idx]])
+        diffs[i] = _win_rate_diff(resampled)
+
+    return {
+        "win_rate_diff_from_null": {
+            "point": point_diff,
+            "ci_95": [float(np.percentile(diffs, 2.5)), float(np.percentile(diffs, 97.5))],
+        },
+        "null_rate": null_rate,
         "n_seed_blocks": n_blocks,
         "n_records": len(records),
         "n_resamples": n_resamples,

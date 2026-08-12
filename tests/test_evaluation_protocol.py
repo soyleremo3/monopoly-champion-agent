@@ -41,6 +41,7 @@ def test_dev_promotion_final_blind_pools_are_pairwise_disjoint():
         10000, 10009, 10015, 20015,
         30000, 30009, 31000, 31004, 32000, 32009,
         40000, 40015, 41000, 41015,
+        45000, 45031, 46000, 46019,
     ],
 )
 def test_previously_used_seeds_classified_as_dev(seed):
@@ -343,6 +344,65 @@ def test_bootstrap_empty_records_returns_none_stats():
     assert result["win_rate_diff"] == {"point": None, "ci_95": None}
     assert result["net_worth_diff"] == {"point": None, "ci_95": None}
     assert result["n_seed_blocks"] == 0
+
+
+# ── seed-block bootstrap vs. fixed null (PRIMARY, single-arm) ──────────
+
+
+def _fake_null_records(win_rate_pattern):
+    """win_rate_pattern: dict seed -> list[bool] (one entry per rotation)."""
+    records = []
+    for seed, wins in win_rate_pattern.items():
+        for win in wins:
+            records.append({"seed": seed, "win": win})
+    return records
+
+
+def test_seed_block_bootstrap_vs_null_point_matches_direct_computation():
+    records = _fake_null_records({1: [True, False, False, False], 2: [True, True, False, False]})
+    result = ep.seed_block_bootstrap_vs_null(records, null_rate=0.25, n_resamples=50, bootstrap_seed=0)
+    # 3/8 wins overall = 0.375; 0.375 - 0.25 = 0.125
+    assert result["win_rate_diff_from_null"]["point"] == pytest.approx(0.125)
+    assert result["null_rate"] == 0.25
+    assert result["n_seed_blocks"] == 2
+    assert result["n_records"] == 8
+
+
+def test_seed_block_bootstrap_vs_null_deterministic_given_same_seed():
+    records = _fake_null_records({s: [s % 2 == 0, False, False, True] for s in range(1, 6)})
+    result_a = ep.seed_block_bootstrap_vs_null(records, null_rate=0.25, n_resamples=200, bootstrap_seed=7)
+    result_b = ep.seed_block_bootstrap_vs_null(records, null_rate=0.25, n_resamples=200, bootstrap_seed=7)
+    assert result_a == result_b
+
+
+def test_seed_block_bootstrap_vs_null_different_seed_can_differ():
+    records = _fake_null_records({s: [s % 2 == 0, False, False, True] for s in range(1, 6)})
+    result_a = ep.seed_block_bootstrap_vs_null(records, null_rate=0.25, n_resamples=200, bootstrap_seed=7)
+    result_b = ep.seed_block_bootstrap_vs_null(records, null_rate=0.25, n_resamples=200, bootstrap_seed=8)
+    assert result_a != result_b
+
+
+def test_seed_block_bootstrap_vs_null_resamples_at_seed_block_not_record_level():
+    source = MODULE_PATH.read_text(encoding="utf-8")
+    doc_start = source.index("def seed_block_bootstrap_vs_null")
+    assert "rng.integers(0, n_blocks, size=n_blocks)" in source[doc_start:doc_start + 2500]
+
+
+def test_seed_block_bootstrap_vs_null_empty_records_returns_none_stats():
+    result = ep.seed_block_bootstrap_vs_null([], null_rate=0.25, n_resamples=10, bootstrap_seed=0)
+    assert result["win_rate_diff_from_null"] == {"point": None, "ci_95": None}
+    assert result["n_seed_blocks"] == 0
+
+
+def test_seed_block_bootstrap_vs_null_all_wins_ci_excludes_zero_above():
+    """20 seed blocks, always wins (candidate_win_rate=1.0) - CI for
+    (1.0 - 0.25) should stay clearly above zero (a sanity check that the
+    CI direction/magnitude is not accidentally inverted)."""
+    records = _fake_null_records({s: [True, True, True, True] for s in range(1, 21)})
+    result = ep.seed_block_bootstrap_vs_null(records, null_rate=0.25, n_resamples=500, bootstrap_seed=0)
+    lower, upper = result["win_rate_diff_from_null"]["ci_95"]
+    assert lower > 0.0
+    assert result["win_rate_diff_from_null"]["point"] == pytest.approx(0.75)
 
 
 # ── McNemar (SECONDARY, clustered) ──────────────────────────────────────
