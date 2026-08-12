@@ -641,7 +641,13 @@ def test_real_engine_smoke_one_seed_tiny_training_and_checkpoint_roundtrip(tmp_p
     checkpoint through save_inference/load_inference + SHA-256. Calls the
     sub-functions directly (like the gradient diagnostic's own real smoke
     test) rather than main(), to avoid main()'s git-clean-tree requirement
-    during local dev-loop testing. Not a benchmark, not a long training run."""
+    during local dev-loop testing. Not a benchmark, not a long training run.
+    Passes an explicit tmp_path replay_dir to train_candidate() - never
+    the default module.REPLAY_DIR - so running this test can never create,
+    clear, or overwrite the real production replay directory under
+    artifacts/monopolyzero_native_train_candidate/replay (see
+    test_real_engine_smoke_does_not_touch_production_replay_dir below for
+    the regression guard)."""
     module.common.ensure_reference_on_path()
     import random
 
@@ -675,7 +681,9 @@ def test_real_engine_smoke_one_seed_tiny_training_and_checkpoint_roundtrip(tmp_p
     before_stats = module.opportunity_greedy_stats(positions, model, buy_id=buy_id, accept_id=accept_id)
 
     before_params = {name: p.detach().clone() for name, p in model.named_parameters()}
-    train_stats = module.train_candidate(model, positions, updates=2, batch_size=8, seed=0)
+    train_stats = module.train_candidate(
+        model, positions, updates=2, batch_size=8, seed=0, replay_dir=tmp_path / "replay",
+    )
     assert len(train_stats) == 2
     for update in train_stats:
         for key in ("loss", "policy_loss", "value_loss", "gradient_norm"):
@@ -700,6 +708,66 @@ def test_real_engine_smoke_one_seed_tiny_training_and_checkpoint_roundtrip(tmp_p
     reloaded_params = dict(reloaded.named_parameters())
     for name, p in model.named_parameters():
         assert torch.equal(p.detach(), reloaded_params[name].detach())
+
+
+def test_real_engine_smoke_does_not_touch_production_replay_dir(tmp_path):
+    """Regression guard for the test-isolation bug found in experiment 025
+    (see docs/EXPERIMENTS.md and logs/experiments/025-native-train-buy-trade-
+    learnability-sweep.json's replay_provenance_caveat): train_candidate()
+    unconditionally clears/recreates whatever directory it's given, and the
+    real-engine smoke test above used to call it with no replay_dir override
+    at all - silently defaulting to module.REPLAY_DIR, the real production
+    path (artifacts/monopolyzero_native_train_candidate/replay). Snapshots
+    that real path's actual on-disk state (or confirms its absence) before
+    calling train_candidate() the same way the fixed smoke test above now
+    does - with an explicit isolated replay_dir - and asserts the real
+    production path is completely unchanged afterward: not created if it
+    didn't exist, and byte-for-byte identical (same files, same sizes, same
+    mtimes) if it did. Uses synthetic ReplayPosition objects (same pattern
+    as test_load_existing_replay_opens_real_buffer_and_reads_records above)
+    instead of real self-play, so this stays fast and only needs the real
+    checkpoint/engine, not a full game."""
+    module.common.ensure_reference_on_path()
+    import numpy as np
+
+    from monopoly_bench.contracts import ReplayPosition
+    from monopoly_bench.engine import ACTION_SPACE_SIZE, STATE_DIM
+    from monopoly_bench.model import MonopolyZeroNet
+
+    if not module.CHECKPOINT_PATH.is_file():
+        pytest.skip("baseline_pretraining.pt not present in this environment")
+
+    production_dir = module.REPLAY_DIR
+    existed_before = production_dir.is_dir()
+    snapshot_before = (
+        {f.name: (f.stat().st_mtime_ns, f.stat().st_size) for f in sorted(production_dir.glob("*"))}
+        if existed_before else None
+    )
+
+    model = MonopolyZeroNet.load_inference(module.CHECKPOINT_PATH)
+    model.eval()
+
+    mask = np.zeros(ACTION_SPACE_SIZE, dtype=bool)
+    mask[[0, BUY_ID, ACCEPT_ID, 8]] = True
+    positions = [
+        ReplayPosition(
+            state=np.zeros(STATE_DIM, dtype=np.float32), legal_mask=mask,
+            visits={0: 5, BUY_ID: 2}, q_values={0: (0.25,) * 4, BUY_ID: (0.25,) * 4},
+            selected_action=0, value=(0.25,) * 4, outcome=(1.0, 0.0, 0.0, 0.0), actor_id=1, game_id=999,
+        )
+        for _ in range(2)
+    ]
+
+    module.train_candidate(
+        model, positions, updates=1, batch_size=2, seed=0, replay_dir=tmp_path / "isolated_replay",
+    )
+
+    assert production_dir.is_dir() == existed_before
+    if existed_before:
+        snapshot_after = {f.name: (f.stat().st_mtime_ns, f.stat().st_size) for f in sorted(production_dir.glob("*"))}
+        assert snapshot_after == snapshot_before
+    else:
+        assert not production_dir.exists()
 
 
 def test_real_engine_smoke_reuse_replay_trains_without_new_self_play(tmp_path):
