@@ -1,0 +1,198 @@
+{
+  "asu_modules_loaded": [],
+  "asu_modules_loaded_count": 0,
+  "checkpoint_output": "artifacts\\monopolyzero_native_train_candidate\\sweep\\updates_25.pt",
+  "checkpoint_sha256": "09e7bf3470e2fb334a948feba93b9dbf463bd079e40231b6e52e560313f4937f",
+  "config": {
+    "batch_size": 32,
+    "input_checkpoint": "C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\monopolyzero_strength_pilot\\baseline_pretraining.pt",
+    "input_checkpoint_sha256": "22ae2abea60478355f61ce0404a31de3b52fb97769d4f99f7e04f4c673629370",
+    "mode": "reuse_replay",
+    "policy": "training-only (reuse-replay) - no new self-play, no new search, zero ASU, zero HYBRID_COMPAT, zero fixed rule",
+    "positions_loaded": 286,
+    "replay_dir": "C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\monopolyzero_native_train_candidate\\replay",
+    "updates": 25
+  },
+  "elapsed_s": 4.291448799998761,
+  "git_head_sha": "f85fba0750cc06f2cc2e31448da32af9f5b2fe29",
+  "greedy_selection_after_training": {
+    "accept_trade_greedy_chosen": 0,
+    "accept_trade_greedy_rate": 0.0,
+    "accept_trade_mean_prior_rank": 7.35,
+    "accept_trade_mean_raw_prior": 0.05674676310736686,
+    "accept_trade_opportunities": 40,
+    "buy_property_greedy_chosen": 0,
+    "buy_property_greedy_rate": 0.0,
+    "buy_property_mean_prior_rank": 2.7142857142857144,
+    "buy_property_mean_raw_prior": 0.14136900007724762,
+    "buy_property_opportunities": 14
+  },
+  "greedy_selection_before_training": {
+    "accept_trade_greedy_chosen": 0,
+    "accept_trade_greedy_rate": 0.0,
+    "accept_trade_mean_prior_rank": 6.525,
+    "accept_trade_mean_raw_prior": 0.13339022025465966,
+    "accept_trade_opportunities": 40,
+    "buy_property_greedy_chosen": 0,
+    "buy_property_greedy_rate": 0.0,
+    "buy_property_mean_prior_rank": 2.9285714285714284,
+    "buy_property_mean_raw_prior": 0.22193182313016482,
+    "buy_property_opportunities": 14
+  },
+  "peak_rss_gib": 0.2933082580566406,
+  "per_game": null,
+  "positions_used": 286,
+  "status": "OK",
+  "train_stats": [
+    {
+      "gradient_norm": 11.731892585754395,
+      "loss": 2.7483296394348145,
+      "policy_loss": 1.41316819190979,
+      "value_loss": 1.3351613283157349
+    },
+    {
+      "gradient_norm": 7.472111225128174,
+      "loss": 2.7178399562835693,
+      "policy_loss": 1.5908608436584473,
+      "value_loss": 1.126979112625122
+    },
+    {
+      "gradient_norm": 5.325836658477783,
+      "loss": 2.390425682067871,
+      "policy_loss": 1.626186728477478,
+      "value_loss": 0.7642390727996826
+    },
+    {
+      "gradient_norm": 4.248180389404297,
+      "loss": 2.2355449199676514,
+      "policy_loss": 1.473962664604187,
+      "value_loss": 0.7615823149681091
+    },
+    {
+      "gradient_norm": 3.5979700088500977,
+      "loss": 1.8281865119934082,
+      "policy_loss": 1.4136147499084473,
+      "value_loss": 0.4145718216896057
+    },
+    {
+      "gradient_norm": 5.799002647399902,
+      "loss": 2.432265281677246,
+      "policy_loss": 1.6650124788284302,
+      "value_loss": 0.7672526836395264
+    },
+    {
+      "gradient_norm": 4.054019451141357,
+      "loss": 2.091008186340332,
+      "policy_loss": 1.4900176525115967,
+      "value_loss": 0.6009904146194458
+    },
+    {
+      "gradient_norm": 2.8546416759490967,
+      "loss": 1.903913974761963,
+      "policy_loss": 1.4822074174880981,
+      "value_loss": 0.42170652747154236
+    },
+    {
+      "gradient_norm": 2.7023496627807617,
+      "loss": 2.1391913890838623,
+      "policy_loss": 1.726427435874939,
+      "value_loss": 0.4127638638019562
+    },
+    {
+      "gradient_norm": 3.126373052597046,
+      "loss": 2.080639123916626,
+      "policy_loss": 1.6670563220977783,
+      "value_loss": 0.41358286142349243
+    },
+    {
+      "gradient_norm": 3.2144739627838135,
+      "loss": 1.7390342950820923,
+      "policy_loss": 1.4758952856063843,
+      "value_loss": 0.2631389796733856
+    },
+    {
+      "gradient_norm": 3.5620758533477783,
+      "loss": 1.9667563438415527,
+      "policy_loss": 1.4776556491851807,
+      "value_loss": 0.48910069465637207
+    },
+    {
+      "gradient_norm": 2.816028356552124,
+      "loss": 1.9134098291397095,
+      "policy_loss": 1.5031495094299316,
+      "value_loss": 0.4102603495121002
+    },
+    {
+      "gradient_norm": 2.9963886737823486,
+      "loss": 2.2376089096069336,
+      "policy_loss": 1.8449537754058838,
+      "value_loss": 0.39265507459640503
+    },
+    {
+      "gradient_norm": 2.5179455280303955,
+      "loss": 1.853602647781372,
+      "policy_loss": 1.4741915464401245,
+      "value_loss": 0.37941116094589233
+    },
+    {
+      "gradient_norm": 3.1191186904907227,
+      "loss": 1.89094877243042,
+      "policy_loss": 1.5232934951782227,
+      "value_loss": 0.36765530705451965
+    },
+    {
+      "gradient_norm": 4.179142475128174,
+      "loss": 1.7473208904266357,
+      "policy_loss": 1.4869751930236816,
+      "value_loss": 0.2603456377983093
+    },
+    {
+      "gradient_norm": 3.0321414470672607,
+      "loss": 1.7035826444625854,
+      "policy_loss": 1.4642574787139893,
+      "value_loss": 0.23932519555091858
+    },
+    {
+      "gradient_norm": 3.343717336654663,
+      "loss": 1.9284248352050781,
+      "policy_loss": 1.604597806930542,
+      "value_loss": 0.32382702827453613
+    },
+    {
+      "gradient_norm": 2.8523025512695312,
+      "loss": 1.8157662153244019,
+      "policy_loss": 1.549135684967041,
+      "value_loss": 0.26663053035736084
+    },
+    {
+      "gradient_norm": 2.694929838180542,
+      "loss": 1.4546914100646973,
+      "policy_loss": 1.2516087293624878,
+      "value_loss": 0.20308265089988708
+    },
+    {
+      "gradient_norm": 3.388864278793335,
+      "loss": 1.6417748928070068,
+      "policy_loss": 1.4763654470443726,
+      "value_loss": 0.16540950536727905
+    },
+    {
+      "gradient_norm": 2.5705132484436035,
+      "loss": 1.5225365161895752,
+      "policy_loss": 1.3910413980484009,
+      "value_loss": 0.1314951777458191
+    },
+    {
+      "gradient_norm": 2.6414334774017334,
+      "loss": 1.4844874143600464,
+      "policy_loss": 1.3651903867721558,
+      "value_loss": 0.1192970722913742
+    },
+    {
+      "gradient_norm": 2.8212711811065674,
+      "loss": 1.5408737659454346,
+      "policy_loss": 1.3968212604522705,
+      "value_loss": 0.14405252039432526
+    }
+  ]
+}

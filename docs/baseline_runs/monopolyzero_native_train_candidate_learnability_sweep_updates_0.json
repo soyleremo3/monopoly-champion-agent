@@ -1,0 +1,47 @@
+{
+  "asu_modules_loaded": [],
+  "asu_modules_loaded_count": 0,
+  "checkpoint_output": "artifacts\\monopolyzero_native_train_candidate\\sweep\\updates_0.pt",
+  "checkpoint_sha256": "fb226782ed674f5ecb36e4e4597766ff39895b6a580986b056228e787b56ed46",
+  "config": {
+    "batch_size": 32,
+    "input_checkpoint": "C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\monopolyzero_strength_pilot\\baseline_pretraining.pt",
+    "input_checkpoint_sha256": "22ae2abea60478355f61ce0404a31de3b52fb97769d4f99f7e04f4c673629370",
+    "mode": "reuse_replay",
+    "policy": "training-only (reuse-replay) - no new self-play, no new search, zero ASU, zero HYBRID_COMPAT, zero fixed rule",
+    "positions_loaded": 286,
+    "replay_dir": "C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\monopolyzero_native_train_candidate\\replay",
+    "updates": 0
+  },
+  "elapsed_s": 3.7984426000002713,
+  "git_head_sha": "f85fba0750cc06f2cc2e31448da32af9f5b2fe29",
+  "greedy_selection_after_training": {
+    "accept_trade_greedy_chosen": 0,
+    "accept_trade_greedy_rate": 0.0,
+    "accept_trade_mean_prior_rank": 6.525,
+    "accept_trade_mean_raw_prior": 0.13339022025465966,
+    "accept_trade_opportunities": 40,
+    "buy_property_greedy_chosen": 0,
+    "buy_property_greedy_rate": 0.0,
+    "buy_property_mean_prior_rank": 2.9285714285714284,
+    "buy_property_mean_raw_prior": 0.22193182313016482,
+    "buy_property_opportunities": 14
+  },
+  "greedy_selection_before_training": {
+    "accept_trade_greedy_chosen": 0,
+    "accept_trade_greedy_rate": 0.0,
+    "accept_trade_mean_prior_rank": 6.525,
+    "accept_trade_mean_raw_prior": 0.13339022025465966,
+    "accept_trade_opportunities": 40,
+    "buy_property_greedy_chosen": 0,
+    "buy_property_greedy_rate": 0.0,
+    "buy_property_mean_prior_rank": 2.9285714285714284,
+    "buy_property_mean_raw_prior": 0.22193182313016482,
+    "buy_property_opportunities": 14
+  },
+  "peak_rss_gib": 0.2728767395019531,
+  "per_game": null,
+  "positions_used": 286,
+  "status": "OK",
+  "train_stats": []
+}

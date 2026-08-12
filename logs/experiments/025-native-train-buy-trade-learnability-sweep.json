@@ -1,0 +1,95 @@
+{
+  "experiment_id": "025-native-train-buy-trade-learnability-sweep",
+  "experiment_name": "Update-count learnability sweep (0/25/50/100) for BUY_PROPERTY/ACCEPT_TRADE via --reuse-replay, same baseline checkpoint + same existing replay each point",
+  "experiment_type": "training_run",
+  "date": "2026-08-12",
+  "code_commit_sha": "f85fba0750cc06f2cc2e31448da32af9f5b2fe29",
+  "reference_submodule_sha": "afd9205761317e196d77f679921c35fb04c7ab96",
+  "exact_commands": [
+    "PYTHONHASHSEED=0 PYTHONIOENCODING=utf-8 python scripts/monopolyzero_native_train_candidate.py --reuse-replay --updates 0 --checkpoint-output artifacts/monopolyzero_native_train_candidate/sweep/updates_0.pt --output artifacts/monopolyzero_native_train_candidate/sweep/updates_0.json",
+    "PYTHONHASHSEED=0 PYTHONIOENCODING=utf-8 python scripts/monopolyzero_native_train_candidate.py --reuse-replay --updates 25 --checkpoint-output artifacts/monopolyzero_native_train_candidate/sweep/updates_25.pt --output artifacts/monopolyzero_native_train_candidate/sweep/updates_25.json",
+    "PYTHONHASHSEED=0 PYTHONIOENCODING=utf-8 python scripts/monopolyzero_native_train_candidate.py --reuse-replay --updates 50 --checkpoint-output artifacts/monopolyzero_native_train_candidate/sweep/updates_50.pt --output artifacts/monopolyzero_native_train_candidate/sweep/updates_50.json",
+    "PYTHONHASHSEED=0 PYTHONIOENCODING=utf-8 python scripts/monopolyzero_native_train_candidate.py --reuse-replay --updates 100 --checkpoint-output artifacts/monopolyzero_native_train_candidate/sweep/updates_100.pt --output artifacts/monopolyzero_native_train_candidate/sweep/updates_100.json"
+  ],
+  "seeds": null,
+  "algorithm_config": {
+    "update_budgets": [0, 25, 50, 100],
+    "mode": "reuse_replay (--reuse-replay): no new self-play games, no new search, no seed consumed - matches the task instruction not to generate new self-play data",
+    "each_budget_starts_fresh_from": "the same baseline_pretraining.pt checkpoint every time (never chained/continued from another budget's output) - input_checkpoint_sha256 verified identical (22ae2abea6...) across all four runs",
+    "sampling_seed": 0,
+    "batch_size": 32,
+    "learning_rate": 0.0003,
+    "weight_decay": 0.0001,
+    "gradient_clip": 1.0,
+    "single_variable": "update budget only - same baseline, same replay buffer, same sampling seed each run. Verified deterministic prefix: the 25-update run's train_stats equal the 50-update run's first 25 entries exactly, and the 50-update run's train_stats equal the 100-update run's first 50 entries exactly (element-wise equality check on loss/policy_loss/value_loss/gradient_norm).",
+    "replay_dir": "artifacts/monopolyzero_native_train_candidate/replay (default REPLAY_DIR, --replay-dir not overridden)",
+    "replay_positions": 286,
+    "replay_fingerprint_sha256_of_concatenated_files": "3070e9130de974b2b89d2d8b52f008165f1b8734539f3f45b15ec009764c3020",
+    "replay_provenance_caveat": "This project's own existing test suite (tests/test_monopolyzero_native_train_candidate.py::test_real_engine_smoke_one_seed_tiny_training_and_checkpoint_roundtrip) writes into this exact default REPLAY_DIR as a side effect of running the tests (it calls train_candidate() without overriding replay_dir). Running that test suite as a pre-flight sanity check (immediately before this sweep) therefore regenerated the on-disk replay via that test's own fixed, deterministic recipe: 1 self-play game, seed=43000, SearchConfig(simulations=4, max_depth=16), max_rounds=5, baseline_pretraining.pt, random/np/torch seeded to 0 - the exact same recipe documented in this script's own commit history as having produced the replay in the first place. Resulting position count (286) matched the pre-existing replay exactly both times this was checked. No new DEV seed was consumed (43000 is already inside the registered 023 seed pool) and no seed/parameter outside this already-fixed, already-committed recipe was used, so this is not new/arbitrary self-play data by the task's intent, but it is not byte-for-byte verified against a hash taken before this session started (no prior hash was ever recorded) - flagged here rather than silently assumed. All four sweep runs below read the exact same on-disk replay (verified identical positions_loaded=286 and identical greedy_selection_before_training across all four runs).",
+    "asu_involved": false
+  },
+  "model_checkpoint": {
+    "sha256": "22ae2abea60478355f61ce0404a31de3b52fb97769d4f99f7e04f4c673629370",
+    "path": "artifacts/monopolyzero_strength_pilot/baseline_pretraining.pt",
+    "format_version": 1
+  },
+  "counts": {
+    "positions_reused_per_point": 286,
+    "new_positions_generated_by_this_sweep": 0,
+    "new_games_generated_by_this_sweep": 0,
+    "buy_property_opportunities_per_point": 14,
+    "accept_trade_opportunities_per_point": 40,
+    "total_updates_across_all_points": 175
+  },
+  "runtime": {"wall_time_s": 18.964, "peak_rss_gib": 0.2933082580566406},
+  "metrics": {
+    "updates_0": {
+      "checkpoint_sha256": "fb226782ed674f5ecb36e4e4597766ff39895b6a580986b056228e787b56ed46",
+      "elapsed_s": 3.798,
+      "peak_rss_gib": 0.2728767395019531,
+      "buy_property": {"greedy_rate": 0.0, "mean_raw_prior": 0.22193182313016482, "mean_prior_rank": 2.9285714285714284},
+      "accept_trade": {"greedy_rate": 0.0, "mean_raw_prior": 0.13339022025465966, "mean_prior_rank": 6.525},
+      "before_after_identical": true
+    },
+    "updates_25": {
+      "checkpoint_sha256": "09e7bf3470e2fb334a948feba93b9dbf463bd079e40231b6e52e560313f4937f",
+      "elapsed_s": 4.291,
+      "peak_rss_gib": 0.2933082580566406,
+      "buy_property": {"greedy_rate": 0.0, "mean_raw_prior": 0.14136900007724762, "mean_prior_rank": 2.7142857142857144},
+      "accept_trade": {"greedy_rate": 0.0, "mean_raw_prior": 0.05674676310736686, "mean_prior_rank": 7.35}
+    },
+    "updates_50": {
+      "checkpoint_sha256": "47902d4deba4dff8ec3c36226db7b73d93f93fde36226f55c13ede0b36666fe0",
+      "elapsed_s": 4.806,
+      "peak_rss_gib": 0.29303741455078125,
+      "buy_property": {"greedy_rate": 0.0, "mean_raw_prior": 0.18619454439197267, "mean_prior_rank": 2.5},
+      "accept_trade": {"greedy_rate": 0.0, "mean_raw_prior": 0.07465379757340998, "mean_prior_rank": 4.85}
+    },
+    "updates_100": {
+      "checkpoint_sha256": "b7cdb38451d73a7804edd7d5bb97accbae857952c9f3a5a7fbbb75d514e5e445",
+      "elapsed_s": 6.069,
+      "peak_rss_gib": 0.2929649353027344,
+      "buy_property": {"greedy_rate": 0.07142857142857142, "mean_raw_prior": 0.16578316049916403, "mean_prior_rank": 2.642857142857143},
+      "accept_trade": {"greedy_rate": 0.025, "mean_raw_prior": 0.06213365118019283, "mean_prior_rank": 4.675}
+    },
+    "trend_buy_property": "greedy_rate stays 0.0 at 0/25/50 updates and only reaches 1/14 = 7.14% at 100 updates. mean_raw_prior is NOT monotonic: 0.222 (0up) -> 0.141 (25up, a drop) -> 0.186 (50up) -> 0.166 (100up) - never recovers to its 0-update value within this budget. mean_prior_rank improves mildly and mostly monotonically: 2.93 -> 2.71 -> 2.50 -> 2.64 (best at 50up, slightly worse at 100up).",
+    "trend_accept_trade": "greedy_rate stays 0.0 at 0/25/50 updates and only reaches 1/40 = 2.5% at 100 updates. mean_raw_prior falls monotonically and never recovers: 0.133 (0up) -> 0.057 (25up) -> 0.075 (50up) -> 0.062 (100up) - lower at 100up than at 0up. mean_prior_rank gets WORSE before it gets better: 6.53 (0up) -> 7.35 (25up, worse) -> 4.85 (50up) -> 4.68 (100up) - net improvement over baseline by 100up but non-monotonic along the way.",
+    "trend_loss": "total_loss falls monotonically at every sampled endpoint (2.748 update#1 -> 1.541 @25up final -> 1.315 @50up final -> 1.043 @100up final). value_loss collapses sharply and monotonically (1.335 update#1 -> 0.144 @25up -> 0.032 @50up -> 0.010 @100up) - with only 286 positions and batch_size 32, 100 updates is >11x pass-equivalent exposure to the same fixed dataset, so this reads as the value head overfitting this small fixed replay rather than generalizing. policy_loss falls more modestly (1.413 update#1 -> 1.397 @25up -> 1.283 @50up -> 1.033 @100up) and does not track value_loss's steep drop."
+  },
+  "loss": {
+    "updates_25_final": {"loss": 1.5408737659454346, "policy_loss": 1.3968212604522705, "value_loss": 0.14405252039432526, "gradient_norm": 2.8212711811065674},
+    "updates_50_final": {"loss": 1.315125823020935, "policy_loss": 1.282794713973999, "value_loss": 0.03233105689287186, "gradient_norm": 2.2229459285736084},
+    "updates_100_final": {"loss": 1.0431264638900757, "policy_loss": 1.0330127477645874, "value_loss": 0.010113740339875221, "gradient_norm": 2.2658543586730957},
+    "update_1_identical_across_all_three_nonzero_runs": {"loss": 2.7483296394348145, "policy_loss": 1.41316819190979, "value_loss": 1.3351613283157349, "gradient_norm": 11.731892585754395},
+    "all_updates_finite_all_budgets": true
+  },
+  "integrity": {"illegal_actions": 0, "fallbacks": 0, "crashes": 0},
+  "result": "Zero ASU modules loaded in any of the four runs (asu_modules_loaded_count=0 every time), zero new self-play games/positions generated by this sweep itself, and input_checkpoint_sha256 confirmed identical (baseline, not chained) across all four points. Training over this replay DOES measurably move BUY_PROPERTY/ACCEPT_TRADE prior mass and rank away from their 0-update baseline within 100 updates, but the movement is small, non-monotonic, and mostly does NOT flip the greedy (argmax) decision: greedy_rate for both actions stays exactly 0.0 at 0/25/50 updates and only reaches 1 of 14 BUY_PROPERTY opportunities (7.1%) and 1 of 40 ACCEPT_TRADE opportunities (2.5%) by 100 updates. Raw prior mass for both actions is LOWER at 100 updates than at 0 updates (BUY_PROPERTY 0.222->0.166, ACCEPT_TRADE 0.133->0.062), and BUY_PROPERTY's own prior dips before partially recovering (0.222->0.141->0.186->0.166) rather than moving toward the target action in a clean trend. Meanwhile value_loss collapses to near-zero (1.335->0.010) far faster than policy_loss falls (1.413->1.033), on a replay of only 286 positions with batch_size 32 - a classic small-fixed-dataset overfitting signature on the value head, not evidence of the policy head robustly learning BUY_PROPERTY/ACCEPT_TRADE as target actions. Given the very small sample (only 14 BUY_PROPERTY and 40 ACCEPT_TRADE opportunities total, from a single short self-play game), a single greedy flip in each category is weak, low-power evidence and cannot by itself support either a GO or a KILL conclusion about whether native ASU-free MCTS/self-play targets can teach these two actions - the honest read is: some prior movement is visible, but it is small, non-monotonic, mostly below the greedy-decision threshold, and measured on a dataset too small to be conclusive. A larger self-play replay (more seeds, more positions) is needed before this question can be answered with adequate statistical power - not run here per this task's explicit scope (no new self-play data, no large strength evaluation).",
+  "raw_logs": [
+    "docs/baseline_runs/monopolyzero_native_train_candidate_learnability_sweep_updates_0.json",
+    "docs/baseline_runs/monopolyzero_native_train_candidate_learnability_sweep_updates_25.json",
+    "docs/baseline_runs/monopolyzero_native_train_candidate_learnability_sweep_updates_50.json",
+    "docs/baseline_runs/monopolyzero_native_train_candidate_learnability_sweep_updates_100.json"
+  ],
+  "notes": "seeds is null (not [43000]) because --reuse-replay mode does not consume/validate any seed - the replay's own generating seed is a property of the replay (see algorithm_config.replay_provenance_caveat), not of this sweep's own commands. Trained candidate checkpoints (updates_{0,25,50,100}.pt, ~3.9MB each) are NOT committed per CLAUDE.md - referenced by SHA-256 and local path (artifacts/monopolyzero_native_train_candidate/sweep/) only. The four --output JSON payloads (small, a few KB to ~20KB each) are committed under docs/baseline_runs/ per this project's convention for small structured result payloads. runtime.wall_time_s is the sum of all four runs' elapsed_s; runtime.peak_rss_gib is the max across the four (each run measured independently, not a single shared process)."
+}
