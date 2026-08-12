@@ -1,0 +1,143 @@
+{
+  "asu_modules_loaded": [],
+  "asu_modules_loaded_count": 0,
+  "checkpoint_output": "artifacts\\monopolyzero_native_train_candidate\\buy_trade_learnability_v2\\candidate_untrained.pt",
+  "checkpoint_sha256": "f3193ba6cedb73a016e343357edaa82c538b407523fd2fb9c0504079c5adc1eb",
+  "config": {
+    "batch_size": 32,
+    "input_checkpoint": "C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\monopolyzero_strength_pilot\\baseline_pretraining.pt",
+    "input_checkpoint_sha256": "22ae2abea60478355f61ce0404a31de3b52fb97769d4f99f7e04f4c673629370",
+    "max_rounds": 200,
+    "mode": "self_play",
+    "policy": "pure MaxNPUCT self-play, all 4 seats, zero ASU, zero HYBRID_COMPAT, zero fixed rule",
+    "search_config": {
+      "c_puct": 1.5,
+      "dirichlet_alpha": 0.3,
+      "dirichlet_epsilon": 0.25,
+      "max_depth": 256,
+      "max_width": 64,
+      "simulations": 16,
+      "temperature_rounds": 40,
+      "visit_temperature": 1.0,
+      "widening_base": 8,
+      "widening_scale": 4.0
+    },
+    "seed_count": 8,
+    "seeds": [
+      43000,
+      43001,
+      43002,
+      43003,
+      43004,
+      43005,
+      43006,
+      43007
+    ],
+    "seeds_reused_from": "custom seed range - validated against the registered DEV pool",
+    "updates": 0
+  },
+  "elapsed_s": 6859.876950400001,
+  "git_head_sha": "ab4fda6b9cb0a4fc8374aa3b3e7311daa3160172",
+  "greedy_selection_after_training": {
+    "accept_trade_greedy_chosen": 0,
+    "accept_trade_greedy_rate": 0.0,
+    "accept_trade_mean_prior_rank": 12.524947458550635,
+    "accept_trade_mean_raw_prior": 0.13489613153986157,
+    "accept_trade_opportunities": 12847,
+    "buy_property_greedy_chosen": 2,
+    "buy_property_greedy_rate": 0.0012461059190031153,
+    "buy_property_mean_prior_rank": 3.5426791277258567,
+    "buy_property_mean_raw_prior": 0.15143026915433994,
+    "buy_property_opportunities": 1605
+  },
+  "greedy_selection_before_training": {
+    "accept_trade_greedy_chosen": 0,
+    "accept_trade_greedy_rate": 0.0,
+    "accept_trade_mean_prior_rank": 12.524947458550635,
+    "accept_trade_mean_raw_prior": 0.13489613153986157,
+    "accept_trade_opportunities": 12847,
+    "buy_property_greedy_chosen": 2,
+    "buy_property_greedy_rate": 0.0012461059190031153,
+    "buy_property_mean_prior_rank": 3.5426791277258567,
+    "buy_property_mean_raw_prior": 0.15143026915433994,
+    "buy_property_opportunities": 1605
+  },
+  "peak_rss_gib": 0.7971916198730469,
+  "per_game": [
+    {
+      "completed": true,
+      "crashed": false,
+      "decisions": 6985,
+      "illegal_actions": 0,
+      "positions_collected": 5429,
+      "seed": 43000,
+      "winner": 0
+    },
+    {
+      "completed": true,
+      "crashed": false,
+      "decisions": 10123,
+      "illegal_actions": 0,
+      "positions_collected": 7935,
+      "seed": 43001,
+      "winner": 0
+    },
+    {
+      "completed": true,
+      "crashed": false,
+      "decisions": 9555,
+      "illegal_actions": 0,
+      "positions_collected": 7396,
+      "seed": 43002,
+      "winner": 0
+    },
+    {
+      "completed": true,
+      "crashed": false,
+      "decisions": 7515,
+      "illegal_actions": 0,
+      "positions_collected": 5881,
+      "seed": 43003,
+      "winner": 0
+    },
+    {
+      "completed": true,
+      "crashed": false,
+      "decisions": 6548,
+      "illegal_actions": 0,
+      "positions_collected": 5186,
+      "seed": 43004,
+      "winner": 1
+    },
+    {
+      "completed": true,
+      "crashed": false,
+      "decisions": 9608,
+      "illegal_actions": 0,
+      "positions_collected": 7525,
+      "seed": 43005,
+      "winner": 3
+    },
+    {
+      "completed": true,
+      "crashed": false,
+      "decisions": 10213,
+      "illegal_actions": 0,
+      "positions_collected": 8010,
+      "seed": 43006,
+      "winner": 3
+    },
+    {
+      "completed": true,
+      "crashed": false,
+      "decisions": 10175,
+      "illegal_actions": 0,
+      "positions_collected": 7853,
+      "seed": 43007,
+      "winner": 1
+    }
+  ],
+  "positions_used": 55215,
+  "status": "OK",
+  "train_stats": []
+}

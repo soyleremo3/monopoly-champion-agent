@@ -1,0 +1,97 @@
+{
+  "experiment_id": "026-buy-trade-learnability-v2-replay-generation",
+  "experiment_name": "Larger clean ASU-free native self-play replay for BUY/TRADE learnability (8 DEV seeds 43000-43007, 16 sims, max_rounds=200, no training)",
+  "experiment_type": "selfplay_training_smoke",
+  "date": "2026-08-12",
+  "code_commit_sha": "ab4fda6b9cb0a4fc8374aa3b3e7311daa3160172",
+  "reference_submodule_sha": "afd9205761317e196d77f679921c35fb04c7ab96",
+  "exact_commands": [
+    "PYTHONHASHSEED=0 PYTHONIOENCODING=utf-8 python scripts/monopolyzero_native_train_candidate.py --seed-start 43000 --seed-count 1 --simulations 16 --max-rounds 200 --updates 0 --replay-dir artifacts/monopolyzero_native_train_candidate/buy_trade_learnability_v2_benchmark/replay --checkpoint-output artifacts/monopolyzero_native_train_candidate/buy_trade_learnability_v2_benchmark/candidate.pt --output artifacts/monopolyzero_native_train_candidate/buy_trade_learnability_v2_benchmark/result.json",
+    "PYTHONHASHSEED=0 PYTHONIOENCODING=utf-8 python scripts/monopolyzero_native_train_candidate.py --seed-start 43000 --seed-count 8 --simulations 16 --max-rounds 200 --updates 0 --replay-dir artifacts/monopolyzero_native_train_candidate/buy_trade_learnability_v2/replay --checkpoint-output artifacts/monopolyzero_native_train_candidate/buy_trade_learnability_v2/candidate_untrained.pt --output artifacts/monopolyzero_native_train_candidate/buy_trade_learnability_v2/result.json"
+  ],
+  "seeds": [43000, 43001, 43002, 43003, 43004, 43005, 43006, 43007],
+  "algorithm_config": {
+    "seed_pool": "DEV 43000-43007 (subset of the already-registered 023 DEV range 43000-43019) - FINAL_BLIND (90000-90049) never touched",
+    "simulations": 16,
+    "max_rounds": 200,
+    "updates": 0,
+    "no_training_performed": "updates=0 - train_stats is an empty list, before_stats and after_stats are identical (verified byte-for-byte equal in the raw payload) - this run generates data only, per the task's explicit instruction not to train yet",
+    "policy": "pure MaxNPUCT self-play, all 4 seats the same baseline model, self_play=True - zero ASU, zero HYBRID_COMPAT, zero fixed-rule BUY/TRADE action selection anywhere (unchanged source-level guards from scripts/monopolyzero_native_train_candidate.py's existing test suite)",
+    "search_config_full": {
+      "simulations": 16, "c_puct": 1.5, "dirichlet_alpha": 0.3, "dirichlet_epsilon": 0.25,
+      "max_depth": 256, "max_width": 64, "temperature_rounds": 40, "visit_temperature": 1.0,
+      "widening_base": 8, "widening_scale": 4.0
+    },
+    "calibration_benchmark": {
+      "purpose": "1-seed run at the exact target simulations/max_rounds, run first per this project's benchmark-before-committing discipline, to estimate whether the full 8-seed run's runtime would be reasonable before starting it",
+      "seed": 43000, "elapsed_s": 272.1965780999999, "positions_collected": 5429,
+      "naive_linear_extrapolation_to_8_seeds_s": 2177.57,
+      "actual_8_seed_elapsed_s": 6859.876950400001,
+      "extrapolation_undershot_by_factor": 3.15,
+      "why_undershot": "per-game cost is not constant - decision counts ranged 6548-10213 across the 8 real games vs. the benchmark game's 6985 (total 70722 decisions across 8 games vs. 8x6985=55880 naive expectation), and per-decision search/bookkeeping cost appears to grow somewhat over a long-running single process (peak_rss_gib grew from 0.324 in the 1-seed benchmark to 0.797 in the 8-seed run, consistent with accumulating in-memory position lists across games before the single end-of-run replay write). Actual runtime (~1.9h total) still completed cleanly with zero illegal actions/crashes, so it was not judged unreasonable per the task's own stop-if-unreasonable criterion, but the linear extrapolation from a 1-seed benchmark should not be trusted as a tight estimate for future sizing."
+    },
+    "incident_replay_dir_plumbing_bug": {
+      "summary": "scripts/monopolyzero_native_train_candidate.py's main() self-play branch called train_candidate(model, positions, updates=args.updates, batch_size=BATCH_SIZE, seed=0) WITHOUT forwarding args.replay_dir, so train_candidate() silently fell back to its own default parameter value (REPLAY_DIR, the real production path artifacts/monopolyzero_native_train_candidate/replay) regardless of what --replay-dir was given on the command line. --replay-dir was only ever actually honored by --reuse-replay mode's load_existing_replay(args.replay_dir) call, not by self-play mode's write path.",
+      "consequence": "Both the calibration benchmark and the real 8-seed run above were invoked with explicit --replay-dir overrides pointing at dedicated directories, but due to this bug both actually wrote into the default production REPLAY_DIR instead - overwriting experiment 025's existing 286-position replay (first by the 1-seed benchmark, then again by the 8-seed run), directly contrary to this task's explicit 'do not overwrite any prior replay artifact' requirement.",
+      "fix": "One-line fix in scripts/monopolyzero_native_train_candidate.py: the self-play branch now calls train_candidate(..., replay_dir=args.replay_dir). Added a new regression test, test_main_self_play_mode_honors_custom_replay_dir (tests/test_monopolyzero_native_train_candidate.py), asserting a custom --replay-dir reaches train_candidate() unchanged and differs from module.REPLAY_DIR. Existing tests that monkeypatched train_candidate with a fixed keyword signature were updated to accept/assert the new replay_dir kwarg. Full relevant test file (32/32) and full project suite re-verified green after the fix. Committed separately from this data-generation log, per the repo's smallest-meaningful-unit commit discipline.",
+      "remediation": "The real 8-seed replay (55,215 positions) was relocated from the default production REPLAY_DIR to its correct dedicated directory (artifacts/monopolyzero_native_train_candidate/buy_trade_learnability_v2/replay) - this is the data reported in counts/metrics below. An attempt was then made to restore experiment 025's original 286-position replay into the now-emptied default REPLAY_DIR by re-running its exact documented deterministic recipe (seed 43000, SearchConfig(simulations=4, max_depth=16), max_rounds=5, baseline checkpoint, random/np/torch seeded to 0, matching 025's own recorded provenance notes) - see determinism_finding below."
+    },
+    "determinism_finding": {
+      "summary": "The restoration attempt described above did NOT reproduce experiment 025's original replay: it produced 323 positions, not the original 286, despite using the identical documented seed/config/checkpoint recipe (PYTHONHASHSEED=0 in both cases).",
+      "interpretation": "This project's self-play/MCTS generation path is NOT verified to be deterministic across separate process invocations, unlike its training-update-over-a-fixed-replay path, which HAS been rigorously verified multiple times this session (e.g. experiment 025's byte-identical 25/50/100-update prefix check). This is a new, previously undocumented finding - not something experiment 025 could have known when it noted (based only on a size match, not a full content hash) that its own replay-regeneration side effect 'matched the pre-existing replay exactly both times this was checked'. Experiment 025's own MEASURED VALUES remain valid and are unaffected by this finding (they never depended on the replay being regenerable later) - only that one provenance-confidence claim in its notes needs a caveat, which is being flagged here rather than silently left uncorrected.",
+      "current_default_replay_dir_state": "The default production REPLAY_DIR now contains this 323-position mismatched regeneration attempt, NOT experiment 025's original 286-position replay. An attempt to clear it was blocked by the harness ('protected system path') rather than completed - left as-is rather than forced. This directory's current content should NOT be relied upon as matching experiment 025 and is flagged here for the user to decide how to handle (e.g. explicitly relabel/move it, or accept it as a new, different, unverified dataset)."
+    },
+    "unrelated_concurrent_change_observed": "During this run, an unrelated, uncommitted change (an actor-relative property-owner state-vector encoding fix in scripts/monopolyzero_common.py, plus tests/test_monopolyzero_actor_relative_owner_fix.py) appeared in the working tree, apparently from a concurrent/parallel process, not from this task. Not touched, not included in either of this task's commits, mentioned here only for the record.",
+    "asu_involved": false,
+    "hybrid_compat_involved": false,
+    "fixed_buy_trade_rule_involved": false
+  },
+  "model_checkpoint": {
+    "sha256": "22ae2abea60478355f61ce0404a31de3b52fb97769d4f99f7e04f4c673629370",
+    "path": "artifacts/monopolyzero_strength_pilot/baseline_pretraining.pt",
+    "format_version": 1
+  },
+  "counts": {
+    "games_played": 8,
+    "games_completed": 8,
+    "games_incomplete_or_round_capped": 0,
+    "total_decisions_across_all_games": 70722,
+    "total_replay_positions": 55215,
+    "buy_property_opportunities": 1605,
+    "accept_trade_opportunities": 12847,
+    "decline_trade_opportunities": 12847,
+    "decline_trade_note": "computed post-hoc directly from the stored replay's legal_mask (this script's own opportunity_greedy_stats() does not track DECLINE_TRADE) - exactly equal to accept_trade_opportunities in every position checked, consistent with DECLINE_TRADE always being legal exactly when ACCEPT_TRADE is (a pending trade offer permits either response)",
+    "prior_replay_size_for_comparison": 286,
+    "scale_up_factor_vs_prior_replay": 193.06
+  },
+  "runtime": {"wall_time_s": 6859.876950400001, "peak_rss_gib": 0.7971916198730469},
+  "metrics": {
+    "per_game": [
+      {"seed": 43000, "completed": true, "decisions": 6985, "positions_collected": 5429, "winner": 0, "illegal_actions": 0, "crashed": false},
+      {"seed": 43001, "completed": true, "decisions": 10123, "positions_collected": 7935, "winner": 0, "illegal_actions": 0, "crashed": false},
+      {"seed": 43002, "completed": true, "decisions": 9555, "positions_collected": 7396, "winner": 0, "illegal_actions": 0, "crashed": false},
+      {"seed": 43003, "completed": true, "decisions": 7515, "positions_collected": 5881, "winner": 0, "illegal_actions": 0, "crashed": false},
+      {"seed": 43004, "completed": true, "decisions": 6548, "positions_collected": 5186, "winner": 1, "illegal_actions": 0, "crashed": false},
+      {"seed": 43005, "completed": true, "decisions": 9608, "positions_collected": 7525, "winner": 3, "illegal_actions": 0, "crashed": false},
+      {"seed": 43006, "completed": true, "decisions": 10213, "positions_collected": 8010, "winner": 3, "illegal_actions": 0, "crashed": false},
+      {"seed": 43007, "completed": true, "decisions": 10175, "positions_collected": 7853, "winner": 1, "illegal_actions": 0, "crashed": false}
+    ],
+    "wins_by_seat": {"0": 4, "1": 2, "2": 0, "3": 2},
+    "round_cap_rate": 0.0,
+    "greedy_selection_before_training_equals_after": true,
+    "buy_property": {"greedy_rate": 0.0012461059190031153, "mean_raw_prior": 0.15143026915433994, "mean_prior_rank": 3.5426791277258567},
+    "accept_trade": {"greedy_rate": 0.0, "mean_raw_prior": 0.13489613153986157, "mean_prior_rank": 12.524947458550635},
+    "checkpoint_sha256_untrained_output": "f3193ba6cedb73a016e343357edaa82c538b407523fd2fb9c0504079c5adc1eb",
+    "checkpoint_sha256_note": "identical model weights to the baseline (updates=0, no training) - this SHA differs from the baseline's only because save_inference()'s embedded run metadata (seeds, mode, updates=0) differs, not because any weight changed",
+    "replay_dir_combined_sha256_of_concatenated_files": "9b3f895f64331ccad153a9a10e2cb324e4075fffd0769779d8180966f5b11276",
+    "replay_dir_final_path": "artifacts/monopolyzero_native_train_candidate/buy_trade_learnability_v2/replay"
+  },
+  "loss": null,
+  "integrity": {"illegal_actions": 0, "fallbacks": 0, "crashes": 0},
+  "result": "All 8 requested DEV seeds (43000-43007) completed cleanly: 8/8 games finished with a decisive winner (0% round-cap rate), 0 illegal actions, 0 crashes, 0 ASU modules loaded. This produced 55,215 replay positions - a 193x scale-up over the 286-position replay experiment 025's sweep was limited to - with 1,605 BUY_PROPERTY opportunities (vs. 14 before), 12,847 ACCEPT_TRADE opportunities (vs. 40 before), and 12,847 DECLINE_TRADE opportunities (newly counted, computed post-hoc from the stored replay). This is a substantially higher-powered dataset for a future BUY/TRADE learnability sweep. No training was performed (updates=0 throughout, before/after greedy-selection stats are byte-identical) and no strength or GO/KILL claim is made here - this step only establishes that enough clean, native, ASU-free self-play data now exists for a properly powered version of experiment 025's sweep. Two issues were discovered and must be read alongside this data: (1) a script bug caused both the calibration benchmark and this real run to initially write into the default production replay directory despite explicit --replay-dir overrides, overwriting experiment 025's original small replay - now fixed with a regression test, and the real 8-seed data has been relocated to its correct dedicated directory (the path/SHA reported here); (2) an attempt to restore experiment 025's original replay via its documented deterministic recipe did NOT reproduce it exactly (323 positions vs. the original 286), revealing that self-play/MCTS generation in this codebase is not verified deterministic across process runs - flagged for awareness, does not affect the validity of the 55,215-position dataset reported here (which is itself internally consistent: positions_used, per-game counts, and post-hoc BUY/ACCEPT/DECLINE tallies all cross-check).",
+  "raw_logs": [
+    "docs/baseline_runs/monopolyzero_native_train_candidate_buy_trade_learnability_v2_benchmark.json",
+    "docs/baseline_runs/monopolyzero_native_train_candidate_buy_trade_learnability_v2.json"
+  ],
+  "notes": "Trained/output checkpoints (candidate.pt, candidate_untrained.pt, ~3.7MB each) are NOT committed per CLAUDE.md - referenced by SHA-256 and local path only. The replay buffer itself (artifacts/monopolyzero_native_train_candidate/buy_trade_learnability_v2/replay, ~few MB of .mmap files) is likewise not committed - referenced by its combined SHA-256 fingerprint (metrics.replay_dir_combined_sha256_of_concatenated_files) and local path, same convention experiment 025 used for its own replay fingerprint. See algorithm_config.incident_replay_dir_plumbing_bug and .determinism_finding for the full incident writeup: a real script bug was found and fixed (separate small commit), the intended dedicated-directory requirement was violated by that bug before being corrected after the fact, and a genuine non-determinism finding in self-play generation (as opposed to the already-verified-deterministic training-update path) surfaced during remediation. The default production REPLAY_DIR currently holds a 323-position dataset that does NOT match experiment 025's original 286-position replay and should not be treated as equivalent to it - left as-is because clearing it was blocked by the harness, and flagged here for the user to decide how to handle rather than silently resolved."
+}

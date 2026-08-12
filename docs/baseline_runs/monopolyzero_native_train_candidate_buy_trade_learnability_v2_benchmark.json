@@ -1,0 +1,73 @@
+{
+  "asu_modules_loaded": [],
+  "asu_modules_loaded_count": 0,
+  "checkpoint_output": "artifacts\\monopolyzero_native_train_candidate\\buy_trade_learnability_v2_benchmark\\candidate.pt",
+  "checkpoint_sha256": "562a680233e210d692a257acaa0512fa8c85ff38d2994ee1a84f4c5f3cf6eed3",
+  "config": {
+    "batch_size": 32,
+    "input_checkpoint": "C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\monopolyzero_strength_pilot\\baseline_pretraining.pt",
+    "input_checkpoint_sha256": "22ae2abea60478355f61ce0404a31de3b52fb97769d4f99f7e04f4c673629370",
+    "max_rounds": 200,
+    "mode": "self_play",
+    "policy": "pure MaxNPUCT self-play, all 4 seats, zero ASU, zero HYBRID_COMPAT, zero fixed rule",
+    "search_config": {
+      "c_puct": 1.5,
+      "dirichlet_alpha": 0.3,
+      "dirichlet_epsilon": 0.25,
+      "max_depth": 256,
+      "max_width": 64,
+      "simulations": 16,
+      "temperature_rounds": 40,
+      "visit_temperature": 1.0,
+      "widening_base": 8,
+      "widening_scale": 4.0
+    },
+    "seed_count": 1,
+    "seeds": [
+      43000
+    ],
+    "seeds_reused_from": "custom seed range - validated against the registered DEV pool",
+    "updates": 0
+  },
+  "elapsed_s": 272.1965780999999,
+  "git_head_sha": "ab4fda6b9cb0a4fc8374aa3b3e7311daa3160172",
+  "greedy_selection_after_training": {
+    "accept_trade_greedy_chosen": 0,
+    "accept_trade_greedy_rate": 0.0,
+    "accept_trade_mean_prior_rank": 12.947418738049713,
+    "accept_trade_mean_raw_prior": 0.12358913851909012,
+    "accept_trade_opportunities": 1046,
+    "buy_property_greedy_chosen": 0,
+    "buy_property_greedy_rate": 0.0,
+    "buy_property_mean_prior_rank": 3.5494505494505493,
+    "buy_property_mean_raw_prior": 0.15619531417122254,
+    "buy_property_opportunities": 182
+  },
+  "greedy_selection_before_training": {
+    "accept_trade_greedy_chosen": 0,
+    "accept_trade_greedy_rate": 0.0,
+    "accept_trade_mean_prior_rank": 12.947418738049713,
+    "accept_trade_mean_raw_prior": 0.12358913851909012,
+    "accept_trade_opportunities": 1046,
+    "buy_property_greedy_chosen": 0,
+    "buy_property_greedy_rate": 0.0,
+    "buy_property_mean_prior_rank": 3.5494505494505493,
+    "buy_property_mean_raw_prior": 0.15619531417122254,
+    "buy_property_opportunities": 182
+  },
+  "peak_rss_gib": 0.3243675231933594,
+  "per_game": [
+    {
+      "completed": true,
+      "crashed": false,
+      "decisions": 6985,
+      "illegal_actions": 0,
+      "positions_collected": 5429,
+      "seed": 43000,
+      "winner": 0
+    }
+  ],
+  "positions_used": 5429,
+  "status": "OK",
+  "train_stats": []
+}

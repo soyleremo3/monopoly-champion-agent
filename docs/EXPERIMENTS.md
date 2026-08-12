@@ -1743,3 +1743,70 @@ its own proposed experiment and decision log.
   positions) is needed before this question has adequate statistical
   power - out of scope for this task (no new self-play data, no large
   strength evaluation, per instructions).
+
+## 2026-08-12 (later) — Larger native replay for a properly powered BUY/TRADE learnability sweep
+
+- Goal: `025` was underpowered (only 14 `BUY_PROPERTY` / 40 `ACCEPT_TRADE`
+  opportunities, from a single short self-play game). Generate one larger
+  clean native, ASU-free self-play replay - 8 DEV seeds (`43000`-`43007`,
+  subset of the already-registered `023` range; `FINAL_BLIND` untouched),
+  16 `MaxNPUCT` simulations/decision, `max_rounds=200`, all 4 seats native
+  self-play, `baseline_pretraining.pt`. **No training** (`--updates 0`) -
+  data generation only, per this task's explicit scope.
+- A 1-seed calibration benchmark ran first (this project's standard
+  benchmark-before-committing discipline): 272.2s, 5,429 positions. The
+  full 8-seed run then took 6,859.9s (~1.9h) - about 3.15x the naive
+  linear extrapolation, since per-game decision counts varied (6,548-10,213
+  vs. the benchmark's 6,985) and per-decision cost grew somewhat over the
+  long-running process. It completed cleanly (0 illegal actions, 0
+  crashes) so this wasn't judged unreasonable per the task's own
+  stop-if-unreasonable criterion, but the linear estimate undershot
+  notably - worth remembering for future sizing.
+- Result: **8/8 seeds completed, 0% round-cap rate, 0 illegal actions, 0
+  crashes, 0 ASU modules loaded.** 55,215 replay positions - a **193x**
+  scale-up over `025`'s 286-position replay - with **1,605**
+  `BUY_PROPERTY` opportunities (vs. 14), **12,847** `ACCEPT_TRADE`
+  opportunities (vs. 40), and **12,847** `DECLINE_TRADE` opportunities
+  (newly counted post-hoc from the stored replay; always legal exactly
+  when `ACCEPT_TRADE` is, as expected for a pending trade response). No
+  training performed; before/after greedy-selection stats are
+  byte-identical, as expected with `updates=0`.
+- **Two issues were found during this run and are documented in full in
+  the JSON log - not smoothed over:**
+  1. **A real script bug**: `main()`'s self-play branch called
+     `train_candidate()` without forwarding `args.replay_dir`, so
+     `--replay-dir` was silently ignored in self-play mode (only ever
+     honored by `--reuse-replay` mode). Both the calibration benchmark and
+     the real 8-seed run consequently wrote into the **default production
+     replay directory** instead of their intended dedicated directories -
+     overwriting `025`'s original 286-position replay, directly contrary
+     to this task's explicit "do not overwrite any prior replay artifact"
+     requirement. Fixed (one-line: pass `replay_dir=args.replay_dir`
+     through) with a new regression test
+     (`test_main_self_play_mode_honors_custom_replay_dir`), committed
+     separately as its own small fix. The real 8-seed data was then
+     relocated to its correct dedicated directory
+     (`artifacts/monopolyzero_native_train_candidate/buy_trade_learnability_v2/replay`)
+     - that relocated data is what's reported above.
+  2. **A determinism finding**: attempting to restore `025`'s original
+     replay by re-running its exact documented recipe (seed 43000,
+     `SearchConfig(simulations=4, max_depth=16)`, `max_rounds=5`, same
+     checkpoint, same fixed seeds) produced **323 positions, not the
+     original 286** - proving this codebase's self-play/MCTS generation is
+     **not** verified deterministic across separate process runs, unlike
+     its training-update-over-a-fixed-replay path (which has been
+     rigorously verified multiple times, e.g. `025`'s byte-identical
+     update-prefix check). `025`'s own measured values are unaffected -
+     only its provenance-confidence note needs a caveat. The default
+     replay directory currently holds this mismatched 323-position
+     dataset (an attempt to clear it was blocked by the harness as a
+     protected path, not forced through) - it should **not** be treated as
+     equivalent to `025`'s original replay.
+
+  Full structured record:
+  [logs/experiments/026-buy-trade-learnability-v2-replay-generation.json](../logs/experiments/026-buy-trade-learnability-v2-replay-generation.json).
+
+- **No strength or GO/KILL claim.** This step only establishes that a
+  properly powered clean native replay now exists (1,605/12,847/12,847
+  opportunities vs. `025`'s 14/40) for a future learnability sweep - that
+  sweep itself is not run here.
