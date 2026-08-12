@@ -67,6 +67,9 @@ DEV_SEED_RANGES: tuple[tuple[int, int, str], ...] = (
     (48000, 48019, "030 - 128-game candidate vs 32-game baseline strength test: 20 seeds x 4 focus-seat rotation"),
     (49000, 49007, "031 - 32->128 early-stop checkpoint search: selection screen, 8 seeds x 4 focus-seat rotation, common set across all 5 candidates (48/64/80/96/112) vs 32-game champion"),
     (49100, 49119, "031 - early-stop checkpoint search: confirmation of the selected candidate, 20 seeds x 4 focus-seat rotation, vs 32-game champion"),
+    (52000, 52015, "032 - LR-ablation candidates A (lr=1e-4) and B (lr=3e-5): 16-game resume from the 80-game champion, identical seed_arg=51920 for both conditions so LR is the only difference"),
+    (52100, 52107, "032 - LR-ablation selection screen: 8 seeds x 4 focus-seat rotation, candidate A/B vs 3 copies of the frozen 80-game champion"),
+    (52200, 52219, "032 - LR-ablation confirmation: 20 seeds x 4 focus-seat rotation, selected candidate vs 3 copies of the frozen 80-game champion"),
 )
 
 # Fresh, disjoint from DEV_SEED_RANGES and from each other. Reserved here,
