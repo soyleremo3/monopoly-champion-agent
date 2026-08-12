@@ -65,6 +65,8 @@ DEV_SEED_RANGES: tuple[tuple[int, int, str], ...] = (
     (46000, 46019, "028 - pure PPO (hybrid=False) 027-candidate-vs-own-untrained-baseline strength screen: 20 seeds x 4 focus-seat rotation, deterministic masked-argmax PPO actor, candidate vs 3 copies of the untrained baseline (no fixed/ASU opponents)"),
     (47000, 47095, "030 - 027 checkpoint resumed 32->128 games: 96 additional training episode seeds (train()'s own episode_seed=seed_arg+absolute_game-1 formula, seed_arg=46968 chosen so this range results exactly)"),
     (48000, 48019, "030 - 128-game candidate vs 32-game baseline strength test: 20 seeds x 4 focus-seat rotation"),
+    (49000, 49007, "031 - 32->128 early-stop checkpoint search: selection screen, 8 seeds x 4 focus-seat rotation, common set across all 5 candidates (48/64/80/96/112) vs 32-game champion"),
+    (49100, 49119, "031 - early-stop checkpoint search: confirmation of the selected candidate, 20 seeds x 4 focus-seat rotation, vs 32-game champion"),
 )
 
 # Fresh, disjoint from DEV_SEED_RANGES and from each other. Reserved here,
