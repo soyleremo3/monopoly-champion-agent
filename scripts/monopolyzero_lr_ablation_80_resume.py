@@ -38,6 +38,7 @@ SELECTION_WIN_RATE_THRESHOLD = 0.25
 
 
 def load_verified_champion():
+    common.ensure_reference_on_path()
     from monopoly_game_engine.agent_ppo import PPOAgent
     checkpoint_sha256 = screen._file_sha256(CHAMPION_PATH)
     if checkpoint_sha256 != EXPECTED_CHAMPION_CHECKPOINT_SHA256:
@@ -51,7 +52,6 @@ def load_verified_champion():
 
 
 def train_candidate(lr: float, out_path: Path) -> dict:
-    common.ensure_reference_on_path()
     from monopoly_game_engine.train import train as reference_train
     agent = load_verified_champion()
     for group in agent.opt.param_groups:
