@@ -1,0 +1,195 @@
+
+============================================================
+Training Standard PPO agent (player 0)
+Total games: 96  |  Log every: 1
+============================================================
+  Game    33 | Win%:   0.0% | Props: 15.0 | Trades init/acc/dec: 70.0/22.0/4.0
+  Game    34 | Win%:   0.0% | Props: 13.0 | Trades init/acc/dec: 219.0/5.0/3.0
+  Game    35 | Win%:   0.0% | Props: 15.0 | Trades init/acc/dec: 48.0/29.0/15.0
+  Game    36 | Win%:   0.0% | Props: 6.0 | Trades init/acc/dec: 106.0/9.0/7.0
+  Game    37 | Win%:   0.0% | Props: 15.0 | Trades init/acc/dec: 45.0/45.0/13.0
+  Game    38 | Win%:   0.0% | Props: 5.0 | Trades init/acc/dec: 361.0/7.0/4.0
+  Game    39 | Win%:   0.0% | Props: 12.0 | Trades init/acc/dec: 39.0/23.0/15.0
+  Game    40 | Win%:   0.0% | Props: 3.0 | Trades init/acc/dec: 300.0/16.0/7.0
+  Game    41 | Win%:   0.0% | Props: 12.0 | Trades init/acc/dec: 201.0/1.0/0.0
+  Game    42 | Win%:   0.0% | Props: 18.0 | Trades init/acc/dec: 154.0/31.0/20.0
+  Game    43 | Win%:   0.0% | Props: 17.0 | Trades init/acc/dec: 55.0/38.0/22.0
+  Game    44 | Win%:   0.0% | Props: 6.0 | Trades init/acc/dec: 51.0/4.0/4.0
+  Game    45 | Win%:   0.0% | Props: 11.0 | Trades init/acc/dec: 97.0/9.0/7.0
+  Game    46 | Win%:   0.0% | Props: 11.0 | Trades init/acc/dec: 181.0/14.0/15.0
+  Game    47 | Win%:   0.0% | Props: 8.0 | Trades init/acc/dec: 757.0/26.0/31.0
+  Game    48 | Win%:   0.0% | Props: 6.0 | Trades init/acc/dec: 182.0/5.0/2.0
+  Game    49 | Win%:   0.0% | Props: 9.0 | Trades init/acc/dec: 34.0/18.0/12.0
+  Game    50 | Win%:   0.0% | Props: 7.0 | Trades init/acc/dec: 752.0/8.0/11.0
+  Game    51 | Win%:   0.0% | Props: 7.0 | Trades init/acc/dec: 73.0/6.0/14.0
+  Game    52 | Win%:   0.0% | Props: 9.0 | Trades init/acc/dec: 212.0/15.0/11.0
+  Game    53 | Win%:   0.0% | Props: 4.0 | Trades init/acc/dec: 370.0/4.0/4.0
+  Game    54 | Win%:   0.0% | Props: 14.0 | Trades init/acc/dec: 364.0/21.0/18.0
+  Game    55 | Win%:   0.0% | Props: 23.0 | Trades init/acc/dec: 53.0/31.0/19.0
+  Game    56 | Win%:   0.0% | Props: 9.0 | Trades init/acc/dec: 66.0/33.0/25.0
+  Game    57 | Win%:   0.0% | Props: 5.0 | Trades init/acc/dec: 234.0/4.0/3.0
+  Game    58 | Win%:   0.0% | Props: 5.0 | Trades init/acc/dec: 391.0/4.0/2.0
+  Game    59 | Win%:   0.0% | Props: 7.0 | Trades init/acc/dec: 27.0/18.0/15.0
+  Game    60 | Win%:   0.0% | Props: 6.0 | Trades init/acc/dec: 51.0/18.0/23.0
+  Game    61 | Win%:   0.0% | Props: 3.0 | Trades init/acc/dec: 32.0/1.0/4.0
+  Game    62 | Win%:   0.0% | Props: 3.0 | Trades init/acc/dec: 309.0/3.0/5.0
+  Game    63 | Win%:   0.0% | Props: 20.0 | Trades init/acc/dec: 158.0/30.0/15.0
+  Game    64 | Win%:   0.0% | Props: 13.0 | Trades init/acc/dec: 80.0/31.0/27.0
+  Game    65 | Win%:   0.0% | Props: 7.0 | Trades init/acc/dec: 222.0/4.0/4.0
+  Game    66 | Win%:   0.0% | Props: 4.0 | Trades init/acc/dec: 128.0/5.0/2.0
+  Game    67 | Win%:   0.0% | Props: 7.0 | Trades init/acc/dec: 189.0/3.0/2.0
+  Game    68 | Win%:   0.0% | Props: 14.0 | Trades init/acc/dec: 52.0/19.0/8.0
+  Game    69 | Win%:   0.0% | Props: 7.0 | Trades init/acc/dec: 219.0/1.0/1.0
+  Game    70 | Win%:   0.0% | Props: 4.0 | Trades init/acc/dec: 160.0/9.0/4.0
+  Game    71 | Win%:   0.0% | Props: 6.0 | Trades init/acc/dec: 37.0/13.0/29.0
+  Game    72 | Win%:   0.0% | Props: 11.0 | Trades init/acc/dec: 29.0/8.0/17.0
+  Game    73 | Win%:   0.0% | Props: 6.0 | Trades init/acc/dec: 108.0/3.0/2.0
+  Game    74 | Win%:   0.0% | Props: 9.0 | Trades init/acc/dec: 235.0/0.0/5.0
+  Game    75 | Win%:   0.0% | Props: 4.0 | Trades init/acc/dec: 246.0/0.0/5.0
+  Game    76 | Win%:   0.0% | Props: 4.0 | Trades init/acc/dec: 198.0/0.0/2.0
+  Game    77 | Win%:   0.0% | Props: 17.0 | Trades init/acc/dec: 234.0/24.0/60.0
+  Game    78 | Win%:   0.0% | Props: 14.0 | Trades init/acc/dec: 126.0/13.0/31.0
+  Game    79 | Win%:   0.0% | Props: 6.0 | Trades init/acc/dec: 22.0/2.0/6.0
+  Game    80 | Win%:   0.0% | Props: 7.0 | Trades init/acc/dec: 121.0/3.0/26.0
+  Game    81 | Win%:   0.0% | Props: 11.0 | Trades init/acc/dec: 41.0/1.0/20.0
+  Game    82 | Win%:   0.0% | Props: 6.0 | Trades init/acc/dec: 188.0/0.0/5.0
+  Game    83 | Win%:   0.0% | Props: 7.0 | Trades init/acc/dec: 73.0/1.0/10.0
+  Game    84 | Win%:   0.0% | Props: 5.0 | Trades init/acc/dec: 471.0/4.0/8.0
+  Game    85 | Win%:   0.0% | Props: 8.0 | Trades init/acc/dec: 725.0/5.0/7.0
+  Game    86 | Win%:   0.0% | Props: 6.0 | Trades init/acc/dec: 204.0/2.0/10.0
+  Game    87 | Win%:   0.0% | Props: 9.0 | Trades init/acc/dec: 110.0/7.0/32.0
+  Game    88 | Win%:   0.0% | Props: 7.0 | Trades init/acc/dec: 91.0/2.0/17.0
+  Game    89 | Win%:   0.0% | Props: 6.0 | Trades init/acc/dec: 74.0/1.0/2.0
+  Game    90 | Win%:   0.0% | Props: 7.0 | Trades init/acc/dec: 163.0/6.0/8.0
+  Game    91 | Win%:   0.0% | Props: 6.0 | Trades init/acc/dec: 551.0/14.0/24.0
+  Game    92 | Win%:   0.0% | Props: 9.0 | Trades init/acc/dec: 260.0/5.0/1.0
+  Game    93 | Win%:   0.0% | Props: 6.0 | Trades init/acc/dec: 135.0/2.0/3.0
+  Game    94 | Win%:   0.0% | Props: 9.0 | Trades init/acc/dec: 30.0/3.0/24.0
+  Game    95 | Win%:   0.0% | Props: 10.0 | Trades init/acc/dec: 136.0/15.0/8.0
+  Game    96 | Win%:   0.0% | Props: 16.0 | Trades init/acc/dec: 183.0/38.0/70.0
+  Game    97 | Win%:   0.0% | Props: 10.0 | Trades init/acc/dec: 328.0/17.0/49.0
+  Game    98 | Win%:   0.0% | Props: 6.0 | Trades init/acc/dec: 76.0/1.0/3.0
+  Game    99 | Win%:   0.0% | Props: 8.0 | Trades init/acc/dec: 245.0/2.0/9.0
+  Game   100 | Win%:   0.0% | Props: 7.0 | Trades init/acc/dec: 245.0/3.0/10.0
+  Game   101 | Win%:   0.0% | Props: 5.0 | Trades init/acc/dec: 120.0/2.0/8.0
+  Game   102 | Win%:   0.0% | Props: 7.0 | Trades init/acc/dec: 672.0/11.0/28.0
+  Game   103 | Win%:   0.0% | Props: 8.0 | Trades init/acc/dec: 174.0/9.0/16.0
+  Game   104 | Win%:   0.0% | Props: 11.0 | Trades init/acc/dec: 73.0/22.0/27.0
+  Game   105 | Win%:   0.0% | Props: 2.0 | Trades init/acc/dec: 168.0/0.0/6.0
+  Game   106 | Win%:   0.0% | Props: 13.0 | Trades init/acc/dec: 174.0/11.0/21.0
+  Game   107 | Win%:   0.0% | Props: 6.0 | Trades init/acc/dec: 192.0/8.0/12.0
+  Game   108 | Win%:   0.0% | Props: 6.0 | Trades init/acc/dec: 780.0/11.0/49.0
+  Game   109 | Win%:   0.0% | Props: 17.0 | Trades init/acc/dec: 35.0/17.0/30.0
+  Game   110 | Win%:   0.0% | Props: 5.0 | Trades init/acc/dec: 451.0/7.0/11.0
+  Game   111 | Win%:   0.0% | Props: 13.0 | Trades init/acc/dec: 46.0/16.0/35.0
+  Game   112 | Win%:   0.0% | Props: 11.0 | Trades init/acc/dec: 73.0/12.0/34.0
+  Game   113 | Win%:   0.0% | Props: 9.0 | Trades init/acc/dec: 113.0/9.0/36.0
+  Game   114 | Win%:   0.0% | Props: 3.0 | Trades init/acc/dec: 167.0/2.0/14.0
+  Game   115 | Win%:   0.0% | Props: 11.0 | Trades init/acc/dec: 37.0/22.0/30.0
+  Game   116 | Win%:   0.0% | Props: 9.0 | Trades init/acc/dec: 51.0/38.0/42.0
+  Game   117 | Win%:   0.0% | Props: 5.0 | Trades init/acc/dec: 44.0/12.0/53.0
+  Game   118 | Win%:   0.0% | Props: 6.0 | Trades init/acc/dec: 285.0/12.0/69.0
+  Game   119 | Win%:   0.0% | Props: 3.0 | Trades init/acc/dec: 233.0/7.0/41.0
+  Game   120 | Win%:   0.0% | Props: 11.0 | Trades init/acc/dec: 209.0/18.0/61.0
+  Game   121 | Win%:   0.0% | Props: 6.0 | Trades init/acc/dec: 148.0/3.0/23.0
+  Game   122 | Win%:   0.0% | Props: 13.0 | Trades init/acc/dec: 50.0/14.0/45.0
+  Game   123 | Win%:   0.0% | Props: 7.0 | Trades init/acc/dec: 93.0/22.0/133.0
+  Game   124 | Win%:   0.0% | Props: 5.0 | Trades init/acc/dec: 98.0/11.0/79.0
+  Game   125 | Win%:   0.0% | Props: 6.0 | Trades init/acc/dec: 125.0/14.0/23.0
+  Game   126 | Win%:   0.0% | Props: 6.0 | Trades init/acc/dec: 262.0/0.0/10.0
+  Game   127 | Win%:   0.0% | Props: 5.0 | Trades init/acc/dec: 47.0/6.0/25.0
+  Game   128 | Win%:   0.0% | Props: 4.0 | Trades init/acc/dec: 85.0/0.0/1.0
+{
+  "actor_sha256_128game": "ad4e9a6d066aab3b2ff5c8414b40669cae51b4bde6d49c42a1ce8128985dd224",
+  "asu_modules_loaded": [],
+  "checkpoint_output": "C:\\Users\\Emrullah Soyler\\Desktop\\Exposure Academy Projects\\Second Week\\Monoply\\artifacts\\monopolyzero_pure_ppo_learnability_gate\\candidate_ppo_128.pt",
+  "checkpoint_output_sha256": "78be2735b14c0563e2c558a8a56cfc20c30d05b225acde29d31d1a2c0975fbcb",
+  "elapsed_s": 447.70653990000574,
+  "episode_seed_first": 47000,
+  "episode_seed_last": 47095,
+  "eval_seeds": [
+    48000,
+    48001,
+    48002,
+    48003,
+    48004,
+    48005,
+    48006,
+    48007,
+    48008,
+    48009,
+    48010,
+    48011,
+    48012,
+    48013,
+    48014,
+    48015,
+    48016,
+    48017,
+    48018,
+    48019
+  ],
+  "games_trained_end": 128,
+  "games_trained_start": 32,
+  "git_head_sha": "2ff2820c58e55b813f16031b8c8adbf7d92253e0",
+  "peak_rss_gib": 0.3102531433105469,
+  "status": "OK",
+  "strength_test_summary": {
+    "baseline_action_behavior": {
+      "accept_trade_opportunities": 68186,
+      "accept_trade_rate_when_legal": 0.48402897955592056,
+      "buy_property_opportunities": 2853,
+      "buy_property_rate_when_legal": 0.9985979670522257,
+      "decline_trade_opportunities": 68186,
+      "decline_trade_rate_when_legal": 0.0,
+      "trade_offers_total": 72246
+    },
+    "baseline_bankruptcy_rate": 0.45416666666666666,
+    "baseline_mean_net_worth": 3533.68125,
+    "baseline_trade_offers_per_game": 301.025,
+    "candidate_action_behavior": {
+      "accept_trade_opportunities": 30185,
+      "accept_trade_rate_when_legal": 0.00016564518800728838,
+      "buy_property_opportunities": 3153,
+      "buy_property_rate_when_legal": 0.0,
+      "decline_trade_opportunities": 30185,
+      "decline_trade_rate_when_legal": 0.2749047540168958,
+      "trade_offers_total": 26655
+    },
+    "candidate_bankruptcy_rate": 0.2,
+    "candidate_mean_net_worth": 5258.025,
+    "candidate_net_worth_advantage": 1724.3437499999995,
+    "candidate_trade_offers_per_game": 333.1875,
+    "candidate_wilson_95": [
+      0.16806231857542378,
+      0.35484674619233975
+    ],
+    "candidate_win_rate": 0.25,
+    "candidate_wins": 20,
+    "integrity": {
+      "crashes": 0,
+      "illegal_actions": 0
+    },
+    "n_games": 80,
+    "n_seed_blocks": 20,
+    "null_win_rate": 0.25,
+    "primary_seed_block_bootstrap_vs_25pct_null": {
+      "bootstrap_seed": 0,
+      "n_records": 80,
+      "n_resamples": 2000,
+      "n_seed_blocks": 20,
+      "null_rate": 0.25,
+      "win_rate_diff_from_null": {
+        "ci_95": [
+          -0.1,
+          0.11249999999999999
+        ],
+        "point": 0.0
+      }
+    },
+    "round_cap_hits": 59,
+    "round_cap_rate": 0.7375,
+    "verdict": "INCONCLUSIVE"
+  }
+}
+EXIT_CODE=0

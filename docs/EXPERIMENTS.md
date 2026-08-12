@@ -2105,3 +2105,87 @@ its own proposed experiment and decision log.
   `afd9205761317e196d77f679921c35fb04c7ab96`) were all confirmed
   unchanged before running (`git diff --stat` showed only the two script
   files above). `FINAL_BLIND` was not touched.
+
+## 2026-08-12 (later) — 030: resume 027's checkpoint 32->128 games (INCONCLUSIVE, notable policy-collapse finding)
+
+- Hypothesis: `027`'s 32-game pure-PPO checkpoint beat its own untrained
+  init (`028`, GO). Does continuing training on the identical recipe
+  (same `PPOAgent`/`hybrid=False`/hyperparameters/reward/action-space/
+  state pipeline, reference `train()` unmodified) for 96 MORE games (128
+  total) add further real strength?
+- Setup: new
+  [scripts/monopolyzero_pure_ppo_resume_128_strength_test.py](../scripts/monopolyzero_pure_ppo_resume_128_strength_test.py)
+  (82 production lines total incl. a 2-line DEV seed registration - no
+  core algorithm file or the reference submodule touched, confirmed via
+  `git diff --stat` before running). **Phase 1**: loaded `027`'s
+  hash-verified 32-game checkpoint (`e6c142d1...9861b5b`), confirmed
+  `games_trained==32`, then called the reference's own unmodified
+  `train()` for 96 more games. Base seed `46968` was chosen so `train()`'s
+  own `episode_seed = seed_arg + absolute_game - 1` formula lands exactly
+  on `47000-47095` - verified at runtime against every one of the 96
+  logged episode seeds (not merely asserted), never just trusted. Saved
+  to a **separate** checkpoint (`candidate_ppo_128.pt`) - the 32-game
+  file was never overwritten (confirmed both present with distinct
+  SHA-256 afterward). **Phase 2**: reused `028`'s exact
+  `play_one_game`/`summarize`/masked-argmax policy wholesale (zero new
+  evaluation code) to strength-test the 128-game candidate against three
+  copies of the **frozen 32-game checkpoint** (not the untrained init this
+  time), 20 fresh DEV seeds (`48000-48019`, disjoint from the training
+  seeds and every prior experiment/`FINAL_BLIND`) x 4 seat rotations = 80
+  games. Pre-registered rule: **GO** if the seed-block bootstrap CI for
+  `win_rate - 25%` has a lower bound `> 0`; **KILL** if the upper bound is
+  `<= 0`; otherwise **INCONCLUSIVE** - and either way, this task stops
+  here (no automatic scaling to 256/500/1000 games, no reward/
+  architecture follow-up).
+
+  ```bash
+  PYTHONHASHSEED=0 PYTHONIOENCODING=utf-8 python scripts/monopolyzero_pure_ppo_resume_128_strength_test.py
+  ```
+
+- Result: episode seed range verified exactly `47000-47095`, `games_trained`
+  went `32 -> 128` as expected, both checkpoint hashes recorded. 0 illegal
+  actions, 0 crashes, 0 ASU modules loaded across all 176 games (96
+  training + 80 eval). Wall time 447.7s (~7.5 min).
+
+  **Primary: seed-block bootstrap for `128-game win rate - 25%`: point
+  0.0, 95% CI `[-10.0, +11.25]` points** - straddles zero (candidate won
+  exactly 20/80 = 25.0%, landing precisely on the null itself, Wilson 95%
+  `[16.8%, 35.5%]`). **INCONCLUSIVE** per the pre-registered rule -
+  neither GO nor KILL is satisfied.
+
+  **Large non-pre-registered finding, reported regardless:** the 128-game
+  checkpoint's behavior collapsed away from the trait that gave the
+  32-game checkpoint its edge in `028`. `BUY_PROPERTY` (98.5%-99.9% of
+  legal opportunities in every prior pure-PPO measurement in this
+  project) fell to **exactly 0.0%** (0/3,153). `ACCEPT_TRADE` fell to
+  **0.017%** (5/30,185). `DECLINE_TRADE` - chosen 0% of the time in
+  *every* prior experiment (`027`/`028`/`029`) despite always being legal
+  alongside `ACCEPT_TRADE` - jumped to **27.5%**. The frozen 32-game
+  baseline kept its familiar ~99.9% `BUY_PROPERTY` rate throughout this
+  same run (it played the other three seats), confirming this is a real
+  shift in the 128-game checkpoint's own policy, not a measurement
+  artifact. Despite this collapse, win rate stayed statistically flat -
+  net worth and bankruptcy both moved in the candidate's favor (+1,724.3
+  mean net worth, 20.0% vs. 45.4% bankruptcy) but neither is the primary
+  metric and neither was pre-registered.
+
+  Full structured record:
+  [logs/experiments/030-pure-ppo-32-vs-128-game-resume-strength-test.json](../logs/experiments/030-pure-ppo-32-vs-128-game-resume-strength-test.json).
+
+- Conclusion / next step: **INCONCLUSIVE on the primary win-rate
+  question - task stops here per its own instruction (no automatic
+  256/500/1000-game scaling, no reward/architecture changes).** Beyond
+  the letter of that verdict, the `BUY_PROPERTY`/`ACCEPT_TRADE`/
+  `DECLINE_TRADE` collapse is a strong caution sign: continuing this
+  exact PPO recipe past 32 games did not extend the behavior that made
+  the 32-game checkpoint strong - it abandoned it, while win rate
+  happened to stay flat rather than clearly dropping. This reads as
+  policy drift/instability under continued training on a small-game-count
+  recipe, not a confirmed regression (the primary statistic doesn't
+  support that stronger claim) but also not a case for "just train
+  longer." No agent/training/architecture code changed for this task -
+  `PPOAgent`, `ActorNetwork`, reward shaping, state encoding, the action
+  space, the environment, MCTS, `monopolyzero_common.py`, and
+  `references/DeepRL_Monopoly` (pinned at
+  `afd9205761317e196d77f679921c35fb04c7ab96`) were all confirmed
+  unchanged before running. `FINAL_BLIND` was not touched.
