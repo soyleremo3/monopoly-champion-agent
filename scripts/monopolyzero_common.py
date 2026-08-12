@@ -117,6 +117,66 @@ class RssMonitor:
 def ensure_reference_on_path() -> None:
     if str(REFERENCE_ROOT) not in sys.path:
         sys.path.insert(0, str(REFERENCE_ROOT))
+    patch_actor_relative_owner_encoding()
+
+
+_ACTOR_RELATIVE_OWNER_FIX_MARKER = "_actor_relative_owner_fix"
+
+
+def _actor_relative_order(agent_id: int, num_players: int) -> list[int]:
+    return [agent_id] + [i for i in range(num_players) if i != agent_id]
+
+
+def _build_actor_relative_state_vector(original_build_state_vector, players, properties_dict, agent_id, env=None):
+    """Drop-in replacement for monopoly_game_engine.state.build_state_vector.
+
+    Upstream's property-owner one-hot indexes by physical player id
+    (state.py's `owner_vec[prop.owner] = 1.0`), unlike every other
+    per-player section of this same 300-dim vector (turn order, bankrupt,
+    jail_turns, debt_creditor, ...), which all go through an actor-relative
+    `order = [agent_id] + [other seats]` list. For agent_id != 0 this mislabels
+    which relative seat owns a property. Re-maps that one 5-dim segment post
+    hoc so the pinned read-only submodule (references/DeepRL_Monopoly) is
+    never edited in place — see docs/REFERENCE_AUDIT.md and
+    docs/DECISIONS.md's 2026-08-12 entry. Layout, dims, and every other
+    feature are untouched: delegates to the original for everything else.
+    """
+    from monopoly_game_engine.constants import NUM_PLAYERS, PROPERTY_IDS
+
+    state = original_build_state_vector(players, properties_dict, agent_id, env)
+    order = _actor_relative_order(agent_id, NUM_PLAYERS)
+    section_start = 4 * NUM_PLAYERS  # end of the 16-dim player-features block
+    stride = 8  # owner_onehot(5) + mortgaged(1) + is_monopoly(1) + improvement_fraction(1)
+    for prop_index, square_id in enumerate(PROPERTY_IDS):
+        owner = properties_dict[square_id].owner
+        start = section_start + prop_index * stride
+        state[start : start + 5] = 0.0
+        if owner is not None:
+            state[start + order.index(owner)] = 1.0
+    return state
+
+
+def patch_actor_relative_owner_encoding() -> None:
+    """Monkeypatches the actor-relative property-owner fix into the pinned
+    submodule's build_state_vector callsite, without editing the submodule
+    file in place. Idempotent — safe to call every time
+    ensure_reference_on_path() runs."""
+    import monopoly_game_engine as _package
+    import monopoly_game_engine.env as _env_module
+    import monopoly_game_engine.state as _state_module
+
+    if getattr(_env_module.build_state_vector, _ACTOR_RELATIVE_OWNER_FIX_MARKER, False):
+        return
+
+    original = _state_module.build_state_vector
+
+    def _patched(players, properties_dict, agent_id, env=None):
+        return _build_actor_relative_state_vector(original, players, properties_dict, agent_id, env)
+
+    setattr(_patched, _ACTOR_RELATIVE_OWNER_FIX_MARKER, True)
+    _state_module.build_state_vector = _patched
+    _env_module.build_state_vector = _patched
+    _package.build_state_vector = _patched
 
 
 def _mix_decision_seed(base_seed: int, turn_index: int, seat: int) -> int:

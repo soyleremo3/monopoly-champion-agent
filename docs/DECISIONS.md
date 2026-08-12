@@ -322,3 +322,130 @@ only the calendar label was wrong in places. Fixed going forward from here.*
   question is external validity to a *different* future distribution, not
   a flaw in what was measured).
 - Reference checked: `references/DeepRL_Monopoly` at `afd9205761317e196d77f679921c35fb04c7ab96` (submodule unchanged, read-only). No training or reference code changed for this decision.
+
+## 2026-08-12 — Fix confirmed actor-relative property-owner state bug; re-scope prior MCTS/value/BUY-TRADE findings to the pre-fix state family
+
+- Context: `references/DeepRL_Monopoly/monopoly_game_engine/state.py::build_state_vector`'s
+  300-dim observation encodes every other per-player section (player
+  position/cash/jail block, turn order, bankrupt, jail_turns,
+  debt_creditor, auction leader/bidders, incoming-trade sender, ...) through
+  the engine's canonical actor-relative order,
+  `order = [agent_id] + [i for i in range(NUM_PLAYERS) if i != agent_id]`
+  (agent first, then the other physical player ids in ascending order) -
+  **except** the 28 property-owner 5-dim one-hot slices, which indexed
+  directly by raw physical `prop.owner` (`owner_vec[prop.owner] = 1.0`,
+  state.py line 154). For any `agent_id != 0` this mislabeled which
+  actor-relative seat owns a property, corrupting exactly the
+  `BUY_PROPERTY`/`ACCEPT_TRADE`-adjacent part of the state representation
+  for three of every four decisions.
+- Decision: **Fix it as a project-owned runtime monkeypatch**, not an edit
+  to the pinned read-only submodule. `scripts/monopolyzero_common.py` adds
+  `patch_actor_relative_owner_encoding()` (wired into the existing
+  `ensure_reference_on_path()`, so every script/test that already calls it
+  picks the fix up automatically, idempotent via a marker attribute so
+  repeated calls never double-wrap): it replaces
+  `monopoly_game_engine.state.build_state_vector` with a wrapper that calls
+  the original unchanged for the full 300-dim vector, then re-maps only the
+  28 owner one-hot slices from physical-id indexing to
+  `actor_order(agent_id).index(owner)` indexing, in place. `STATE_DIM`,
+  action ids, checkpoint tensor shapes, and every other feature are
+  byte-for-byte untouched.
+  - **No separate search/predict adapter was needed for MaxNPUCT, despite
+    the task's provisional allowance for one.** `monopoly_game_engine/env.py`
+    has exactly one call site for `build_state_vector`
+    (`_get_state`, env.py line 1076), reached via a bare module-global name
+    lookup resolved at call time, not import time - so patching
+    `env`'s module dict once covers every consumer: `POLICY_ONLY`/
+    `HYBRID_COMPAT` (`model.predict(env._get_state(seat), ...)`),
+    `MaxNPUCT._evaluate` for **both** the root node (`search.py:265`) and
+    every descendant node (`search.py:198,214`, both go through
+    `env._get_state(actor)` again), and `play_local_game`'s
+    `ReplayPosition.state=game.env._get_state(seat)` recording call - all
+    without touching `references/DeepRL_Monopoly/monopoly_bench/search.py`.
+    Because there is exactly one function that ever builds a state vector,
+    and no separate post-hoc remap step exists anywhere downstream, there
+    is no code path that could double-remap an already-corrected state
+    (verified by `test_patch_is_idempotent_and_does_not_double_remap`).
+  - **Test-design correction** (superseding the original approach in an
+    earlier uncommitted draft of this fix): a broad
+    "arbitrary-physical-seat-permutation invariance of the full 300-dim
+    vector" test is **wrong** and was removed. Because `order` sorts the
+    *other* physical ids ascending (not "same relative position after any
+    relabeling"), relabeling individuals to different physical seats
+    changes `order` itself for every per-player section, not just
+    ownership - two seatings of "the same relative situation" are not
+    expected to produce identical vectors in general. The correct,
+    narrower invariant - **internal frame consistency** - is that within
+    one `build_state_vector` call, property-owner slot `k` must name the
+    same physical player as player-feature slot `k`, both under that
+    call's own `actor_order(agent_id)`. `tests/test_monopolyzero_actor_relative_owner_fix.py`
+    now proves this directly (including a non-circular cross-check against
+    the independently-built player-features block, not just the owner
+    section against itself), plus: exact owner-mapping for actor_id 0-3,
+    byte-for-byte-unchanged actor_id=0 output, non-owner-coordinate
+    invariance for actors 1-3, patch idempotency, `MaxNPUCT` root+descendant
+    coverage (via direct `_evaluate` calls - see environment note below),
+    and `play_local_game`/`ReplayPosition` recording correctness.
+  - **Environment note**: two of the new tests would otherwise exercise
+    `MaxNPUCT.choose_action`/`play_local_game` end-to-end, but
+    `numpy.random.default_rng` is currently blocked on this machine by a
+    local Application Control policy (`ImportError: DLL load failed while
+    importing _mt19937: An Application Control policy has blocked this
+    file`) - a pre-existing environment issue, confirmed unrelated to this
+    fix by re-running the full `tests/` suite against clean HEAD
+    `2f4fa0f` before making any change: the identical 27 tests fail there
+    too (582 passed/27 failed on `2f4fa0f`; 589 passed/27 failed with this
+    fix's 7 new tests added, zero newly-broken, zero newly-fixed). Those 27
+    failures span files with no relation to this fix (`evaluation_protocol.py`,
+    `colab_shard_runner.py`, `monopolyzero_native_train_candidate.py`,
+    `monopolyzero_value_generalization_probe.py`,
+    `monopolyzero_value_learnability_probe.py`,
+    `monopolyzero_buy_trade_gradient_diagnostic.py`), all via the same
+    `numpy.random`/`_mt19937` import failure. This is a machine-level
+    issue outside this repo's and this task's scope (not a security
+    setting this project should be changing) - **`tests/` is not fully
+    green on this machine right now, but every failure is this one
+    pre-existing, unrelated cause, and the fix's own 7 new tests are
+    designed to avoid it** (calling `MaxNPUCT._evaluate` directly instead
+    of `choose_action`, and a `kind="search"` stub instead of a real
+    `MaxNPUCT`-backed policy for the replay-recorder test).
+  - **Prior findings built on the buggy owner encoding must be re-scoped**,
+    not silently carried forward as if measured on corrected semantics:
+    - `026`'s 55,215-position replay
+      (`artifacts/monopolyzero_native_train_candidate/buy_trade_learnability_v2/replay`)
+      is **PRE-FIX DIAGNOSTIC ONLY, NOT eligible for corrected-model
+      strength training** - both its stored states and its MCTS visit
+      targets were generated under the old, physical-id owner encoding.
+    - `017`/`018`'s PUCT-search-budget and PUCT-vs-`POLICY_ONLY` KILL
+      conclusions are re-scoped to the pre-fix checkpoint/state family they
+      were actually measured on - not yet re-established for
+      corrected-state search.
+    - `021`/`022`'s learned-value-probe KILL conclusion is likewise
+      re-scoped to the pre-fix state family - the probe was trained and
+      evaluated entirely on states whose owner one-hot was mislabeled for
+      3 of every 4 seats.
+    - `023`/`024`'s qualitative finding - that plain `POLICY_ONLY` never
+      chooses `BUY_PROPERTY`/`ACCEPT_TRADE` due to the PPO-bootstrap's
+      untrained action-head rows - is **kept**, since it is a property of
+      the checkpoint's weights, not of the state encoding. Their exact
+      win-rate magnitudes (e.g. `023`'s +21.25-point `HYBRID_COMPAT` vs.
+      `POLICY_ONLY` gap) are **not** carried forward as post-fix evidence -
+      those numbers were measured on pre-fix states and have not been
+      re-verified against corrected ones.
+  - This task explicitly excluded training, replay generation, and
+    evaluation - re-running any of `017`/`018`/`021`/`022`/`023`/`024`/`026`
+    against corrected-state semantics is future work, not decided here.
+- Alternatives considered: editing `references/DeepRL_Monopoly/monopoly_game_engine/state.py`
+  directly (rejected - the submodule must stay read-only per `CLAUDE.md`);
+  a project-owned `search.py`/model-predict wrapper class instead of a
+  `build_state_vector` monkeypatch (rejected as unnecessary after tracing
+  every consumer to the single `env._get_state` call site - would have
+  been strictly more code for the same coverage, and would have needed to
+  be threaded through `MaxNPUCT` at both root and descendant evaluation
+  separately); keeping the original broad permutation-invariance test and
+  trying to make the implementation satisfy it (rejected - the test's own
+  premise doesn't hold for this engine's actual `actor_order` semantics, so
+  making it pass would have required either a different, non-canonical
+  ordering scheme or a fragile test-only special case, neither justified
+  by anything in this task).
+- Reference checked: `references/DeepRL_Monopoly` at `afd9205761317e196d77f679921c35fb04c7ab96` (submodule unchanged, read-only).
