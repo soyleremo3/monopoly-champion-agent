@@ -396,12 +396,13 @@ def test_main_writes_output_and_checkpoint_with_requested_config(monkeypatch, tm
         }
 
     monkeypatch.setattr(module, "opportunity_greedy_stats", fake_opportunity_greedy_stats)
-    monkeypatch.setattr(
-        module, "train_candidate",
-        lambda model, positions, *, updates, batch_size, seed: (
-            [{"loss": 1.0, "policy_loss": 0.5, "value_loss": 0.5, "gradient_norm": 0.1}] * updates
-        ),
-    )
+    train_candidate_calls = []
+
+    def fake_train_candidate(model, positions, *, updates, batch_size, seed, replay_dir):
+        train_candidate_calls.append(replay_dir)
+        return [{"loss": 1.0, "policy_loss": 0.5, "value_loss": 0.5, "gradient_norm": 0.1}] * updates
+
+    monkeypatch.setattr(module, "train_candidate", fake_train_candidate)
 
     output_path = tmp_path / "out.json"
     checkpoint_path = tmp_path / "candidate.pt"
@@ -427,6 +428,74 @@ def test_main_writes_output_and_checkpoint_with_requested_config(monkeypatch, tm
     assert len(written["train_stats"]) == 3
     assert written["checkpoint_sha256"] == hashlib.sha256(b"fake-checkpoint-bytes").hexdigest()
     assert len(stats_calls) == 2  # before + after
+    # regression guard: self-play mode must forward args.replay_dir to
+    # train_candidate() (it silently defaulted to the production REPLAY_DIR
+    # before this was fixed - see test_main_self_play_mode_honors_custom_replay_dir)
+    assert train_candidate_calls == [module.REPLAY_DIR]
+
+
+def test_main_self_play_mode_honors_custom_replay_dir(monkeypatch, tmp_path):
+    """Regression guard: main()'s self-play branch used to call
+    train_candidate() without forwarding args.replay_dir at all, so a
+    custom --replay-dir was silently ignored and self-play writes always
+    landed in the default production REPLAY_DIR regardless of what was
+    requested - discovered when generating the 8-seed replay for the
+    BUY/TRADE learnability experiment overwrote the existing production
+    replay directory despite an explicit --replay-dir override (see
+    docs/EXPERIMENTS.md and the buy-trade-learnability-v2 experiment log).
+    Asserts a custom --replay-dir reaches train_candidate() unchanged, and
+    is NOT module.REPLAY_DIR."""
+    module.common.ensure_reference_on_path()
+    from monopoly_bench.model import MonopolyZeroNet
+
+    monkeypatch.setattr(module.common, "require_pinned_hash_seed", lambda name: None)
+    monkeypatch.setattr(module.common, "require_clean_git_tree", lambda name: "a" * 40)
+    monkeypatch.setattr(module.ep, "require_seed_scope", lambda seeds, seed_class, *, context: None)
+    monkeypatch.setattr(module, "verify_baseline_checkpoint", lambda: "b" * 64)
+    monkeypatch.setattr(module.common, "loaded_asu_modules", lambda: [])
+
+    class _FakeModel:
+        def eval(self):
+            return self
+
+        def save_inference(self, path, metadata):
+            Path(path).parent.mkdir(parents=True, exist_ok=True)
+            Path(path).write_bytes(b"fake-checkpoint-bytes")
+
+    monkeypatch.setattr(MonopolyZeroNet, "load_inference", classmethod(lambda cls, path: _FakeModel()))
+
+    fake_positions = [object()]
+    monkeypatch.setattr(
+        module, "generate_self_play_positions",
+        lambda seeds, model, search_config, max_rounds: {
+            "per_game": [], "positions": fake_positions, "total_illegal": 0, "total_crashed": 0, "incomplete": 0,
+        },
+    )
+    monkeypatch.setattr(module, "opportunity_greedy_stats", lambda positions, model, *, buy_id, accept_id: {})
+
+    train_candidate_calls = []
+
+    def fake_train_candidate(model, positions, *, updates, batch_size, seed, replay_dir):
+        train_candidate_calls.append(replay_dir)
+        return []
+
+    monkeypatch.setattr(module, "train_candidate", fake_train_candidate)
+
+    custom_replay_dir = tmp_path / "custom_dedicated_replay"
+    output_path = tmp_path / "out.json"
+    checkpoint_path = tmp_path / "candidate.pt"
+
+    exit_code = module.main(
+        [
+            "--seed-start", "43000", "--seed-count", "1",
+            "--replay-dir", str(custom_replay_dir),
+            "--output", str(output_path), "--checkpoint-output", str(checkpoint_path),
+        ]
+    )
+
+    assert exit_code == 0
+    assert train_candidate_calls == [custom_replay_dir]
+    assert custom_replay_dir != module.REPLAY_DIR
 
 
 def test_main_stops_before_training_on_self_play_failure(monkeypatch, tmp_path):
@@ -500,7 +569,10 @@ def test_main_uses_custom_input_checkpoint_not_baseline(monkeypatch, tmp_path):
         },
     )
     monkeypatch.setattr(module, "opportunity_greedy_stats", lambda positions, model, *, buy_id, accept_id: {})
-    monkeypatch.setattr(module, "train_candidate", lambda model, positions, *, updates, batch_size, seed: [])
+    monkeypatch.setattr(
+        module, "train_candidate",
+        lambda model, positions, *, updates, batch_size, seed, replay_dir: [],
+    )
 
     output_path = tmp_path / "out.json"
     checkpoint_path = tmp_path / "out_candidate.pt"

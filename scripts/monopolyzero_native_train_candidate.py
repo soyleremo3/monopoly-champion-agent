@@ -429,7 +429,9 @@ def main(argv: list[str] | None = None) -> int:
         if args.reuse_replay:
             train_stats = run_training_updates(model, replay, updates=args.updates, batch_size=BATCH_SIZE, seed=0)
         else:
-            train_stats = train_candidate(model, positions, updates=args.updates, batch_size=BATCH_SIZE, seed=0)
+            train_stats = train_candidate(
+                model, positions, updates=args.updates, batch_size=BATCH_SIZE, seed=0, replay_dir=args.replay_dir,
+            )
 
         model.eval()
         after_stats = opportunity_greedy_stats(positions, model, buy_id=buy_id, accept_id=accept_id)
