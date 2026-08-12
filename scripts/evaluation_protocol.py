@@ -61,6 +61,7 @@ DEV_SEED_RANGES: tuple[tuple[int, int, str], ...] = (
     (42100, 42195, "021 - value-generalization probe: 96 clean POLICY_ONLY self-play games (64 train / 16 selection / 16 test)"),
     (43000, 43019, "023 - hybrid-PPO BUY_PROPERTY/ACCEPT_TRADE fixed-action isolation screen: 20 seeds x 4 focus-seat rotation, POLICY_ONLY vs HYBRID_COMPAT paired games"),
     (44000, 44999, "Colab infra (docs/COLAB_RUNBOOK.md, scripts/colab_shard_runner.py) - reserved pool for future Colab-run shards; not yet consumed by a specific experiment as of registration"),
+    (45000, 45031, "027 - pure PPO (hybrid=False) BUY_PROPERTY/ACCEPT_TRADE learnability gate: 32-game training run, player_id=0 vs FPAgentA/B/C"),
 )
 
 # Fresh, disjoint from DEV_SEED_RANGES and from each other. Reserved here,
