@@ -28,6 +28,25 @@ sys.modules["monopolyzero_a96_vs_asu_robustness_eval"] = module
 _spec.loader.exec_module(module)
 
 
+@pytest.fixture(autouse=True)
+def _no_asu_module_leakage():
+    """This is the one test file in the suite that legitimately imports
+    real ASU_FROZEN_TEACHER submodules (this script's whole purpose is
+    using ASU as an opponent). Without cleanup, those imports stick in
+    `sys.modules` for the rest of the pytest PROCESS (module caching is
+    process-wide, not per-file), which would break every other file's
+    "ASU_FROZEN_TEACHER is not loaded" guard test
+    (test_monopolyzero_common.py::test_asu_module_guard_clean_when_absent
+    and the ASU-free-guard assertions in other gate/screen scripts' own
+    smoke tests) if they happen to run later in the same session. Strips
+    only the ASU_FROZEN_TEACHER entries THIS test added, after it runs."""
+    before = set(sys.modules)
+    yield
+    for name in list(sys.modules):
+        if name not in before and (name == "ASU_FROZEN_TEACHER" or name.startswith("ASU_FROZEN_TEACHER.")):
+            del sys.modules[name]
+
+
 # ── pure helpers ─────────────────────────────────────────────────────────
 
 
