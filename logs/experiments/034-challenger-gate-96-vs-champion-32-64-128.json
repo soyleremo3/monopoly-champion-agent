@@ -1,0 +1,116 @@
+{
+  "experiment_id": "034-challenger-gate-96-vs-champion-32-64-128",
+  "experiment_name": "PROMOTION-scoped challenger gate for 032's frozen 96-game A_lr1e-4 checkpoint (candidate_ppo_80_lr_ablation_A_lr1e-4_96.pt) against the current 80-game champion PLUS the same 32/64/128-game opponent families 033 used, on fresh PROMOTION seeds disjoint from 033's",
+  "experiment_type": "paired_evaluation",
+  "date": "2026-08-13",
+  "code_commit_sha": "4b26df32f3b5cc049ed00b79bf4d42de2c10972d",
+  "reference_submodule_sha": "afd9205761317e196d77f679921c35fb04c7ab96",
+  "exact_commands": [
+    "PYTHONHASHSEED=0 PYTHONIOENCODING=utf-8 python scripts/monopolyzero_challenger_gate_96_vs_champion_32_64_128.py"
+  ],
+  "seeds": [50020, 50021, 50022, 50023, 50024, 50025, 50026, 50027, 50028, 50029, 50030, 50031, 50032, 50033, 50034, 50035, 50036, 50037, 50038, 50039],
+  "algorithm_config": {
+    "purpose": "032's frozen 96-game A_lr1e-4 checkpoint beat the 80-game champion on 032's own DEV confirmation set only (single opponent, DEV seeds). This gate tests whether it also beats the 80-game champion directly and generalizes across the same 32/64/128-game opponent families 033 used, on fresh PROMOTION seeds never touched by 032 or 033.",
+    "algorithm_frozen": "PPOAgent, ActorNetwork/architecture, PPO hyperparameters, reward shaping, action space, state pipeline, evaluation_protocol.py's statistics, and the reference submodule were all unmodified - reuses 028/030/031/033's exact play_one_game/summarize wholesale (scripts/monopolyzero_pure_ppo_strength_screen.py), no new evaluation framework.",
+    "checkpoints_verified_before_any_game": {
+      "challenger_96": {"path": "artifacts/monopolyzero_pure_ppo_learnability_gate/candidate_ppo_80_lr_ablation_A_lr1e-4_96.pt", "checkpoint_sha256": "78585ed4e2400d024633ee2878d8b88243f7f4a9f498d9019a73e44b3a830f51", "actor_sha256": "2bd1e9bad3d6e0100e033507f72f15b5088d8f8fb2f04dba1ae9d759b5a34a40"},
+      "champion_80": {"path": "artifacts/monopolyzero_pure_ppo_learnability_gate/candidate_ppo_80.pt", "checkpoint_sha256": "e47c8d4559c1d74cfceffe114fa069a8e7a2845ba60af68be0b0ae4bd37e1dae", "actor_sha256": "7442f99e51619b7f6b53bc662e74d360e0a1f9cf2365b8dcb003d5a0cc3eda11"},
+      "opponent_32": {"path": "artifacts/monopolyzero_pure_ppo_learnability_gate/candidate_ppo.pt", "checkpoint_sha256": "85194f337182c2d698519966cb8c19d3c1e701102b5fb280cd69d4c23ed8a113", "actor_sha256": "e6c142d143b5430d02b37cd3be34fa39a7d8d2f282bdb1eda8677a6109861b5b"},
+      "opponent_64": {"path": "artifacts/monopolyzero_pure_ppo_learnability_gate/candidate_ppo_64.pt", "checkpoint_sha256": "9dcd29045c5fa1d9c0f853f109a78b347b99ef6c2ef428d39066ef7d97ded2d1", "actor_sha256": "df7114bed6598df0137a540c3485c945ca8ce3b14bc771b7d5a3bc109b610c6c"},
+      "opponent_128": {"path": "artifacts/monopolyzero_pure_ppo_learnability_gate/candidate_ppo_128.pt", "checkpoint_sha256": "78be2735b14c0563e2c558a8a56cfc20c30d05b225acde29d31d1a2c0975fbcb", "actor_sha256": "ad4e9a6d066aab3b2ff5c8414b40669cae51b4bde6d49c42a1ce8128985dd224"}
+    },
+    "design": "For each of 20 fresh PROMOTION seeds (50020-50039, evaluation_protocol.SEED_CLASS_PROMOTION, disjoint from 033's consumed 50000-50019, verified via require_seed_scope before running): one challenger_96 focus seat + three copies of ONE opponent family, rotated across all 4 physical seats = 4 games/seed/family. Four opponent families (vs_80: the current 80-game champion; vs_32, vs_64, vs_128: identical to 033's already-verified checkpoints) x 20 seeds x 4 rotations = 320 physical games total, max_rounds=200, deterministic legal-masked argmax for every seat.",
+    "pre_registered_decision_rule": {
+      "primary_statistic": "aggregate challenger win rate across the four equally-weighted opponent families vs. the symmetric 25% null, via evaluation_protocol.seed_block_bootstrap_vs_null with the PROMOTION seed (not seat, not opponent family) as the resampling block - each seed block pools all 16 games (4 rotations x 4 families) sharing that seed",
+      "CHALLENGER_PROMOTION_GO": "ALL three hold: (1) vs_80 family's 95% CI lower bound for (win_rate - 25%) is > 0; (2) aggregate 95% CI lower bound is > 0; (3) no individual family's CI upper bound is <= 0",
+      "CHALLENGER_PROMOTION_KILL_KEEP_80_GAME_CHAMPION": "vs_80 family's CI upper bound is <= 0, OR aggregate CI upper bound is <= 0",
+      "otherwise": "CHALLENGER_PROMOTION_INCONCLUSIVE_KEEP_80_GAME_CHAMPION",
+      "registered_before_running": true,
+      "rule_not_altered_after_seeing_results": true,
+      "note": "Behavior metrics (BUY_PROPERTY/ACCEPT_TRADE/DECLINE_TRADE rates), net worth, bankruptcy rate, and round-cap rate are diagnostic only, exactly as in every prior gate in this project - they are recorded but cannot override this rule (see docs/EXPERIMENTS.md's 034 pre-registration entry)."
+    }
+  },
+  "model_checkpoint": {
+    "sha256": "78585ed4e2400d024633ee2878d8b88243f7f4a9f498d9019a73e44b3a830f51",
+    "path": "artifacts/monopolyzero_pure_ppo_learnability_gate/candidate_ppo_80_lr_ablation_A_lr1e-4_96.pt",
+    "format_version": 3
+  },
+  "counts": {
+    "promotion_seeds": 20,
+    "seat_rotations_per_seed_per_family": 4,
+    "opponent_families": 4,
+    "games_per_family": 80,
+    "total_games_this_run": 320,
+    "seed_blocks_aggregate": 20,
+    "games_per_seed_block_aggregate": 16
+  },
+  "runtime": {"wall_time_s": 4423.360555899999, "peak_rss_gib": 0.33686065673828125},
+  "metrics": {
+    "aggregate": {
+      "wins": 155,
+      "n_games": 320,
+      "win_rate": 0.484375,
+      "wilson_95": [0.4301298582109422, 0.5389908342525362],
+      "primary_seed_block_bootstrap_diff_from_25pct_null_point": 0.234375,
+      "primary_seed_block_bootstrap_diff_from_25pct_null_ci_95": [0.18125000000000002, 0.290625],
+      "candidate_mean_net_worth": 6735.553125,
+      "baseline_mean_net_worth": 3441.790104166667,
+      "candidate_net_worth_advantage": 3293.7630208333335,
+      "candidate_bankruptcy_rate": 0.13125,
+      "baseline_bankruptcy_rate": 0.4,
+      "round_cap_hits": 286,
+      "round_cap_rate": 0.89375,
+      "verdict_per_summarize_helper": "GO"
+    },
+    "vs_80": {
+      "wins": 35, "n_games": 80, "win_rate": 0.4375,
+      "wilson_95": [0.3341386091614381, 0.5465886570305027],
+      "ci_95_vs_25pct_null": [0.04999999999999999, 0.32499999999999996],
+      "verdict": "GO",
+      "candidate_mean_net_worth": 7113.00625, "baseline_mean_net_worth": 4131.897916666667,
+      "candidate_bankruptcy_rate": 0.1, "baseline_bankruptcy_rate": 0.36666666666666664,
+      "round_cap_rate": 0.9625
+    },
+    "vs_32": {
+      "wins": 34, "n_games": 80, "win_rate": 0.425,
+      "wilson_95": [0.32256561789601773, 0.5343071015343113],
+      "ci_95_vs_25pct_null": [0.08750000000000002, 0.26249999999999996],
+      "verdict": "GO",
+      "candidate_mean_net_worth": 6239.74375, "baseline_mean_net_worth": 2995.35,
+      "candidate_bankruptcy_rate": 0.1625, "baseline_bankruptcy_rate": 0.49583333333333335,
+      "round_cap_rate": 0.7625
+    },
+    "vs_64": {
+      "wins": 48, "n_games": 80, "win_rate": 0.6,
+      "wilson_95": [0.49045465005160394, 0.7003817240412905],
+      "ci_95_vs_25pct_null": [0.26249999999999996, 0.44999999999999996],
+      "verdict": "GO",
+      "candidate_mean_net_worth": 7299.50625, "baseline_mean_net_worth": 2809.297916666667,
+      "candidate_bankruptcy_rate": 0.1625, "baseline_bankruptcy_rate": 0.44166666666666665,
+      "round_cap_rate": 0.9
+    },
+    "vs_128": {
+      "wins": 38, "n_games": 80, "win_rate": 0.475,
+      "wilson_95": [0.36924733297407564, 0.5830435735027005],
+      "ci_95_vs_25pct_null": [0.125, 0.32499999999999996],
+      "verdict": "GO",
+      "candidate_mean_net_worth": 6289.95625, "baseline_mean_net_worth": 3830.6145833333335,
+      "candidate_bankruptcy_rate": 0.1, "baseline_bankruptcy_rate": 0.29583333333333334,
+      "round_cap_rate": 0.95
+    },
+    "behavior_diagnostic_only_aggregate": {
+      "candidate_buy_property_rate_when_legal": 0.0,
+      "candidate_accept_trade_rate_when_legal": 0.0,
+      "candidate_decline_trade_rate_when_legal": 0.04481675716650423,
+      "candidate_trade_offers_per_game": 374.928125,
+      "baseline_buy_property_rate_when_legal": 0.29690282785283,
+      "baseline_accept_trade_rate_when_legal": 0.12865219736279268,
+      "baseline_trade_offers_per_game": 349.26145833333334
+    }
+  },
+  "loss": null,
+  "integrity": {"illegal_actions": 0, "fallbacks": null, "crashes": 0},
+  "result": "CHALLENGER_PROMOTION_GO per the pre-registered rule: vs_80 CI for (win_rate - 25%) = [+5.0, +32.5]pts (lower bound > 0); aggregate CI = [+18.125, +29.0625]pts (lower bound > 0); no individual family's CI upper bound <= 0 (worst case, vs_32, upper bound +26.25pts). Aggregate: 155/320 = 48.44% win rate. Per-family: vs_80 35/80=43.75% GO (CI [+5.0,+32.5]pts); vs_32 34/80=42.5% GO (CI [+8.75,+26.25]pts); vs_64 48/80=60.0% GO (CI [+26.25,+45.0]pts); vs_128 38/80=47.5% GO (CI [+12.5,+32.5]pts). All four families and the aggregate clear the pre-registered GO bar, including a direct win against the 80-game champion itself. 0 illegal actions, 0 crashes, 0 ASU modules loaded across all 320 games. Important limitation, diagnostic-only and non-overriding per the pre-registered rule: aggregate round-cap rate is 89.375% (most 'wins' are round-200 net-worth tiebreaks, not bankruptcy victories), and the challenger's BUY_PROPERTY and ACCEPT_TRADE rates when legal are both 0.0% (a known, previously-documented behavioral collapse also present in the prior 80-game champion). This result establishes strength within this project's existing self-play family (same-lineage checkpoints) on held-out PROMOTION seeds; it does not by itself establish generalization to a genuinely different opponent, an official competition engine, or an unverified turn/round horizon.",
+  "raw_logs": ["logs/experiments/raw/034-challenger-gate-96-vs-champion-32-64-128_stdout.txt"],
+  "notes": "This entry records a run that completed unattended (elapsed_s=4423.36, i.e. process started 2026-08-13 10:15:51 local and finished ~11:29:34, matching the raw stdout file's filesystem mtime of 11:29:39) and was recovered, not re-run, from a stdout capture the launcher had redirected to artifacts/monopolyzero_pure_ppo_learnability_gate/034_challenger_gate_stdout.txt (outside logs/, gitignored, not itself a committed artifact). The raw SHA-256 (6161f4c7d4646ff84da6e48e9a31036562f8ef5fffbd4065e83cdd83e2ab6feb) was verified against that file before this log was written, and the copy at logs/experiments/raw/034-challenger-gate-96-vs-champion-32-64-128_stdout.txt is byte-for-byte identical (same SHA-256) to it; the file's final line is a literal 'EXIT_CODE=0' appended by the launcher, confirming a clean process exit, not a crash or truncation. All three pre-registered GO conditions (docs/EXPERIMENTS.md's 034 pre-registration entry, decide_verdict() in scripts/monopolyzero_challenger_gate_96_vs_champion_32_64_128.py) were independently re-derived from the recovered per-family CIs and match the recorded top-level verdict field (CHALLENGER_PROMOTION_GO) exactly - not merely trusted. No game was (re-)played to produce this record. This is the second consumption of the PROMOTION seed pool: seeds 50020-50039 (20 of the 50 registered in evaluation_protocol.PROMOTION_SEED_RANGE = (50000, 50049)) are now spent by this experiment, exactly as reserved by the pre-registration; 50040-50049 remain fresh, unconsumed PROMOTION seeds. FINAL_BLIND (90000-90049) was not touched by this experiment or by this recording task. Per this project's PROMOTION-pool policy (docs/EVALUATION_PROTOCOL.md), 50020-50039 should not be reused for a future PROMOTION-scoped run; they remain classified PROMOTION (never reclassified to DEV). No core algorithm file, evaluation_protocol.py's statistics, checkpoint files, the challenger-gate runner (scripts/monopolyzero_challenger_gate_96_vs_champion_32_64_128.py), its pre-registered decision rule, or references/DeepRL_Monopoly (pinned at afd9205761317e196d77f679921c35fb04c7ab96) was modified for this recording task - only this log, its raw-output copy, docs/EXPERIMENTS.md, docs/EVALUATION_PROTOCOL.md's PROMOTION provenance note, and docs/DECISIONS.md were added/changed."
+}

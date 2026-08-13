@@ -2499,3 +2499,59 @@ after the run completes.**
   unreserved. `FINAL_BLIND` was not touched. No core algorithm file,
   `evaluation_protocol.py`'s statistics, existing checkpoints, or the
   `032`/`033` records were modified to add this pre-registration.
+
+---
+
+### 2026-08-13 (later) — 034 RESULT: CHALLENGER_PROMOTION_GO (appended after completion; pre-registration above is unedited)
+
+The run above completed unattended and was recovered from a redirected
+stdout capture rather than re-run - see
+`logs/experiments/034-challenger-gate-96-vs-champion-32-64-128.json` for
+full provenance (raw SHA-256 `6161f4c7...e2ab6feb`, verified byte-identical
+against the copy at
+`logs/experiments/raw/034-challenger-gate-96-vs-champion-32-64-128_stdout.txt`,
+ending in a literal `EXIT_CODE=0`). `elapsed_s=4423.36`, `git_head_sha`
+matches this pre-registration's commit exactly, all 320/320 games
+completed, 0 illegal actions, 0 crashes, 0 ASU modules loaded.
+
+**All three pre-registered GO conditions hold** (independently re-derived
+from the recovered per-family CIs, not merely trusted):
+
+1. **vs_80 CI lower bound > 0**: CI `[+5.0, +32.5]`pts - **TRUE**.
+2. **aggregate CI lower bound > 0**: CI `[+18.125, +29.0625]`pts - **TRUE**.
+3. **no family's CI upper bound `<= 0`**: vs_80 `+32.5`, vs_32 `+26.25`,
+   vs_64 `+45.0`, vs_128 `+32.5` - all `> 0` - **TRUE**.
+
+-> **Verdict: `CHALLENGER_PROMOTION_GO`.**
+
+| family | n | win rate | CI (`win_rate - 25%`) | verdict |
+|---|---|---|---|---|
+| aggregate | 320 | 48.44% (155/320) | `[+18.125, +29.0625]` | GO |
+| vs_80 | 80 | 43.75% (35/80) | `[+5.0, +32.5]` | GO |
+| vs_32 | 80 | 42.5% (34/80) | `[+8.75, +26.25]` | GO |
+| vs_64 | 80 | 60.0% (48/80) | `[+26.25, +45.0]` | GO |
+| vs_128 | 80 | 47.5% (38/80) | `[+12.5, +32.5]` | GO |
+
+**Important limitation - diagnostic-only, does not override the rule
+above** (per this entry's own pre-registered "behavior metrics ...
+cannot override this rule"): aggregate round-cap rate is **89.375%**
+(most "wins" are round-200 net-worth tiebreaks, not bankruptcy
+victories), and the challenger's `BUY_PROPERTY` and `ACCEPT_TRADE` rates
+when legal are both **0.0%** - the same behavioral collapse already
+documented for the 80-game champion in `033`. This result establishes
+strength within this project's existing self-play family (same-lineage
+checkpoints) on held-out PROMOTION seeds. It does **not** by itself
+establish generalization to a genuinely different opponent, an official
+competition engine/API, or an unverified turn/round horizon - all of
+which remain `TBD` (`docs/RULES_SPEC.md`). Today's real competition
+test, if it runs, is the next highest-priority evidence on exactly that
+open question.
+
+Per the pre-registered rule, this GO promotes the frozen 96-game
+`A_lr1e-4` checkpoint (`candidate_ppo_80_lr_ablation_A_lr1e-4_96.pt`) to
+project champion - see `docs/DECISIONS.md`'s corresponding entry. The
+former 80-game champion (`candidate_ppo_80.pt`) is preserved unchanged as
+the former champion/reference baseline; no checkpoint file was renamed,
+copied, rebuilt, or committed. `50020-50039` are now consumed PROMOTION
+seeds; `50040-50049` remain fresh; `FINAL_BLIND` remains untouched (see
+`docs/EVALUATION_PROTOCOL.md`).

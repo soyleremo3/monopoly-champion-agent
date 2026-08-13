@@ -449,3 +449,50 @@ only the calendar label was wrong in places. Fixed going forward from here.*
   ordering scheme or a fragile test-only special case, neither justified
   by anything in this task).
 - Reference checked: `references/DeepRL_Monopoly` at `afd9205761317e196d77f679921c35fb04c7ab96` (submodule unchanged, read-only).
+
+## 2026-08-13 — Champion promoted: frozen 96-game A_lr1e-4 checkpoint replaces the 80-game champion
+
+- Context: `034` (pre-registered before running, `docs/EXPERIMENTS.md`) tested
+  032's frozen 96-game `A_lr1e-4` checkpoint (`candidate_ppo_80_lr_ablation_A_lr1e-4_96.pt`)
+  against the current 80-game champion (`candidate_ppo_80.pt`) plus the
+  same 32/64/128-game opponent families `033` used, on 20 fresh PROMOTION
+  seeds (`50020-50039`) never touched by `032` or `033`. The run completed
+  unattended (320/320 games, 0 illegal actions, 0 crashes, 0 ASU modules
+  loaded, exit code 0) and was recovered from a stdout capture rather than
+  re-run - see `logs/experiments/034-challenger-gate-96-vs-champion-32-64-128.json`
+  for full provenance (raw SHA-256 verified byte-identical between the
+  original capture and its committed copy).
+- Decision: **Promote the frozen 96-game `A_lr1e-4` checkpoint to project
+  champion.** All three conditions of the pre-registered `034` decision
+  rule passed without alteration after seeing results: vs_80 CI
+  `[+5.0, +32.5]`pts (lower bound `> 0`), aggregate CI `[+18.125, +29.0625]`pts
+  (lower bound `> 0`), no family's CI upper bound `<= 0` (worst case
+  `+26.25`pts). Verdict: `CHALLENGER_PROMOTION_GO`.
+  - **Canonical champion checkpoint**: `candidate_ppo_80_lr_ablation_A_lr1e-4_96.pt`
+    — checkpoint SHA-256 `78585ed4e2400d024633ee2878d8b88243f7f4a9f498d9019a73e44b3a830f51`,
+    actor SHA-256 `2bd1e9bad3d6e0100e033507f72f15b5088d8f8fb2f04dba1ae9d759b5a34a40`.
+  - The previous 80-game checkpoint (`candidate_ppo_80.pt`) **remains
+    preserved unchanged** as the former champion / reference baseline —
+    no checkpoint file was renamed, copied, rebuilt, or committed by this
+    decision. This is a champion-identity/decision update recorded against
+    existing frozen artifacts only.
+  - **This promotion does NOT claim official-competition generalization.**
+    Diagnostic (non-overriding, per `034`'s own pre-registered rule)
+    behavior metrics show the new champion's aggregate round-cap rate is
+    89.375% (most wins are round-200 net-worth tiebreaks, not bankruptcy
+    victories) and its `BUY_PROPERTY`/`ACCEPT_TRADE` rates when legal are
+    both 0.0% — the same collapse already documented for the prior
+    champion in `033`. The official competition engine/API and turn/round
+    horizon remain `TBD` (`docs/RULES_SPEC.md`); today's real competition
+    test, if it runs, is the next highest-priority evidence on whether
+    this strength generalizes beyond this project's own self-play family.
+- Alternatives considered: keep the 80-game champion (rejected — the
+  pre-registered `034` rule's GO conditions all passed, and per this
+  project's pre-registration discipline the rule is not overridden after
+  seeing results); wait for further PROMOTION-seed (`50040-50049`) or
+  `FINAL_BLIND` evidence before promoting (rejected for now — those pools
+  were not needed for `034`'s own pre-registered question and remain
+  fresh/unconsumed; `50040-50049` is PROMOTION, `FINAL_BLIND` is reserved
+  exclusively for the final model-selection read, see
+  `docs/EVALUATION_PROTOCOL.md`).
+- Reference checked: `references/DeepRL_Monopoly` at `afd9205761317e196d77f679921c35fb04c7ab96` (submodule unchanged, read-only). No core algorithm file, `evaluation_protocol.py`'s statistics, checkpoint files, the `034` runner, or its pre-registered decision rule was modified to record this decision.
