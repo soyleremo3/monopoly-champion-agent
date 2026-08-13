@@ -44,18 +44,23 @@ A mismatch on gate 1, on gate 2, or on gate 3 (when supplied) raises
 `ChecksumMismatchError` immediately - never a silent retrain/reconstruct/
 fallback, matching this project's existing hash-gate discipline.
 
-Which exact checkpoint counts as "the" frozen submission agent is TBD as of
-this writing (docs/EXPERIMENTS.md's `033` PROMOTION gate went GO; `034`,
-which would compare that champion against further challengers, is
-pre-registered but NOT YET RUN as of this writing - not touched, not run,
-not disturbed by this module or its tests). Per CLAUDE.md ("Do not make
+As of this writing, the documented project champion is A96
+(`candidate_ppo_80_lr_ablation_A_lr1e-4_96.pt`, checkpoint SHA-256
+`78585ed4e2400d024633ee2878d8b88243f7f4a9f498d9019a73e44b3a830f51`, actor
+SHA-256 `2bd1e9bad3d6e0100e033507f72f15b5088d8f8fb2f04dba1ae9d759b5a34a40`) -
+`033`'s PROMOTION gate went GO, and `034`'s challenger gate against it
+(pre-registered when this module was first written) has since completed
+with a `CHALLENGER_PROMOTION_GO` result promoting A96 (see
+docs/EXPERIMENTS.md's `033`/`034` entries). This module intentionally
+stays champion-agnostic regardless: per CLAUDE.md ("Do not make
 unverified assumptions ... If unknown, mark TBD and confirm before relying
-on it"), this module does NOT hardcode a pinned checkpoint path or
-expected-hash values for a specific champion - `expected_checkpoint_sha256`
-and `expected_actor_sha256` are required caller-supplied parameters, and
-`expected_actor_source_sha256` is an optional caller-supplied parameter.
-Wire in the specific pinned values once the champion checkpoint is
-finalized.
+on it"), it does NOT hardcode a pinned checkpoint path or expected-hash
+values for any specific champion, current or future -
+`expected_checkpoint_sha256` and `expected_actor_sha256` are required
+caller-supplied parameters, and `expected_actor_source_sha256` is an
+optional caller-supplied parameter. A caller wiring up A96 today supplies
+the values above; that is a caller-side decision, not something this
+generic loader should assume.
 
 Hybrid/fixed-rule rejection: `load_frozen_actor` always constructs
 `PPOAgent(hybrid=False)` (never accepts a caller-supplied `hybrid` flag) -
