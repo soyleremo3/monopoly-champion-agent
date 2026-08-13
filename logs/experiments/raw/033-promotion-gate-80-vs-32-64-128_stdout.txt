@@ -1,0 +1,278 @@
+{
+  "aggregate_summary": {
+    "baseline_action_behavior": {
+      "accept_trade_opportunities": 192459,
+      "accept_trade_rate_when_legal": 0.11731329789721447,
+      "buy_property_opportunities": 14985,
+      "buy_property_rate_when_legal": 0.3672339005672339,
+      "decline_trade_opportunities": 192459,
+      "decline_trade_rate_when_legal": 0.08907351695685835,
+      "trade_offers_total": 191170
+    },
+    "baseline_bankruptcy_rate": 0.4861111111111111,
+    "baseline_mean_net_worth": 3075.276388888889,
+    "baseline_trade_offers_per_game": 265.5138888888889,
+    "candidate_action_behavior": {
+      "accept_trade_opportunities": 79720,
+      "accept_trade_rate_when_legal": 0.0,
+      "buy_property_opportunities": 10092,
+      "buy_property_rate_when_legal": 0.10384462940943322,
+      "decline_trade_opportunities": 79720,
+      "decline_trade_rate_when_legal": 0.020446562970396386,
+      "trade_offers_total": 70549
+    },
+    "candidate_bankruptcy_rate": 0.20833333333333334,
+    "candidate_mean_net_worth": 6440.76875,
+    "candidate_net_worth_advantage": 3365.492361111111,
+    "candidate_trade_offers_per_game": 293.95416666666665,
+    "candidate_wilson_95": [
+      0.3923914639810075,
+      0.517385978680302
+    ],
+    "candidate_win_rate": 0.45416666666666666,
+    "candidate_wins": 109,
+    "integrity": {
+      "crashes": 0,
+      "illegal_actions": 0
+    },
+    "n_games": 240,
+    "n_seed_blocks": 20,
+    "null_win_rate": 0.25,
+    "primary_seed_block_bootstrap_vs_25pct_null": {
+      "bootstrap_seed": 0,
+      "n_records": 240,
+      "n_resamples": 2000,
+      "n_seed_blocks": 20,
+      "null_rate": 0.25,
+      "win_rate_diff_from_null": {
+        "ci_95": [
+          0.1375,
+          0.2666666666666667
+        ],
+        "point": 0.20416666666666666
+      }
+    },
+    "round_cap_hits": 194,
+    "round_cap_rate": 0.8083333333333333,
+    "verdict": "GO"
+  },
+  "asu_modules_loaded": [],
+  "elapsed_s": 2007.3545922000048,
+  "git_head_sha": "a6022792db808297105e04831ea0211df38e6d8e",
+  "hash_verification": {
+    "champion_80": {
+      "actor_sha256": "7442f99e51619b7f6b53bc662e74d360e0a1f9cf2365b8dcb003d5a0cc3eda11",
+      "checkpoint_sha256": "e47c8d4559c1d74cfceffe114fa069a8e7a2845ba60af68be0b0ae4bd37e1dae"
+    },
+    "opponent_128": {
+      "actor_sha256": "ad4e9a6d066aab3b2ff5c8414b40669cae51b4bde6d49c42a1ce8128985dd224",
+      "checkpoint_sha256": "78be2735b14c0563e2c558a8a56cfc20c30d05b225acde29d31d1a2c0975fbcb"
+    },
+    "opponent_32": {
+      "actor_sha256": "e6c142d143b5430d02b37cd3be34fa39a7d8d2f282bdb1eda8677a6109861b5b",
+      "checkpoint_sha256": "85194f337182c2d698519966cb8c19d3c1e701102b5fb280cd69d4c23ed8a113"
+    },
+    "opponent_64": {
+      "actor_sha256": "df7114bed6598df0137a540c3485c945ca8ce3b14bc771b7d5a3bc109b610c6c",
+      "checkpoint_sha256": "9dcd29045c5fa1d9c0f853f109a78b347b99ef6c2ef428d39066ef7d97ded2d1"
+    }
+  },
+  "lineup_summaries": {
+    "A_vs_32": {
+      "baseline_action_behavior": {
+        "accept_trade_opportunities": 41035,
+        "accept_trade_rate_when_legal": 0.5177531375654929,
+        "buy_property_opportunities": 3235,
+        "buy_property_rate_when_legal": 0.9969088098918083,
+        "decline_trade_opportunities": 41035,
+        "decline_trade_rate_when_legal": 0.0,
+        "trade_offers_total": 44354
+      },
+      "baseline_bankruptcy_rate": 0.6458333333333334,
+      "baseline_mean_net_worth": 2344.0833333333335,
+      "baseline_trade_offers_per_game": 184.80833333333334,
+      "candidate_action_behavior": {
+        "accept_trade_opportunities": 19446,
+        "accept_trade_rate_when_legal": 0.0,
+        "buy_property_opportunities": 3653,
+        "buy_property_rate_when_legal": 0.08759923350670681,
+        "decline_trade_opportunities": 19446,
+        "decline_trade_rate_when_legal": 0.026432171140594467,
+        "trade_offers_total": 14922
+      },
+      "candidate_bankruptcy_rate": 0.175,
+      "candidate_mean_net_worth": 7759.2375,
+      "candidate_net_worth_advantage": 5415.154166666667,
+      "candidate_trade_offers_per_game": 186.525,
+      "candidate_wilson_95": [
+        0.41695642649729947,
+        0.6307526670259243
+      ],
+      "candidate_win_rate": 0.525,
+      "candidate_wins": 42,
+      "integrity": {
+        "crashes": 0,
+        "illegal_actions": 0
+      },
+      "n_games": 80,
+      "n_seed_blocks": 20,
+      "null_win_rate": 0.25,
+      "primary_seed_block_bootstrap_vs_25pct_null": {
+        "bootstrap_seed": 0,
+        "n_records": 80,
+        "n_resamples": 2000,
+        "n_seed_blocks": 20,
+        "null_rate": 0.25,
+        "win_rate_diff_from_null": {
+          "ci_95": [
+            0.125,
+            0.4125
+          ],
+          "point": 0.275
+        }
+      },
+      "round_cap_hits": 52,
+      "round_cap_rate": 0.65,
+      "verdict": "GO"
+    },
+    "B_vs_64": {
+      "baseline_action_behavior": {
+        "accept_trade_opportunities": 62237,
+        "accept_trade_rate_when_legal": 0.021305654192843484,
+        "buy_property_opportunities": 8266,
+        "buy_property_rate_when_legal": 0.2755867408661989,
+        "decline_trade_opportunities": 62237,
+        "decline_trade_rate_when_legal": 0.0,
+        "trade_offers_total": 62509
+      },
+      "baseline_bankruptcy_rate": 0.475,
+      "baseline_mean_net_worth": 3126.7854166666666,
+      "baseline_trade_offers_per_game": 260.45416666666665,
+      "candidate_action_behavior": {
+        "accept_trade_opportunities": 31687,
+        "accept_trade_rate_when_legal": 0.0,
+        "buy_property_opportunities": 4542,
+        "buy_property_rate_when_legal": 0.0845442536327609,
+        "decline_trade_opportunities": 31687,
+        "decline_trade_rate_when_legal": 0.016158045886325623,
+        "trade_offers_total": 27724
+      },
+      "candidate_bankruptcy_rate": 0.15,
+      "candidate_mean_net_worth": 7102.2375,
+      "candidate_net_worth_advantage": 3975.4520833333336,
+      "candidate_trade_offers_per_game": 346.55,
+      "candidate_wilson_95": [
+        0.40493334216542254,
+        0.6189212045961893
+      ],
+      "candidate_win_rate": 0.5125,
+      "candidate_wins": 41,
+      "integrity": {
+        "crashes": 0,
+        "illegal_actions": 0
+      },
+      "n_games": 80,
+      "n_seed_blocks": 20,
+      "null_win_rate": 0.25,
+      "primary_seed_block_bootstrap_vs_25pct_null": {
+        "bootstrap_seed": 0,
+        "n_records": 80,
+        "n_resamples": 2000,
+        "n_seed_blocks": 20,
+        "null_rate": 0.25,
+        "win_rate_diff_from_null": {
+          "ci_95": [
+            0.15000000000000002,
+            0.38749999999999996
+          ],
+          "point": 0.26249999999999996
+        }
+      },
+      "round_cap_hits": 70,
+      "round_cap_rate": 0.875,
+      "verdict": "GO"
+    },
+    "C_vs_128": {
+      "baseline_action_behavior": {
+        "accept_trade_opportunities": 89187,
+        "accept_trade_rate_when_legal": 6.727437855292812e-05,
+        "buy_property_opportunities": 3484,
+        "buy_property_rate_when_legal": 0.0,
+        "decline_trade_opportunities": 89187,
+        "decline_trade_rate_when_legal": 0.1922141119221411,
+        "trade_offers_total": 84307
+      },
+      "baseline_bankruptcy_rate": 0.3375,
+      "baseline_mean_net_worth": 3754.960416666667,
+      "baseline_trade_offers_per_game": 351.27916666666664,
+      "candidate_action_behavior": {
+        "accept_trade_opportunities": 28587,
+        "accept_trade_rate_when_legal": 0.0,
+        "buy_property_opportunities": 1897,
+        "buy_property_rate_when_legal": 0.18133895624670532,
+        "decline_trade_opportunities": 28587,
+        "decline_trade_rate_when_legal": 0.02112848497568825,
+        "trade_offers_total": 27903
+      },
+      "candidate_bankruptcy_rate": 0.3,
+      "candidate_mean_net_worth": 4460.83125,
+      "candidate_net_worth_advantage": 705.8708333333334,
+      "candidate_trade_offers_per_game": 348.7875,
+      "candidate_wilson_95": [
+        0.23244161844358172,
+        0.4335947268938527
+      ],
+      "candidate_win_rate": 0.325,
+      "candidate_wins": 26,
+      "integrity": {
+        "crashes": 0,
+        "illegal_actions": 0
+      },
+      "n_games": 80,
+      "n_seed_blocks": 20,
+      "null_win_rate": 0.25,
+      "primary_seed_block_bootstrap_vs_25pct_null": {
+        "bootstrap_seed": 0,
+        "n_records": 80,
+        "n_resamples": 2000,
+        "n_seed_blocks": 20,
+        "null_rate": 0.25,
+        "win_rate_diff_from_null": {
+          "ci_95": [
+            -0.024999999999999994,
+            0.1875
+          ],
+          "point": 0.07500000000000001
+        }
+      },
+      "round_cap_hits": 72,
+      "round_cap_rate": 0.9,
+      "verdict": "INCONCLUSIVE"
+    }
+  },
+  "peak_rss_gib": 0.3162879943847656,
+  "promotion_seeds": [
+    50000,
+    50001,
+    50002,
+    50003,
+    50004,
+    50005,
+    50006,
+    50007,
+    50008,
+    50009,
+    50010,
+    50011,
+    50012,
+    50013,
+    50014,
+    50015,
+    50016,
+    50017,
+    50018,
+    50019
+  ],
+  "verdict": "PROMOTION_GO"
+}
+EXIT_CODE=0

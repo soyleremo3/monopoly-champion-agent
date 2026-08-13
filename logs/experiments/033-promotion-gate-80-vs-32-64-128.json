@@ -1,0 +1,106 @@
+{
+  "experiment_id": "033-promotion-gate-80-vs-32-64-128",
+  "experiment_name": "First PROMOTION/generalization gate for the 80-game PURE PPO champion (candidate_ppo_80.pt): candidate focus seat vs three frozen opponent families (032/030/031's 32-game, 64-game, and 128-game checkpoints) on fresh PROMOTION seeds, testing whether it generalizes beyond the single 32-game predecessor it was selected against in 031",
+  "experiment_type": "paired_evaluation",
+  "date": "2026-08-13",
+  "code_commit_sha": "a6022792db808297105e04831ea0211df38e6d8e",
+  "reference_submodule_sha": "afd9205761317e196d77f679921c35fb04c7ab96",
+  "exact_commands": [
+    "PYTHONHASHSEED=0 PYTHONIOENCODING=utf-8 python scripts/monopolyzero_promotion_gate_80_vs_32_64_128.py"
+  ],
+  "seeds": [50000, 50001, 50002, 50003, 50004, 50005, 50006, 50007, 50008, 50009, 50010, 50011, 50012, 50013, 50014, 50015, 50016, 50017, 50018, 50019],
+  "algorithm_config": {
+    "purpose": "The 80-game champion (031) was selected purely against the 32-game predecessor. This gate tests generalization against 3 different frozen opponent strengths (32/64/128-game checkpoints, all produced by 031) on held-out PROMOTION seeds never used by any prior run, to check whether the 80-game champion's edge is real strength or an artifact of the single opponent it was tuned against.",
+    "algorithm_frozen": "PPOAgent, ActorNetwork/architecture, PPO hyperparameters, reward shaping, action space, state pipeline, evaluation_protocol.py's statistics, and the reference submodule were all unmodified - reuses 028/030/031's exact play_one_game/summarize wholesale (scripts/monopolyzero_pure_ppo_strength_screen.py), no new evaluation framework.",
+    "checkpoints_verified_before_any_game": {
+      "champion_80": {"path": "artifacts/monopolyzero_pure_ppo_learnability_gate/candidate_ppo_80.pt", "checkpoint_sha256": "e47c8d4559c1d74cfceffe114fa069a8e7a2845ba60af68be0b0ae4bd37e1dae", "actor_sha256": "7442f99e51619b7f6b53bc662e74d360e0a1f9cf2365b8dcb003d5a0cc3eda11"},
+      "opponent_32": {"path": "artifacts/monopolyzero_pure_ppo_learnability_gate/candidate_ppo.pt", "checkpoint_sha256": "85194f337182c2d698519966cb8c19d3c1e701102b5fb280cd69d4c23ed8a113", "actor_sha256": "e6c142d143b5430d02b37cd3be34fa39a7d8d2f282bdb1eda8677a6109861b5b"},
+      "opponent_64": {"path": "artifacts/monopolyzero_pure_ppo_learnability_gate/candidate_ppo_64.pt", "checkpoint_sha256": "9dcd29045c5fa1d9c0f853f109a78b347b99ef6c2ef428d39066ef7d97ded2d1", "actor_sha256": "df7114bed6598df0137a540c3485c945ca8ce3b14bc771b7d5a3bc109b610c6c"},
+      "opponent_128": {"path": "artifacts/monopolyzero_pure_ppo_learnability_gate/candidate_ppo_128.pt", "checkpoint_sha256": "78be2735b14c0563e2c558a8a56cfc20c30d05b225acde29d31d1a2c0975fbcb", "actor_sha256": "ad4e9a6d066aab3b2ff5c8414b40669cae51b4bde6d49c42a1ce8128985dd224"}
+    },
+    "design": "For each of 20 fresh PROMOTION seeds (50000-50019, evaluation_protocol.SEED_CLASS_PROMOTION, verified via require_seed_scope before running): one champion_80 focus seat + three copies of ONE opponent family, rotated across all 4 physical seats = 4 games/seed/family. Three opponent families (A: 32-game, B: 64-game, C: 128-game) x 20 seeds x 4 rotations = 240 physical games total, max_rounds=200, deterministic legal-masked argmax for every seat.",
+    "pre_registered_decision_rule": {
+      "primary_statistic": "aggregate candidate win rate across the three equally-weighted opponent families vs. the symmetric 25% null, via evaluation_protocol.seed_block_bootstrap_vs_null with the PROMOTION seed (not seat, not opponent family) as the resampling block - each seed block pools all 12 games (4 rotations x 3 families) sharing that seed",
+      "PROMOTION_GO": "aggregate 95% CI lower bound for (candidate_win_rate - 25%) is > 0 AND no individual opponent family has a 95% CI upper bound <= 0",
+      "PROMOTION_KILL": "aggregate CI upper bound <= 0",
+      "otherwise": "INCONCLUSIVE",
+      "registered_before_running": true,
+      "rule_not_altered_after_seeing_results": true,
+      "note": "Per-family win rate/CI is also reported and was pre-registered as diagnostic-cross-check evidence (the second GO condition), never as a standalone override of the aggregate statistic. Behavior metrics (BUY/ACCEPT/DECLINE rates) are diagnostic only, never used in the GO/KILL decision."
+    }
+  },
+  "model_checkpoint": {
+    "sha256": "e47c8d4559c1d74cfceffe114fa069a8e7a2845ba60af68be0b0ae4bd37e1dae",
+    "path": "artifacts/monopolyzero_pure_ppo_learnability_gate/candidate_ppo_80.pt",
+    "format_version": 3
+  },
+  "counts": {
+    "promotion_seeds": 20,
+    "seat_rotations_per_seed_per_family": 4,
+    "opponent_families": 3,
+    "games_per_family": 80,
+    "total_games_this_run": 240,
+    "seed_blocks_aggregate": 20,
+    "games_per_seed_block_aggregate": 12
+  },
+  "runtime": {"wall_time_s": 2007.3545922000048, "peak_rss_gib": 0.3162879943847656},
+  "metrics": {
+    "aggregate": {
+      "wins": 109,
+      "n_games": 240,
+      "win_rate": 0.45416666666666666,
+      "wilson_95": [0.3923914639810075, 0.517385978680302],
+      "primary_seed_block_bootstrap_diff_from_25pct_null_point": 0.20416666666666666,
+      "primary_seed_block_bootstrap_diff_from_25pct_null_ci_95": [0.1375, 0.2666666666666667],
+      "candidate_mean_net_worth": 6440.76875,
+      "baseline_mean_net_worth": 3075.276388888889,
+      "candidate_net_worth_advantage": 3365.492361111111,
+      "candidate_bankruptcy_rate": 0.20833333333333334,
+      "baseline_bankruptcy_rate": 0.4861111111111111,
+      "round_cap_hits": 194,
+      "round_cap_rate": 0.8083333333333333,
+      "verdict_per_summarize_helper": "GO"
+    },
+    "family_A_vs_32game": {
+      "wins": 42, "n_games": 80, "win_rate": 0.525,
+      "wilson_95": [0.41695642649729947, 0.6307526670259243],
+      "ci_95_vs_25pct_null": [0.125, 0.4125],
+      "verdict": "GO",
+      "candidate_mean_net_worth": 7759.2375, "baseline_mean_net_worth": 2344.0833333333335,
+      "candidate_bankruptcy_rate": 0.175, "baseline_bankruptcy_rate": 0.6458333333333334,
+      "round_cap_rate": 0.65
+    },
+    "family_B_vs_64game": {
+      "wins": 41, "n_games": 80, "win_rate": 0.5125,
+      "wilson_95": [0.40493334216542254, 0.6189212045961893],
+      "ci_95_vs_25pct_null": [0.15000000000000002, 0.38749999999999996],
+      "verdict": "GO",
+      "candidate_mean_net_worth": 7102.2375, "baseline_mean_net_worth": 3126.7854166666666,
+      "candidate_bankruptcy_rate": 0.15, "baseline_bankruptcy_rate": 0.475,
+      "round_cap_rate": 0.875
+    },
+    "family_C_vs_128game": {
+      "wins": 26, "n_games": 80, "win_rate": 0.325,
+      "wilson_95": [0.23244161844358172, 0.4335947268938527],
+      "ci_95_vs_25pct_null": [-0.024999999999999994, 0.1875],
+      "verdict": "INCONCLUSIVE",
+      "candidate_mean_net_worth": 4460.83125, "baseline_mean_net_worth": 3754.960416666667,
+      "candidate_bankruptcy_rate": 0.3, "baseline_bankruptcy_rate": 0.3375,
+      "round_cap_rate": 0.9
+    },
+    "behavior_diagnostic_only_aggregate": {
+      "candidate_buy_property_rate_when_legal": 0.10384462940943322,
+      "candidate_accept_trade_rate_when_legal": 0.0,
+      "candidate_decline_trade_rate_when_legal": 0.020446562970396386,
+      "candidate_trade_offers_per_game": 293.95416666666665,
+      "baseline_buy_property_rate_when_legal": 0.3672339005672339,
+      "baseline_accept_trade_rate_when_legal": 0.11731329789721447,
+      "baseline_trade_offers_per_game": 265.5138888888889
+    }
+  },
+  "loss": null,
+  "integrity": {"illegal_actions": 0, "fallbacks": 0, "crashes": 0},
+  "result": "PROMOTION_GO per the pre-registered rule: aggregate seed-block bootstrap 95% CI for (candidate_win_rate - 25%) = [+13.75, +26.67] points, entirely above zero, AND no individual opponent family's CI upper bound is <= 0 (worst case, family C vs. the 128-game opponent, upper bound is +18.75). Aggregate: 109/240 = 45.42% win rate. Per-family: A (vs. 32-game) 42/80 = 52.5%, GO (CI [+12.5, +41.25]pts); B (vs. 64-game) 41/80 = 51.25%, GO (CI [+15.0, +38.75]pts); C (vs. 128-game) 26/80 = 32.5%, INCONCLUSIVE (CI [-2.5, +18.75]pts, straddles zero). The champion clearly generalizes against the 32-game and 64-game opponent families it was NOT selected against, which is this gate's central question. The aggregate statistic is GO because it pools all three equally-weighted families as one 20-seed-block resampling unit and is not reducible to any single family - it does NOT mean the 80-game champion conclusively beats the 128-game checkpoint individually: family C's own CI straddles zero (INCONCLUSIVE), so no individual-family strength claim vs. the 128-game opponent specifically is supported by this run. 0 illegal actions, 0 crashes, 0 ASU modules loaded across all 240 games.",
+  "raw_logs": ["logs/experiments/raw/033-promotion-gate-80-vs-32-64-128_stdout.txt"],
+  "notes": "This entry records a run that was already completed and reported to the user before this log was written; no game was (re-)played to produce this record - the raw stdout SHA-256 (0e16926f041f8cd439ba0ff68d7f2e2da6cf3426864c49943b60622ee98d7160, 278 lines) was verified to match exactly before this log entry was written, and the copy at logs/experiments/raw/033-promotion-gate-80-vs-32-64-128_stdout.txt is byte-for-byte identical (same SHA-256) to the local artifacts/ copy the run itself produced. This is the first consumption of the PROMOTION seed pool: seeds 50000-50019 (20 of the 50 registered in evaluation_protocol.PROMOTION_SEED_RANGE = (50000, 50049)) are now spent by this experiment; 50020-50049 remain unused/fresh PROMOTION seeds - see docs/EVALUATION_PROTOCOL.md's updated provenance note. Per this project's PROMOTION-pool policy (docs/EVALUATION_PROTOCOL.md: 'spent once... not for routine dev'), 50000-50019 should not be reused for a future PROMOTION-scoped run; they remain classified as PROMOTION (never reclassified to DEV) and require_seed_scope continues to accept them only under SEED_CLASS_PROMOTION. FINAL_BLIND (90000-90049) was not touched by this experiment or by this recording task. No core algorithm file, evaluation_protocol.py's statistics, the promotion runner (scripts/monopolyzero_promotion_gate_80_vs_32_64_128.py), or references/DeepRL_Monopoly (pinned at afd9205761317e196d77f679921c35fb04c7ab96) was modified for this recording task - only this log, its raw-output copy, docs/EXPERIMENTS.md, and docs/EVALUATION_PROTOCOL.md's PROMOTION provenance note were added/changed."
+}

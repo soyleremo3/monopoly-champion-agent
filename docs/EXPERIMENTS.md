@@ -2355,3 +2355,74 @@ its own proposed experiment and decision log.
   (pinned at `afd9205761317e196d77f679921c35fb04c7ab96`) was touched.
   `FINAL_BLIND`/`PROMOTION` were not touched - DEV seeds only, per this
   task's explicit instruction.
+
+## 2026-08-13 — 033: first PROMOTION gate, 80-game champion vs. 32/64/128-game opponent families (PROMOTION_GO)
+
+- Hypothesis: the 80-game champion (`031`) was selected purely against
+  the 32-game predecessor it beat. Does it generalize against opponents
+  it was never tuned against - the 64-game and 128-game checkpoints
+  `031` also produced - or is its edge specific to the one opponent it
+  was selected on?
+- Setup: reused the existing
+  [scripts/monopolyzero_promotion_gate_80_vs_32_64_128.py](../scripts/monopolyzero_promotion_gate_80_vs_32_64_128.py)
+  runner unmodified (no code, seed pool, evaluation-statistics, or
+  checkpoint change for this run). One champion focus seat (hash-gated
+  `candidate_ppo_80.pt`) + three copies of ONE frozen opponent per game,
+  rotated across all 4 seats, for each of three opponent families -
+  **A**: 32-game checkpoint, **B**: 64-game checkpoint, **C**: 128-game
+  checkpoint (all hash-gated against their previously-logged SHA-256
+  values before any game). 20 fresh PROMOTION seeds (`50000-50019`,
+  `evaluation_protocol.SEED_CLASS_PROMOTION`) x 4 rotations x 3 families =
+  **240 physical games**, `max_rounds=200`, deterministic legal-masked
+  argmax throughout. Pre-registered rule (unchanged from when the runner
+  was built): **PROMOTION_GO** if the aggregate seed-block bootstrap 95%
+  CI for `win_rate - 25%` (PROMOTION seed as the block, pooling all 12
+  games per seed across the three families) has a lower bound `> 0` AND
+  no individual family's CI upper bound is `<= 0`; **PROMOTION_KILL** if
+  the aggregate CI upper bound is `<= 0`; otherwise INCONCLUSIVE.
+
+  ```bash
+  PYTHONHASHSEED=0 PYTHONIOENCODING=utf-8 python scripts/monopolyzero_promotion_gate_80_vs_32_64_128.py
+  ```
+
+- Result: all four checkpoint/actor hash gates passed before any game.
+  0 illegal actions, 0 crashes, 0 ASU modules loaded across all 240
+  games. Wall time 2007.4s (~33.5 min), peak RSS 0.32 GiB.
+
+  | | Wins/games | Win rate | CI vs. 25% null | Verdict |
+  |---|---|---|---|---|
+  | **Aggregate** (240g, 20 seed blocks) | 109/240 | **45.42%** | **[+13.75, +26.67] pts** | (GO condition met) |
+  | A vs. 32-game | 42/80 | **52.5%** | [+12.5, +41.25] pts | GO |
+  | B vs. 64-game | 41/80 | **51.25%** | [+15.0, +38.75] pts | GO |
+  | C vs. 128-game | 26/80 | **32.5%** | [-2.5, +18.75] pts | INCONCLUSIVE |
+
+  Net worth and bankruptcy moved in the champion's favor in aggregate
+  (+3,365.5 mean net worth, 20.8% vs. 48.6% bankruptcy) and in every
+  individual family, though neither is the primary statistic.
+  `BUY_PROPERTY` stayed collapsed (10.4% of legal opportunities in
+  aggregate, consistent with `031`/`032`'s documented drift) - diagnostic
+  only, not used in the decision.
+
+  Full structured record:
+  [logs/experiments/033-promotion-gate-80-vs-32-64-128.json](../logs/experiments/033-promotion-gate-80-vs-32-64-128.json).
+
+- Conclusion / next step: **PROMOTION_GO** per the pre-registered rule -
+  the aggregate CI clears zero and no individual family's CI upper bound
+  is `<= 0` (family C's own CI, `[-2.5, +18.75]`, still has a positive
+  upper bound even though it straddles zero and is individually
+  INCONCLUSIVE). The champion clearly generalizes against the 32-game
+  and 64-game families it was never selected against, which was this
+  gate's central question. **This does NOT mean the 80-game model
+  conclusively beats the 128-game model individually** - family C's own
+  CI straddles zero, so no standalone strength claim vs. the 128-game
+  checkpoint specifically is supported by this run; the aggregate GO
+  rests on pooling all three equally-weighted families as one 20-seed-
+  block statistic, exactly as pre-registered, not on family C's own
+  result. `PROMOTION` seeds `50000-50019` are now consumed by this
+  experiment (`50020-50049` remain fresh/unused, still classified
+  `PROMOTION`, not reclassified to `DEV`); `FINAL_BLIND` was not
+  touched. No core algorithm file, `evaluation_protocol.py`'s
+  statistics, the promotion runner itself, or
+  `references/DeepRL_Monopoly` (pinned at
+  `afd9205761317e196d77f679921c35fb04c7ab96`) was modified to record
+  this result - no new game was played to produce this log entry.
