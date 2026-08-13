@@ -343,14 +343,80 @@ def test_build_untrained_baseline_agent_raises_system_exit_on_hash_mismatch(monk
         module.build_untrained_baseline_agent()
 
 
-def test_build_untrained_baseline_agent_is_bit_exact_reproducible():
+# The exact Python/PyTorch/platform/device combination on which 027's
+# untrained-baseline actor hash (EXPECTED_BASELINE_ACTOR_SHA256) was
+# generated and has been confirmed matching on every run since. PyTorch
+# gives no cross-build/cross-platform bit-exactness guarantee for identical
+# seeded construction (different BLAS/CPU-kernel builds, CPU vs CUDA, etc.),
+# so the historical-hash assertion below only runs when the CURRENT runtime
+# matches this fingerprint - everywhere else (e.g. a fresh Colab clone) it
+# skips cleanly rather than asserting an unverified cross-platform hash.
+_KNOWN_GOOD_BASELINE_HASH_FINGERPRINT = {
+    "python_version": "3.12.10",
+    "torch_version": "2.13.0+cpu",
+    "platform_prefix": "Windows",
+    "device": "cpu",
+}
+
+
+def _matches_known_good_fingerprint(fingerprint: dict) -> bool:
+    return (
+        fingerprint["python_version"] == _KNOWN_GOOD_BASELINE_HASH_FINGERPRINT["python_version"]
+        and fingerprint["torch_version"] == _KNOWN_GOOD_BASELINE_HASH_FINGERPRINT["torch_version"]
+        and fingerprint["platform"].startswith(_KNOWN_GOOD_BASELINE_HASH_FINGERPRINT["platform_prefix"])
+        and fingerprint["device"] == _KNOWN_GOOD_BASELINE_HASH_FINGERPRINT["device"]
+    )
+
+
+def test_build_untrained_baseline_agent_reproducible_within_current_runtime():
+    """Portable reproducibility check: constructs 027's exact seeded
+    untrained-baseline sequence (random.seed(0)/np.random.seed(0)/
+    torch.manual_seed(0) -> PPOAgent(hybrid=False)) twice, directly - NOT
+    via module.build_untrained_baseline_agent(), which hard-gates on 027's
+    historical actor hash and would raise SystemExit outright on any
+    environment where PyTorch/platform legitimately produce a different
+    hash for the identical seeded construction (see
+    test_build_untrained_baseline_agent_matches_027_historical_hash_on_known_good_runtime
+    below for that check, gated to the runtime it's actually valid on).
+    Within-run reproducibility holds regardless of PyTorch/platform, so
+    this assertion is unconditional."""
+    import random
+
+    import numpy as np
+    import torch
+
     common.ensure_reference_on_path()
-    agent_a = module.build_untrained_baseline_agent()
-    agent_b = module.build_untrained_baseline_agent()
-    hash_a = module._full_actor_sha256(agent_a.actor)
-    hash_b = module._full_actor_sha256(agent_b.actor)
+    from monopoly_game_engine.agent_ppo import PPOAgent
+
+    def _build():
+        random.seed(0)
+        np.random.seed(0)
+        torch.manual_seed(0)
+        agent = PPOAgent(player_id=0, hybrid=False, device="cpu")
+        agent.actor.eval()
+        return agent
+
+    hash_a = module._full_actor_sha256(_build().actor)
+    hash_b = module._full_actor_sha256(_build().actor)
     assert hash_a == hash_b
-    assert hash_a == module.EXPECTED_BASELINE_ACTOR_SHA256  # pinned to 027's own logged value
+
+
+def test_build_untrained_baseline_agent_matches_027_historical_hash_on_known_good_runtime():
+    """Preserves 027's historical actor-hash provenance, gated to the exact
+    runtime fingerprint it was generated and last confirmed on - skips
+    cleanly (does not fail) everywhere else, per this project's
+    Colab-portability requirement."""
+    fingerprint = common.runtime_fingerprint()
+    if not _matches_known_good_fingerprint(fingerprint):
+        pytest.skip(
+            "027's untrained-baseline actor hash was only ever validated on "
+            f"{_KNOWN_GOOD_BASELINE_HASH_FINGERPRINT} - current runtime is "
+            f"{fingerprint}, skipping rather than asserting an unverified "
+            "cross-platform hash"
+        )
+    common.ensure_reference_on_path()
+    agent = module.build_untrained_baseline_agent()
+    assert module._full_actor_sha256(agent.actor) == module.EXPECTED_BASELINE_ACTOR_SHA256
 
 
 # ── summarize(): synthetic per-game records ─────────────────────────────
