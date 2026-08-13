@@ -70,6 +70,7 @@ DEV_SEED_RANGES: tuple[tuple[int, int, str], ...] = (
     (52000, 52015, "032 - LR-ablation candidates A (lr=1e-4) and B (lr=3e-5): 16-game resume from the 80-game champion, identical seed_arg=51920 for both conditions so LR is the only difference"),
     (52100, 52107, "032 - LR-ablation selection screen: 8 seeds x 4 focus-seat rotation, candidate A/B vs 3 copies of the frozen 80-game champion"),
     (52200, 52219, "032 - LR-ablation confirmation: 20 seeds x 4 focus-seat rotation, selected candidate vs 3 copies of the frozen 80-game champion"),
+    (53000, 53011, "isolated diagnostic/buy-intervention-a96 branch - BUY_PROPERTY runtime-intervention diagnostic (PURE_A96 vs BUY_SIMPLE): 12 seeds x 4 focus-seat rotation, clean-PPO context (vs 3 copies of the former 80-game champion) and structural-stress context (vs FPAgentA/B/C), same seeds both contexts. Isolated worktree/branch only, never merged to main."),
 )
 
 # Fresh, disjoint from DEV_SEED_RANGES and from each other. Reserved here,
