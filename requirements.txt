@@ -1,0 +1,22 @@
+# Root dependency pins - this project's own validated dev environment,
+# exactly mirroring requirements-colab.txt's pins (see that file / this
+# project's experiment logs, which record this exact combination):
+#   Python 3.12.10 (see .python-version), torch 2.13.0+cpu, numpy 2.5.2,
+#   psutil 7.2.2, jsonschema 4.26.0, pytest 9.1.1
+#
+# --extra-index-url adds PyTorch's CPU-only wheel index alongside the
+# default PyPI index (does NOT replace it - the other packages below still
+# resolve from PyPI). CPU-only is deliberate: this project runs no
+# GPU-accelerated code, and pinning CPU-only avoids the much larger CUDA
+# wheel download plus keeps torch's own determinism guarantees the
+# simplest to reason about.
+#
+# Install with a single command:
+#   pip install -r requirements.txt
+--extra-index-url https://download.pytorch.org/whl/cpu
+
+torch==2.13.0
+numpy==2.5.2
+psutil==7.2.2
+jsonschema==4.26.0
+pytest==9.1.1
