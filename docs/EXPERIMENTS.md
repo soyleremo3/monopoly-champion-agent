@@ -2555,3 +2555,110 @@ the former champion/reference baseline; no checkpoint file was renamed,
 copied, rebuilt, or committed. `50020-50039` are now consumed PROMOTION
 seeds; `50040-50049` remain fresh; `FINAL_BLIND` remains untouched (see
 `docs/EVALUATION_PROTOCOL.md`).
+
+## 2026-08-13 (later) — 035: PRE-REGISTERED, NOT YET RUN - EVALUATION-ONLY ASU robustness check for the 96-game champion
+
+**This entry is written before any registered game of this experiment has
+been played, per this project's pre-registration discipline. No results
+section exists yet - one will be added, unedited above this line, only
+after the run completes.** Per `CLAUDE.md`'s ASU-restrictions section, ASU
+sits ONLY as a fixed evaluation opponent below: zero training, zero
+optimizer/backprop steps, and no ASU action/value/rollout output is ever
+recorded as a replay position, training label, or reward-shaping input -
+`monopolyzero_common.play_local_game`/`screen.summarize` only read
+win/loss, net worth, and legal-action-rate counters off each finished game.
+
+- Hypothesis: the current champion (`034`'s frozen 96-game `A_lr1e-4`
+  checkpoint, `candidate_ppo_80_lr_ablation_A_lr1e-4_96.pt`) has so far
+  only ever been measured against same-lineage PPO opponents (`033`/`034`).
+  Does it hold up, at all, against a structurally different, non-learned
+  opponent it has never seen - `ASU_FROZEN_TEACHER`'s frozen heuristic
+  teachers - or does it collapse against play patterns outside its
+  training distribution?
+- Policy verification (done before writing this entry, per the task's own
+  instruction to inspect the pinned reference first): `references/DeepRL_Monopoly`
+  is pinned at `afd9205761317e196d77f679921c35fb04c7ab96` (current submodule
+  HEAD, unchanged). `ASU_FROZEN_TEACHER/__init__.py` exports exactly two
+  concrete teacher classes, confirmed importable at that SHA:
+  **`ASUValueV1`** (one-step frozen value/safety heuristic) and
+  **`ASURolloutV1`** (`ASUValueV1`-driven shortlist + 8-seed x 32-decision
+  rollout on top). Both classes' `policy_id` resolve to
+  `ASU_FROZEN_TEACHER.spec.{ASU_VALUE_V1, ASU_ROLLOUT_V1}`, and
+  `FROZEN_SPEC_HASH` at this SHA matches `006`'s already-recorded value
+  (`9ab1907e...4a6fd74`) - the exact same frozen spec `006` benchmarked
+  zero-illegal-action, zero-crash behavior for.
+- **Cost calibration (informal, DEV seed 42 only - already-consumed/
+  freely-reusable per this project's DEV reuse policy, NOT part of the
+  registered seeds/games below):** before committing to a game count, both
+  classes were timed as all-4-seats opponents on one seeded game.
+  `ASUValueV1`: a full game completed in 170.8s wall time (1043 total
+  decision points, worst single decision 1.74s at 155 legal actions) -
+  cheap enough to run at full scale. `ASURolloutV1`: only 13 decisions
+  completed in a 120s budget (9.56s/decision average, worst 18.5s for a
+  single 2-legal-action decision - the rollout's own internal budget, not
+  legal-action count, dominates its cost). Extrapolating `ASURolloutV1`'s
+  measured per-decision cost across a comparable total-decision count to
+  `ASUValueV1`'s observed 1043-decision full game (scaled to 3 ASU seats
+  out of 4, ~782 ASU-seat decisions/game) gives roughly **2-3 hours per
+  game, ~33-64+ hours for the full pre-registered 16-game family** - far
+  outside "small". Presented to the user with this measurement; the user
+  chose to **skip the `ASURolloutV1` family entirely** rather than run it
+  at that cost, consistent with this task's own "if available" framing.
+  Zero `ASURolloutV1` games are played by this experiment as a result -
+  the infra (`--asu-policy asu-rollout-v1`) exists in the runner for a
+  future, explicitly-budgeted run, but `035` covers `asu-value-v1` only.
+- Setup: new
+  [scripts/monopolyzero_a96_vs_asu_robustness_eval.py](../scripts/monopolyzero_a96_vs_asu_robustness_eval.py),
+  reusing `monopolyzero_pure_ppo_strength_screen.py`'s
+  `build_masked_argmax_policy` (champion seat: the SAME deterministic
+  legal-masked argmax every other champion-gate script in this project
+  uses, no sampling) and `summarize()` (aggregate statistics) unmodified;
+  the only new code is a thin `_ASUOpponentPolicy` adapter binding
+  `ASUValueV1.choose_action(env)` to `play_local_game`'s per-seat contract,
+  with the same opportunity/chosen counters the champion seat records. One
+  champion focus seat (hash-gated `candidate_ppo_80_lr_ablation_A_lr1e-4_96.pt`,
+  checkpoint SHA-256 `78585ed4...a830f51`, actor SHA-256
+  `2bd1e9ba...5a34a40`) + three copies of `ASUValueV1` per game, rotated
+  across all 4 physical seats. **4 fresh DEV seeds (`53000-53003`,
+  `evaluation_protocol.SEED_CLASS_DEV`, newly registered in
+  `DEV_SEED_RANGES` - checked against every existing DEV/PROMOTION/
+  FINAL_BLIND range first, confirmed fresh) x 4 seat rotations = 16
+  physical games**, `max_rounds=200`. Both the reference submodule SHA and
+  `ASU_FROZEN_TEACHER.spec.FROZEN_SPEC_HASH` are re-verified against `006`'s
+  recorded values at runtime (hard `STOP` on drift) before any game, in
+  addition to the champion's own checkpoint/actor hash gate.
+
+  ```bash
+  PYTHONHASHSEED=0 PYTHONIOENCODING=utf-8 python scripts/monopolyzero_a96_vs_asu_robustness_eval.py --asu-policy asu-value-v1
+  ```
+
+- No promotion/GO-KILL decision rule is pre-registered for this run - this
+  is an **evaluation-only robustness read**, not a candidate-selection
+  gate (there is no candidate to promote; the champion is unchanged either
+  way). Metrics collected, all diagnostic/descriptive: champion win rate
+  (wins/games, Wilson 95% interval), champion and ASU mean net worth,
+  champion and ASU bankruptcy rate, round-cap rate, `BUY_PROPERTY`/
+  `ACCEPT_TRADE` legal-opportunity/chosen/rate for both sides, trade
+  offers/game for both sides, illegal actions, crashes, per-physical-seat
+  win breakdown, and wall-clock runtime. `screen.summarize()`'s existing
+  fail-closed behavior (hard `RuntimeError` on any illegal action or
+  crash, refusing to compute statistics on a contaminated run) is reused
+  unmodified, so a genuine ASU/engine integrity failure stops the run
+  rather than being silently averaged over.
+- Result: **not yet run.** `53000-53003` are reserved for this experiment
+  (not yet consumed as of this pre-registration). `PROMOTION`
+  (`50000-50049`, `50000-50039` already consumed by `033`/`034`) and
+  `FINAL_BLIND` (`90000-90049`) are untouched by this DEV-scoped run. No
+  core algorithm file, `evaluation_protocol.py`'s statistics,
+  `monopolyzero_pure_ppo_strength_screen.py`, the champion checkpoint, or
+  `references/DeepRL_Monopoly` (pinned at
+  `afd9205761317e196d77f679921c35fb04c7ab96`) was modified to add this
+  pre-registration - only the new runner script, its test file, this entry,
+  and `evaluation_protocol.py`'s `DEV_SEED_RANGES` registration for
+  `53000-53003` were added.
+
+---
+
+### 2026-08-13 (later still) — 035 RESULT (appended after completion; pre-registration above is unedited)
+
+*placeholder - replaced by the actual result after the run completes.*
