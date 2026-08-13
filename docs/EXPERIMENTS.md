@@ -2659,6 +2659,65 @@ win/loss, net worth, and legal-action-rate counters off each finished game.
 
 ---
 
-### 2026-08-13 (later still) — 035 RESULT (appended after completion; pre-registration above is unedited)
+### 2026-08-13 (later still) — 035 RESULT: champion loses 0/16, NOT robust against ASUValueV1 (appended after completion; pre-registration above is unedited)
 
-*placeholder - replaced by the actual result after the run completes.*
+All 16 pre-registered games (seeds `53000-53003` x 4 seat rotations) ran to
+completion. `git_head_sha` in the run's own output (`7a1a5bf1f6...`) matches
+this pre-registration's commit exactly. 0 illegal actions, 0 crashes, 0
+fallbacks (no fallback/substitution path exists for ASU in this harness)
+across all 16 games. `asu_modules_loaded` confirms `ASU_FROZEN_TEACHER`,
+`.core`, `.spec`, `.types` were loaded (expected - this run's whole purpose
+is ASU as an opponent), never `.evaluate`. Wall time **7008.4s (~1h57m)** -
+well above the ~35min estimate from the single-seed (DEV seed 42)
+calibration; board-draw variance across the 4 fresh seeds accounts for the
+gap (772-2053 decisions/game), not a hang - confirmed CPU-active throughout
+and completed inside the 2-hour hard budget the user approved after the
+run was already taking much longer than expected. Full structured record:
+[logs/experiments/035-pure-a96-vs-asu-value-v1-robustness-eval.json](../logs/experiments/035-pure-a96-vs-asu-value-v1-robustness-eval.json).
+
+| | Champion | ASUValueV1 (3 copies) |
+|---|---|---|
+| Win rate | **0/16 = 0.0%** (Wilson 95% `[0.0, 19.4]`%) | 16/16 games won by one of the 3 ASU seats |
+| Bankruptcy rate | **100%** | 66.7% |
+| Mean net worth | **0.0** | 12,334.83 |
+| Round-cap hits | **0/16** | - |
+| `BUY_PROPERTY` rate when legal | **0.0%** (115 opportunities) | 69.1% (265 opportunities) |
+| `ACCEPT_TRADE` rate when legal | **0.0%** (365 opportunities) | 18.0% (1108 opportunities) |
+| `DECLINE_TRADE` rate when legal | 5.8% | 77.9% |
+| Trade offers/game | 52.9 | 10.8 (combined across 3 seats) |
+| Per-seat win rate | 0/4 at every physical seat (0,1,2,3) | - |
+
+- Conclusion: **the champion is NOT robust against ASUValueV1** - it loses
+  every single game, and unlike its record against same-lineage PPO
+  opponents (`033`/`034`, where most "wins" were round-200 net-worth
+  tiebreaks), **every loss here is a genuine bankruptcy defeat** (0/16
+  round-cap hits). The champion's previously-documented `BUY_PROPERTY`/
+  `ACCEPT_TRADE` collapse (diagnostic-only when the champion was still
+  winning against same-lineage opponents) is lethal here: ASUValueV1
+  actually buys property (69.1% of opportunities) and trades with real
+  discipline, builds full 28-property monopolies, and extracts rent until
+  the champion is bankrupt, while the champion keeps spamming trade offers
+  (52.9/game) that never convert into board position. The loss is uniform
+  across all 4 physical seats, ruling out a seat-position artifact. **This
+  directly contradicts the strength claim `033`/`034` established** - that
+  result was real but scoped to this project's own self-play family
+  (same-lineage PPO checkpoints); it does not generalize to a structurally
+  different, competent, rule-following opponent. The champion itself was
+  NOT modified by this experiment (per `CLAUDE.md`'s ASU restrictions - ASU
+  sits only as a fixed evaluation opponent, never a training label,
+  teacher, or fallback) and remains the current champion; this is
+  evaluation evidence for future decisions, not an automatic
+  demotion/retraining trigger. `ASURolloutV1` (originally in scope as a
+  second family) was skipped entirely per the user's explicit choice after
+  cost calibration measured it at ~2-3h/game (~33-64+h for the full
+  16-game family) - zero `ASURolloutV1` games exist in this experiment;
+  the runner (`--asu-policy asu-rollout-v1`) is ready for a future,
+  explicitly-budgeted run. `53000-53003` are now consumed DEV seeds (DEV
+  pool stays freely reusable per policy); `PROMOTION`/`FINAL_BLIND` were
+  not touched. Incidental to this task: the new test file
+  (`tests/test_monopolyzero_a96_vs_asu_robustness_eval.py`) initially leaked
+  `ASU_FROZEN_TEACHER` into `sys.modules` for the rest of the shared pytest
+  process, breaking three previously-passing "ASU not loaded" guard tests
+  elsewhere in the suite when run in the same session - fixed with an
+  autouse cleanup fixture (commit `288f737`); full suite now passes
+  818/818.

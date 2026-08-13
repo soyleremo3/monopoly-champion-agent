@@ -1,0 +1,89 @@
+{
+  "experiment_id": "035-pure-a96-vs-asu-value-v1-robustness-eval",
+  "experiment_name": "EVALUATION-ONLY ASU robustness check: PURE 96-game A_lr1e-4 champion vs 3xASUValueV1",
+  "experiment_type": "benchmark",
+  "date": "2026-08-13",
+  "code_commit_sha": "7a1a5bf1f60eec33c16ccdb7b0dbf4c7df53e04d",
+  "reference_submodule_sha": "afd9205761317e196d77f679921c35fb04c7ab96",
+  "exact_commands": [
+    "PYTHONHASHSEED=0 PYTHONIOENCODING=utf-8 python scripts/monopolyzero_a96_vs_asu_robustness_eval.py --asu-policy asu-value-v1 --output artifacts/monopolyzero_a96_vs_asu_robustness_eval/035_asu_value_v1_stdout.json"
+  ],
+  "seeds": [53000, 53001, 53002, 53003],
+  "algorithm_config": {
+    "purpose": "The champion (034's frozen 96-game A_lr1e-4 checkpoint) has so far only been measured against same-lineage PPO opponents (033/034). Does it hold up against ASU_FROZEN_TEACHER, a structurally different, non-learned opponent it never saw during training?",
+    "asu_role": "evaluation opponent only - no ASU action, value, or rollout output was recorded as a replay position, training label, or reward-shaping input; zero training/optimizer/backprop steps ran in this experiment",
+    "asu_policy": "asu-value-v1 (ASUValueV1)",
+    "asu_frozen_spec_hash": "9ab1907e0de1af4b253ce36ffa107c4fdb5e2b913858ef87c362423e61a6fd74",
+    "asu_modules_loaded": ["ASU_FROZEN_TEACHER", "ASU_FROZEN_TEACHER.core", "ASU_FROZEN_TEACHER.spec", "ASU_FROZEN_TEACHER.types"],
+    "champion_checkpoint": "candidate_ppo_80_lr_ablation_A_lr1e-4_96.pt",
+    "champion_hashes": {
+      "checkpoint_sha256": "78585ed4e2400d024633ee2878d8b88243f7f4a9f498d9019a73e44b3a830f51",
+      "actor_sha256": "2bd1e9bad3d6e0100e033507f72f15b5088d8f8fb2f04dba1ae9d759b5a34a40"
+    },
+    "design": "One champion focus seat (deterministic legal-masked argmax, same policy every other champion-gate script in this project uses) + three copies of ASUValueV1 per game, rotated across all 4 physical seats. 4 fresh DEV seeds (53000-53003, evaluation_protocol.SEED_CLASS_DEV) x 4 seat rotations = 16 games, max_rounds=200. No promotion/GO-KILL decision rule was pre-registered - this is a descriptive robustness read, not a candidate-selection gate.",
+    "asu_rollout_v1_family_skipped": "ASURolloutV1 (a second, more expensive ASU family originally in scope) was informally calibrated before this run (DEV seed 42, not part of the registered seeds/games): ASUValueV1 completed a full 4-seat game in 170.8s (1043 decisions), but ASURolloutV1 only completed 13 decisions in a 120s budget (9.56s/decision average, worst 18.5s for a single decision). Extrapolated cost for the pre-registered 16-game ASURolloutV1 family was roughly 2-3 hours/game (~33-64+ hours total) - the user explicitly chose to skip it rather than run it at that cost. Zero ASURolloutV1 games were played."
+  },
+  "model_checkpoint": {
+    "sha256": "78585ed4e2400d024633ee2878d8b88243f7f4a9f498d9019a73e44b3a830f51",
+    "path": "artifacts/monopolyzero_pure_ppo_learnability_gate/candidate_ppo_80_lr_ablation_A_lr1e-4_96.pt",
+    "format_version": 3
+  },
+  "counts": {
+    "seeds": 4,
+    "seat_rotations_per_seed": 4,
+    "games": 16,
+    "decisions_total": 21583
+  },
+  "runtime": {
+    "wall_time_s": 7008.423917000001,
+    "peak_rss_gib": 0.2922859191894531
+  },
+  "metrics": {
+    "champion_wins": 0,
+    "champion_games": 16,
+    "champion_win_rate": 0.0,
+    "champion_wilson_95": [0.0, 0.1936076805344365],
+    "champion_mean_net_worth": 0.0,
+    "asu_mean_net_worth": 12334.833333333334,
+    "champion_net_worth_disadvantage": -12334.833333333334,
+    "champion_bankruptcy_rate": 1.0,
+    "asu_bankruptcy_rate": 0.6666666666666666,
+    "round_cap_hits": 0,
+    "round_cap_rate": 0.0,
+    "champion_buy_property_opportunities": 115,
+    "champion_buy_property_rate_when_legal": 0.0,
+    "champion_accept_trade_opportunities": 365,
+    "champion_accept_trade_rate_when_legal": 0.0,
+    "champion_decline_trade_rate_when_legal": 0.057534246575342465,
+    "champion_trade_offers_per_game": 52.9375,
+    "asu_buy_property_opportunities": 265,
+    "asu_buy_property_rate_when_legal": 0.690566037735849,
+    "asu_accept_trade_opportunities": 1108,
+    "asu_accept_trade_rate_when_legal": 0.1796028880866426,
+    "asu_decline_trade_rate_when_legal": 0.7788808664259927,
+    "asu_trade_offers_per_game": 10.770833333333334,
+    "per_seat_win_breakdown": {
+      "0": {"games": 4, "wins": 0, "win_rate": 0.0},
+      "1": {"games": 4, "wins": 0, "win_rate": 0.0},
+      "2": {"games": 4, "wins": 0, "win_rate": 0.0},
+      "3": {"games": 4, "wins": 0, "win_rate": 0.0}
+    },
+    "seed_block_bootstrap_vs_25pct_null": {
+      "point": -0.25,
+      "ci_95": [-0.25, -0.25],
+      "n_seed_blocks": 4
+    },
+    "not_a_promotion_claim": "descriptive/diagnostic only, no GO/KILL rule was pre-registered - this is a robustness read on an unchanged champion, not a candidate comparison"
+  },
+  "loss": null,
+  "integrity": {
+    "illegal_actions": 0,
+    "fallbacks": 0,
+    "crashes": 0
+  },
+  "result": "The champion loses every single game: 0/16 wins (Wilson 95% CI [0.0, 19.4%]), 100% bankruptcy rate, and - unlike its round-200 net-worth-tiebreak-heavy record against same-lineage PPO opponents (033/034) - 0/16 round-cap hits, meaning every loss here is a genuine bankruptcy defeat, not a tiebreak. The champion's known BUY_PROPERTY/ACCEPT_TRADE collapse (0.0% and 0.0% respectively when legal, previously documented in 033/034 as diagnostic-only against same-lineage opponents) is lethal against ASUValueV1, which buys 69.1% of legal opportunities and accepts/declines trades with real discipline (17.96%/77.89%). The champion still spams trade offers (52.9/game) but never converts BUY_PROPERTY or ACCEPT_TRADE opportunities into board position, while ASUValueV1 builds full 28-property monopolies and extracts rent until the champion is bankrupt. The loss is uniform across all 4 physical seats (0/4 wins at every seat), ruling out a positional artifact. 0 illegal actions, 0 crashes, 0 fallbacks (no fallback/substitution mechanism exists for ASU in this harness - ASUValueV1's own selection logic only ever returns actions from its legal candidate set) across all 16 games. This directly contradicts the champion's strong record against same-lineage PPO opponents and shows it is NOT robust against a structurally different, competent, rule-following opponent - the win-rate advantage measured in 033/034 does not generalize outside this project's own self-play family.",
+  "raw_logs": [
+    "logs/experiments/raw/035-pure-a96-vs-asu-value-v1-robustness-eval_stdout.txt"
+  ],
+  "notes": "ASURolloutV1 (family A in the original 2-family pre-registration) was skipped entirely per the user's explicit choice after cost calibration - see algorithm_config.asu_rollout_v1_family_skipped; zero ASURolloutV1 games exist anywhere in this experiment. The champion checkpoint itself was not modified by this experiment - it remains the current champion; this result is evaluation evidence only, per CLAUDE.md's ASU-restrictions section (ASU sits as a fixed evaluation opponent only, never a training label, teacher, or fallback). No core algorithm file, evaluation_protocol.py's statistics, the champion checkpoint, or references/DeepRL_Monopoly (pinned at afd9205761317e196d77f679921c35fb04c7ab96) was modified to add this pre-registration or to record this result - only scripts/monopolyzero_a96_vs_asu_robustness_eval.py, its test file, evaluation_protocol.py's DEV_SEED_RANGES (53000-53003 registration), this log, and docs/EXPERIMENTS.md were added/changed (commits 7a1a5bf pre-registration, 288f737 an incidental test-isolation fix for a new ASU-import test file leaking ASU_FROZEN_TEACHER into sys.modules across the shared pytest process - unrelated to this experiment's own result). code_commit_sha (7a1a5bf1f60eec33c16ccdb7b0dbf4c7df53e04d) is the clean HEAD the runner itself captured via require_clean_git_tree() at process start, read directly from the script's own JSON output field git_head_sha, not backfilled. Wall time 7008.42s (~1h57m) is well above the ~35min estimate from a single-seed (DEV seed 42) calibration game - board-draw variance across the 4 fresh seeds (up to 2053 decisions in the longest game vs. 772 in the shortest) accounts for the difference; all 16 games nonetheless completed cleanly within the user-approved 2-hour hard budget."
+}
