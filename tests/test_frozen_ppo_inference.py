@@ -12,11 +12,19 @@ Coverage:
 - determinism (same inputs twice -> same output)
 - never selects an illegal action, across many randomized scenarios
 - checkpoint-file hash gate: rejects a corrupted/wrong checkpoint
-- actor-source hash gate: rejects on a source-hash mismatch
+- actor STATE (state_dict) hash gate: REQUIRED - rejects on mismatch,
+  passes on a match, reuses (not reimplements)
+  monopolyzero_pure_ppo_learnability_gate._full_actor_sha256
+- actor-source hash gate: OPTIONAL - rejects on a source-hash mismatch when
+  supplied, accepts when correct, is skipped entirely when omitted
 - rejects a hybrid/fixed-rule checkpoint (HYBRID_COMPAT-style override
   path), never silently falls back to it
 - torch.argmax's own tie-break behavior (empirically verified, not assumed)
 - FrozenPurePPOPolicy.act(): legality guarantee, determinism, decision trace
+- act() runs the ActorNetwork forward pass EXACTLY ONCE per decision,
+  whether tracing is enabled or not (forward-call-counting wrapper)
+- trace-enabled and trace-disabled calls select the identical action
+- DecisionTrace.legal_action_count and .inference_latency_ms
 - OfficialSubmissionAdapter: explicit TBD stub, raises on use
 """
 
@@ -77,12 +85,12 @@ def test_no_asu_modules_loaded_after_import_and_use(tmp_path):
     agent.save(str(ckpt_path))
 
     expected_checkpoint_sha256 = module.file_sha256(ckpt_path)
-    expected_actor_source_sha256 = module.actor_source_sha256()
+    expected_actor_sha256 = module.full_actor_state_sha256(agent.actor)
 
     policy = module.FrozenPurePPOPolicy.from_checkpoint(
         ckpt_path,
         expected_checkpoint_sha256=expected_checkpoint_sha256,
-        expected_actor_source_sha256=expected_actor_source_sha256,
+        expected_actor_sha256=expected_actor_sha256,
     )
     policy.act([0.0] * 300, [1])
 
@@ -128,7 +136,7 @@ def test_fresh_subprocess_full_flow_matches_in_process(tmp_path):
     agent = PPOAgent(player_id=0, hybrid=False, device="cpu")
     agent.save(str(ckpt_path))
     checkpoint_sha256 = module.file_sha256(ckpt_path)
-    actor_source_sha256 = module.actor_source_sha256()
+    actor_sha256 = module.full_actor_state_sha256(agent.actor)
 
     code = (
         "import sys\n"
@@ -136,7 +144,7 @@ def test_fresh_subprocess_full_flow_matches_in_process(tmp_path):
         "import frozen_ppo_inference as m\n"
         f"policy = m.FrozenPurePPOPolicy.from_checkpoint({str(ckpt_path)!r}, "
         f"expected_checkpoint_sha256={checkpoint_sha256!r}, "
-        f"expected_actor_source_sha256={actor_source_sha256!r})\n"
+        f"expected_actor_sha256={actor_sha256!r})\n"
         "action = policy.act([0.0] * 300, [1, 2, 3])\n"
         "assert action in (1, 2, 3), action\n"
         "print('OK', action)\n"
@@ -214,7 +222,10 @@ def test_exact_agreement_with_existing_eval_harness_masked_argmax():
     scenarios and a real ActorNetwork, frozen_ppo_inference.masked_argmax_action
     must select the IDENTICAL action as
     monopolyzero_pure_ppo_strength_screen.build_masked_argmax_policy - the
-    policy already used to produce experiments 027-033."""
+    policy already used to produce experiments 027-033. Re-verified after
+    the single-forward-pass refactor: checks masked_argmax_action,
+    masked_argmax_decision, and FrozenPurePPOPolicy.act with tracing both
+    off and on."""
     import torch
 
     from monopoly_game_engine.actions import ACTION_SPACE_SIZE
@@ -226,6 +237,8 @@ def test_exact_agreement_with_existing_eval_harness_masked_argmax():
     scenarios = _random_scenarios(200, seed=1234, action_space_size=ACTION_SPACE_SIZE, state_dim=STATE_DIM)
 
     existing_policy = strength_screen.build_masked_argmax_policy(actor, device, counters=None, env_holder=None)
+    policy_no_trace = module.FrozenPurePPOPolicy(actor, device="cpu", enable_trace=False)
+    policy_with_trace = module.FrozenPurePPOPolicy(actor, device="cpu", enable_trace=True)
 
     for state, legal in scenarios:
         env = _FixedStateEnv(legal, state)
@@ -235,8 +248,11 @@ def test_exact_agreement_with_existing_eval_harness_masked_argmax():
         actual = module.masked_argmax_action(actor, device, state, legal)
         assert actual == expected, (state, legal, expected, actual)
 
-        via_policy_object = module.FrozenPurePPOPolicy(actor, device="cpu").act(state, legal)
-        assert via_policy_object == expected
+        decision_action, _log_probs, _latency_s = module.masked_argmax_decision(actor, device, state, legal)
+        assert decision_action == expected
+
+        assert policy_no_trace.act(state, legal) == expected
+        assert policy_with_trace.act(state, legal) == expected
 
 
 def test_exact_agreement_across_multiple_actor_seeds():
@@ -341,9 +357,9 @@ def _save_real_checkpoint(path: Path, *, hybrid: bool = False, player_id: int = 
 
 def test_load_frozen_actor_rejects_corrupted_checkpoint(tmp_path):
     ckpt_path = tmp_path / "ckpt.pt"
-    _save_real_checkpoint(ckpt_path)
+    agent = _save_real_checkpoint(ckpt_path)
     expected_checkpoint_sha256 = module.file_sha256(ckpt_path)
-    expected_actor_source_sha256 = module.actor_source_sha256()
+    expected_actor_sha256 = module.full_actor_state_sha256(agent.actor)
 
     # Corrupt the file after computing the expected hash from the original.
     raw = bytearray(ckpt_path.read_bytes())
@@ -354,21 +370,22 @@ def test_load_frozen_actor_rejects_corrupted_checkpoint(tmp_path):
         module.load_frozen_actor(
             ckpt_path,
             expected_checkpoint_sha256=expected_checkpoint_sha256,
-            expected_actor_source_sha256=expected_actor_source_sha256,
+            expected_actor_sha256=expected_actor_sha256,
         )
 
 
 def test_load_frozen_actor_rejects_wrong_checkpoint(tmp_path):
     """A structurally valid, real checkpoint - just not the one whose hash
-    was pinned as expected."""
+    was pinned as expected (checkpoint-file gate, not the actor-state
+    gate)."""
     ckpt_path = tmp_path / "ckpt.pt"
-    _save_real_checkpoint(ckpt_path)
+    agent = _save_real_checkpoint(ckpt_path)
 
     with pytest.raises(module.ChecksumMismatchError, match="checkpoint file SHA-256 mismatch"):
         module.load_frozen_actor(
             ckpt_path,
             expected_checkpoint_sha256="0" * 64,
-            expected_actor_source_sha256=module.actor_source_sha256(),
+            expected_actor_sha256=module.full_actor_state_sha256(agent.actor),
         )
 
 
@@ -377,17 +394,17 @@ def test_load_frozen_actor_rejects_nonexistent_checkpoint(tmp_path):
         module.load_frozen_actor(
             tmp_path / "does_not_exist.pt",
             expected_checkpoint_sha256="0" * 64,
-            expected_actor_source_sha256="0" * 64,
+            expected_actor_sha256="0" * 64,
         )
 
 
 def test_load_frozen_actor_succeeds_on_matching_hashes(tmp_path):
     ckpt_path = tmp_path / "ckpt.pt"
-    _save_real_checkpoint(ckpt_path)
+    agent = _save_real_checkpoint(ckpt_path)
     actor = module.load_frozen_actor(
         ckpt_path,
         expected_checkpoint_sha256=module.file_sha256(ckpt_path),
-        expected_actor_source_sha256=module.actor_source_sha256(),
+        expected_actor_sha256=module.full_actor_state_sha256(agent.actor),
     )
     common.ensure_reference_on_path()
     from monopoly_game_engine.networks import ActorNetwork
@@ -396,7 +413,81 @@ def test_load_frozen_actor_succeeds_on_matching_hashes(tmp_path):
     assert actor.training is False  # .eval() was called
 
 
-# ── actor-source hash gate ──────────────────────────────────────────────
+# ── actor STATE hash gate (REQUIRED) ─────────────────────────────────────
+
+
+def test_full_actor_state_sha256_is_a_real_hash(tmp_path):
+    agent = _save_real_checkpoint(tmp_path / "ckpt.pt")
+    value = module.full_actor_state_sha256(agent.actor)
+    assert isinstance(value, str)
+    assert len(value) == 64
+    int(value, 16)  # raises if not valid hex
+
+
+def test_full_actor_state_sha256_is_not_a_reimplementation_but_a_delegation():
+    """AST-based check (not a naive substring search, which would also flag
+    this function's own docstring legitimately mentioning "state_dict"):
+    full_actor_state_sha256's BODY (docstring aside) must consist of a
+    single `return _full_actor_sha256(...)` call - no local hashlib/
+    state_dict iteration logic of its own, i.e. delegation, not a
+    reimplementation of the same algorithm."""
+    import ast
+    import inspect
+
+    source = inspect.getsource(module.full_actor_state_sha256)
+    tree = ast.parse(source)
+    (func_def,) = tree.body
+    assert isinstance(func_def, ast.FunctionDef)
+
+    body = func_def.body
+    # Drop a leading docstring expression statement, if present.
+    if isinstance(body[0], ast.Expr) and isinstance(body[0].value, ast.Constant):
+        body = body[1:]
+
+    assert len(body) == 1, ast.dump(func_def)
+    (stmt,) = body
+    assert isinstance(stmt, ast.Return)
+    call = stmt.value
+    assert isinstance(call, ast.Call)
+    assert isinstance(call.func, ast.Name)
+    assert call.func.id == "_full_actor_sha256"
+
+
+def test_load_frozen_actor_rejects_actor_state_hash_mismatch(tmp_path):
+    """The REQUIRED actor-state gate: correct checkpoint-file hash, correct
+    load, but a wrong expected_actor_sha256 must hard-stop before any
+    inference is possible."""
+    ckpt_path = tmp_path / "ckpt.pt"
+    _save_real_checkpoint(ckpt_path)
+
+    with pytest.raises(module.ChecksumMismatchError, match="actor state_dict SHA-256 mismatch"):
+        module.load_frozen_actor(
+            ckpt_path,
+            expected_checkpoint_sha256=module.file_sha256(ckpt_path),
+            expected_actor_sha256="0" * 64,
+        )
+
+
+def test_load_frozen_actor_succeeds_with_correct_actor_state_hash(tmp_path):
+    ckpt_path = tmp_path / "ckpt.pt"
+    agent = _save_real_checkpoint(ckpt_path)
+    actor = module.load_frozen_actor(
+        ckpt_path,
+        expected_checkpoint_sha256=module.file_sha256(ckpt_path),
+        expected_actor_sha256=module.full_actor_state_sha256(agent.actor),
+    )
+    assert module.full_actor_state_sha256(actor) == module.full_actor_state_sha256(agent.actor)
+
+
+def test_load_frozen_actor_expected_actor_sha256_is_a_required_parameter():
+    import inspect
+
+    sig = inspect.signature(module.load_frozen_actor)
+    assert "expected_actor_sha256" in sig.parameters
+    assert sig.parameters["expected_actor_sha256"].default is inspect.Parameter.empty
+
+
+# ── actor-source hash gate (OPTIONAL) ────────────────────────────────────
 
 
 def test_actor_source_sha256_is_a_real_hash():
@@ -406,16 +497,52 @@ def test_actor_source_sha256_is_a_real_hash():
     int(value, 16)  # raises if not valid hex
 
 
-def test_load_frozen_actor_rejects_on_actor_source_hash_mismatch(tmp_path):
+def test_load_frozen_actor_source_hash_gate_is_optional_and_defaults_to_none():
+    import inspect
+
+    sig = inspect.signature(module.load_frozen_actor)
+    assert sig.parameters["expected_actor_source_sha256"].default is None
+
+
+def test_load_frozen_actor_skips_source_gate_when_omitted(tmp_path):
+    """Not passing expected_actor_source_sha256 at all must still succeed -
+    the optional gate must never be silently required."""
     ckpt_path = tmp_path / "ckpt.pt"
-    _save_real_checkpoint(ckpt_path)
+    agent = _save_real_checkpoint(ckpt_path)
+    actor = module.load_frozen_actor(
+        ckpt_path,
+        expected_checkpoint_sha256=module.file_sha256(ckpt_path),
+        expected_actor_sha256=module.full_actor_state_sha256(agent.actor),
+        # expected_actor_source_sha256 intentionally omitted
+    )
+    assert actor is not None
+
+
+def test_load_frozen_actor_rejects_on_actor_source_hash_mismatch(tmp_path):
+    """Optional gate, when SUPPLIED, must still hard-reject a mismatch -
+    even though the required actor-state hash (gate 2) is correct."""
+    ckpt_path = tmp_path / "ckpt.pt"
+    agent = _save_real_checkpoint(ckpt_path)
 
     with pytest.raises(module.ChecksumMismatchError, match="ActorNetwork class source-code SHA-256 mismatch"):
         module.load_frozen_actor(
             ckpt_path,
             expected_checkpoint_sha256=module.file_sha256(ckpt_path),
+            expected_actor_sha256=module.full_actor_state_sha256(agent.actor),
             expected_actor_source_sha256="0" * 64,
         )
+
+
+def test_load_frozen_actor_accepts_correct_optional_source_hash(tmp_path):
+    ckpt_path = tmp_path / "ckpt.pt"
+    agent = _save_real_checkpoint(ckpt_path)
+    actor = module.load_frozen_actor(
+        ckpt_path,
+        expected_checkpoint_sha256=module.file_sha256(ckpt_path),
+        expected_actor_sha256=module.full_actor_state_sha256(agent.actor),
+        expected_actor_source_sha256=module.actor_source_sha256(),
+    )
+    assert actor is not None
 
 
 # ── hybrid / fixed-rule override rejection ──────────────────────────────
@@ -430,13 +557,16 @@ def test_load_frozen_actor_rejects_hybrid_checkpoint(tmp_path):
     _save_real_checkpoint(ckpt_path, hybrid=True)
 
     # PPOAgent.load's own metadata check (hybrid mismatch) fires before
-    # this module's own redundant hybrid/fixed_action_mask assertion -
-    # either way, this must not return a usable actor.
+    # this module's own redundant hybrid/fixed_action_mask assertion, and
+    # both fire before the actor-state hash gate even runs - either way,
+    # this must not return a usable actor. expected_actor_sha256 is a
+    # placeholder here: this checkpoint is rejected before that gate is
+    # ever reached.
     with pytest.raises((ValueError, RuntimeError)):
         module.load_frozen_actor(
             ckpt_path,
             expected_checkpoint_sha256=module.file_sha256(ckpt_path),
-            expected_actor_source_sha256=module.actor_source_sha256(),
+            expected_actor_sha256="0" * 64,
         )
 
 
@@ -520,6 +650,132 @@ def test_decision_trace_enabled_records_turn_and_top_candidates():
     assert trace.top_candidates[0][1] >= trace.top_candidates[1][1]
     for action_id, _score in trace.top_candidates:
         assert action_id in legal
+
+
+def test_decision_trace_legal_action_count_is_correct():
+    from monopoly_game_engine.state import STATE_DIM
+
+    actor = _build_real_actor()
+    policy = module.FrozenPurePPOPolicy(actor, device="cpu", enable_trace=True)
+    legal = (2, 5, 9, 11, 20, 21)
+    policy.act([0.0] * STATE_DIM, legal)
+
+    trace = policy.last_trace()
+    assert trace.legal_action_count == len(legal) == 6
+
+
+def test_decision_trace_inference_latency_ms_present_finite_nonnegative():
+    import math
+
+    from monopoly_game_engine.state import STATE_DIM
+
+    actor = _build_real_actor()
+    policy = module.FrozenPurePPOPolicy(actor, device="cpu", enable_trace=True)
+    policy.act([0.0] * STATE_DIM, [1, 2, 3])
+
+    trace = policy.last_trace()
+    assert isinstance(trace.inference_latency_ms, float)
+    assert math.isfinite(trace.inference_latency_ms)
+    assert trace.inference_latency_ms >= 0.0
+
+
+def test_decision_trace_optional_turn_field_defaults_to_none():
+    from monopoly_game_engine.state import STATE_DIM
+
+    actor = _build_real_actor()
+    policy = module.FrozenPurePPOPolicy(actor, device="cpu", enable_trace=True)
+    policy.act([0.0] * STATE_DIM, [1, 2, 3])
+    assert policy.last_trace().turn is None
+
+
+# ── single forward pass per decision (trace on or off) ──────────────────
+
+
+class _ForwardCountingActor:
+    """Wraps a real ActorNetwork and counts every call routed through it -
+    lets tests assert exactly how many forward passes a decision used,
+    without mocking torch/nn.Module internals."""
+
+    def __init__(self, actor):
+        self._actor = actor
+        self.call_count = 0
+
+    def __call__(self, state_t, mask_t):
+        self.call_count += 1
+        return self._actor(state_t, mask_t)
+
+    def eval(self):
+        return self._actor.eval()
+
+
+def test_act_runs_exactly_one_forward_pass_with_trace_disabled():
+    from monopoly_game_engine.state import STATE_DIM
+
+    counting_actor = _ForwardCountingActor(_build_real_actor())
+    policy = module.FrozenPurePPOPolicy(counting_actor, device="cpu", enable_trace=False)
+    policy.act([0.0] * STATE_DIM, [1, 2, 3])
+    assert counting_actor.call_count == 1
+
+
+def test_act_runs_exactly_one_forward_pass_with_trace_enabled():
+    from monopoly_game_engine.state import STATE_DIM
+
+    counting_actor = _ForwardCountingActor(_build_real_actor())
+    policy = module.FrozenPurePPOPolicy(counting_actor, device="cpu", enable_trace=True)
+    policy.act([0.0] * STATE_DIM, [1, 2, 3])
+    assert counting_actor.call_count == 1
+    assert policy.last_trace() is not None  # trace was actually built
+
+
+def test_act_runs_exactly_one_forward_pass_across_multiple_decisions():
+    """One forward pass PER decision (not amortized/cached across calls) -
+    N act() calls must produce exactly N forward passes, trace on or off."""
+    from monopoly_game_engine.state import STATE_DIM
+
+    counting_actor = _ForwardCountingActor(_build_real_actor())
+    policy = module.FrozenPurePPOPolicy(counting_actor, device="cpu", enable_trace=True)
+    for _ in range(5):
+        policy.act([0.0] * STATE_DIM, [1, 2, 3])
+    assert counting_actor.call_count == 5
+    assert len(policy.trace_log) == 5
+
+
+def test_trace_enabled_and_disabled_select_the_identical_action():
+    """Tracing must never change the selected action - same actor, same
+    (state, legal_action_ids), trace on vs. off -> identical chosen
+    action."""
+    from monopoly_game_engine.state import STATE_DIM
+
+    actor = _build_real_actor()
+    state = [0.13 * i for i in range(STATE_DIM)]
+    legal = (2, 5, 9, 11)
+
+    no_trace = module.FrozenPurePPOPolicy(actor, device="cpu", enable_trace=False)
+    with_trace = module.FrozenPurePPOPolicy(actor, device="cpu", enable_trace=True)
+
+    assert no_trace.act(state, legal) == with_trace.act(state, legal)
+
+
+def test_masked_argmax_decision_matches_masked_argmax_action():
+    """masked_argmax_action must be a pure delegation to
+    masked_argmax_decision - same chosen action, and the returned log_probs
+    tensor must be usable to recover the exact same argmax independently."""
+    import torch
+
+    from monopoly_game_engine.state import STATE_DIM
+
+    actor = _build_real_actor()
+    device = torch.device("cpu")
+    state = [0.07 * i for i in range(STATE_DIM)]
+    legal = (1, 4, 9, 15)
+
+    chosen_via_wrapper = module.masked_argmax_action(actor, device, state, legal)
+    chosen, log_probs, latency_s = module.masked_argmax_decision(actor, device, state, legal)
+
+    assert chosen == chosen_via_wrapper
+    assert latency_s >= 0.0
+    recomputed = max(legal, key=lambda a: log_probs[a].item())
+    assert recomputed == chosen
 
 
 # ── official adapter: explicit TBD ──────────────────────────────────────
