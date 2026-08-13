@@ -96,6 +96,34 @@ def test_asu_module_guard_clean_when_absent():
     assert common.loaded_asu_modules() == []
 
 
+# ── runtime fingerprint (Colab-portability gate for historical hashes) ──
+
+
+def test_runtime_fingerprint_has_expected_keys_and_types():
+    fp = common.runtime_fingerprint()
+    assert set(fp) == {
+        "python_version", "platform", "torch_version", "numpy_version",
+        "device", "repo_head_sha", "reference_submodule_sha",
+    }
+    assert isinstance(fp["python_version"], str) and fp["python_version"]
+    assert isinstance(fp["platform"], str) and fp["platform"]
+    assert isinstance(fp["torch_version"], str) and fp["torch_version"]
+    assert isinstance(fp["numpy_version"], str) and fp["numpy_version"]
+    assert fp["device"] in ("cpu", "cuda")
+    assert fp["repo_head_sha"] is None or isinstance(fp["repo_head_sha"], str)
+    assert fp["reference_submodule_sha"] is None or isinstance(fp["reference_submodule_sha"], str)
+
+
+def test_runtime_fingerprint_git_sha_none_on_subprocess_failure(monkeypatch):
+    def fake_run(args, **kwargs):
+        raise subprocess.CalledProcessError(1, args)
+
+    monkeypatch.setattr(common.subprocess, "run", fake_run)
+    fp = common.runtime_fingerprint()
+    assert fp["repo_head_sha"] is None
+    assert fp["reference_submodule_sha"] is None
+
+
 # ── module itself imports no ASU-coupled reference modules ──────────────
 
 

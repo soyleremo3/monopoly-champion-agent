@@ -81,6 +81,37 @@ def loaded_asu_modules() -> list[str]:
     )
 
 
+def runtime_fingerprint() -> dict:
+    """Snapshot of facts that can make an otherwise bit-exact-seeded
+    PyTorch construction hash differently across environments (different
+    torch/BLAS/CPU-kernel builds, CPU vs CUDA, different platform) - used
+    to gate historical-hash comparisons to the exact runtime they were
+    generated and last confirmed on, never to change what gets computed.
+    Git fields are best-effort (None if not in a git checkout or the
+    reference submodule isn't present, e.g. a shallow/no-submodule clone)."""
+    import platform
+
+    import numpy as np
+    import torch
+
+    def _git_sha(cwd: Path) -> str | None:
+        try:
+            result = subprocess.run(["git", "rev-parse", "HEAD"], cwd=cwd, capture_output=True, text=True, check=True)
+            return result.stdout.strip() or None
+        except Exception:
+            return None
+
+    return {
+        "python_version": platform.python_version(),
+        "platform": platform.platform(),
+        "torch_version": torch.__version__,
+        "numpy_version": np.__version__,
+        "device": "cuda" if torch.cuda.is_available() else "cpu",
+        "repo_head_sha": _git_sha(REPO_ROOT),
+        "reference_submodule_sha": _git_sha(REFERENCE_ROOT),
+    }
+
+
 class RssMonitor:
     """Polls this process's RSS on a background thread; reports the peak."""
 
