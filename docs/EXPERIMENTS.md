@@ -2426,3 +2426,76 @@ its own proposed experiment and decision log.
   `references/DeepRL_Monopoly` (pinned at
   `afd9205761317e196d77f679921c35fb04c7ab96`) was modified to record
   this result - no new game was played to produce this log entry.
+
+## 2026-08-13 — 034: PRE-REGISTERED, NOT YET RUN - challenger gate for the frozen 96-game A_lr1e-4 checkpoint vs. the 80-game champion + 32/64/128-game families
+
+**This entry is written before any game of this experiment has been
+played, per this project's pre-registration discipline. No results
+section exists yet - one will be added, unedited above this line, only
+after the run completes.**
+
+- Hypothesis: `032`'s frozen 96-game `A_lr1e-4` checkpoint
+  (`candidate_ppo_80_lr_ablation_A_lr1e-4_96.pt`) beat the 80-game
+  champion on `032`'s own DEV confirmation set. Does it also beat the
+  current 80-game champion directly, and generalize across the same
+  32/64/128-game opponent families `033` used, on fresh PROMOTION seeds
+  never touched by `032` or `033`?
+- Setup: new
+  [scripts/monopolyzero_challenger_gate_96_vs_champion_32_64_128.py](../scripts/monopolyzero_challenger_gate_96_vs_champion_32_64_128.py),
+  a minimal adaptation of `033`'s promotion runner
+  (`scripts/monopolyzero_promotion_gate_80_vs_32_64_128.py`) - same
+  `play_one_game`/`summarize` path (`monopolyzero_pure_ppo_strength_screen.py`),
+  same per-checkpoint hash-gate pattern, no new evaluation framework. One
+  challenger focus seat (hash-gated `candidate_ppo_80_lr_ablation_A_lr1e-4_96.pt`,
+  checkpoint SHA-256 `78585ed4...a830f51`, actor SHA-256
+  `2bd1e9ba...5a34a40`) + three copies of ONE frozen opponent per game,
+  rotated across all 4 seats, for each of FOUR opponent families (one
+  more than `033`): **vs_80** (the current 80-game champion,
+  `candidate_ppo_80.pt`), **vs_32**, **vs_64**, **vs_128** (all three
+  identical to `033`'s already-verified checkpoints/hashes). 20 fresh
+  PROMOTION seeds (`50020-50039`, `evaluation_protocol.SEED_CLASS_PROMOTION` -
+  disjoint from `033`'s consumed `50000-50019`) x 4 rotations x 4 families
+  = **320 physical games**, `max_rounds=200`, deterministic legal-masked
+  argmax throughout. Every one of the five checkpoints (challenger +
+  4 opponents) is hash-gated against its already-recorded checkpoint AND
+  actor SHA-256 before any game - a mismatch is a hard `STOP`, never a
+  silent rebuild.
+
+  ```bash
+  PYTHONHASHSEED=0 PYTHONIOENCODING=utf-8 python scripts/monopolyzero_challenger_gate_96_vs_champion_32_64_128.py
+  ```
+
+- **Pre-registered decision rule** (implemented as the pure function
+  `decide_verdict()` in the runner, unit-tested against synthetic CIs in
+  `tests/test_monopolyzero_challenger_gate_96_vs_champion_32_64_128.py`
+  before this experiment is ever run for real - this exact rule will
+  not be altered after seeing results):
+  - **`CHALLENGER_PROMOTION_GO`** only if ALL three hold:
+    1. the **vs_80** family's seed-block bootstrap 95% CI for
+       `win_rate - 25%` has a lower bound `> 0`;
+    2. the **aggregate** CI across all four equally-weighted families
+       (PROMOTION seed as the resampling block, pooling all 16 games -
+       4 rotations x 4 families - sharing that seed) has a lower bound
+       `> 0`;
+    3. no individual family's CI upper bound is `<= 0`.
+  - **`CHALLENGER_PROMOTION_KILL_KEEP_80_GAME_CHAMPION`** if the
+    **vs_80** family's CI upper bound is `<= 0`, OR the aggregate CI
+    upper bound is `<= 0`.
+  - **`CHALLENGER_PROMOTION_INCONCLUSIVE_KEEP_80_GAME_CHAMPION`**
+    otherwise (e.g. a family CI upper bound `<= 0` blocks GO without
+    triggering either KILL condition, or the aggregate/vs_80 lower
+    bound simply doesn't clear zero without the CI going negative).
+  - Behavior metrics (`BUY_PROPERTY`/`ACCEPT_TRADE`/`DECLINE_TRADE`
+    rates), net worth, bankruptcy rate, and round-cap rate remain
+    diagnostic-only, exactly as in every prior gate in this project -
+    they are recorded but **cannot** override this rule.
+  - Both KILL and INCONCLUSIVE keep the 80-game champion; INCONCLUSIVE
+    additionally requires a **separately pre-registered** decision
+    before any promotion action is taken on it (none is pre-authorized
+    by this entry).
+
+- Result: **not yet run.** `50020-50039` are reserved for this
+  experiment (not yet consumed); `50040-50049` remain fresh and
+  unreserved. `FINAL_BLIND` was not touched. No core algorithm file,
+  `evaluation_protocol.py`'s statistics, existing checkpoints, or the
+  `032`/`033` records were modified to add this pre-registration.

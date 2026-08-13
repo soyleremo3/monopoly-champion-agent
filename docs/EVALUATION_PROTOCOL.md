@@ -92,11 +92,15 @@ provenance note) rather than picking ad-hoc numbers.
   **`50000`-`50019` (20 seeds) were consumed by `033`** (the first
   PROMOTION gate, 80-game champion vs. 32/64/128-game opponent families —
   see `logs/experiments/033-promotion-gate-80-vs-32-64-128.json` and
-  `docs/EXPERIMENTS.md`'s `033` entry). **`50020`-`50049`** (30 seeds)
-  remain unused/fresh as of this document. Consumed PROMOTION seeds stay
-  classified `PROMOTION` — per the reuse policy below, they are not
-  reclassified to `DEV` and should not be spent again by a routine or
-  future PROMOTION-scoped run.
+  `docs/EXPERIMENTS.md`'s `033` entry). **`50020`-`50039`** (20 seeds)
+  are **reserved for `034`** (pre-registered challenger gate for the
+  frozen 96-game `A_lr1e-4` checkpoint vs. the 80-game champion +
+  32/64/128-game families — see `docs/EXPERIMENTS.md`'s `034` entry) —
+  reserved, **not yet consumed**, as `034` has not been run. **`50040`-`50049`**
+  (10 seeds) remain fresh and unreserved as of this document. Consumed
+  PROMOTION seeds stay classified `PROMOTION` — per the reuse policy
+  below, they are not reclassified to `DEV` and should not be spent
+  again by a routine or future PROMOTION-scoped run.
 - `FINAL_BLIND_SEED_RANGE = (90000, 90049)` — 50 fresh seeds, deliberately
   far from every other pool, never run by anything as of this document.
 
