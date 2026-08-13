@@ -109,27 +109,31 @@ def export_bundle(source_checkpoint: Path | None = None) -> Path:
     return exported_path
 
 
-_README_TEXT = """A96 friend-match bundle - usage
-================================
+_README_TEXT = """A96 friend-match bundle - usage (from a completely fresh machine)
+====================================================================
 
-1. Code: check out `main` from this project's repository, then
-   initialize the reference submodule:
+1. Clone the repo (default branch: main) and enter it:
+       git clone https://github.com/soyleremo3/monopoly-champion-agent.git
+       cd monopoly-champion-agent
+
+2. Initialize the reference submodule (required - the engine code lives
+   there, not in this repo):
        git submodule update --init --recursive
 
-2. Install the pinned dependencies (from the repo root):
+3. Install the pinned dependencies (from the repo root):
        pip install -r requirements.txt
 
-3. Point the agent at this bundle's checkpoint (copy a96_champion.pt
+4. Point the agent at this bundle's checkpoint (copy a96_champion.pt
    wherever you like, then set the environment variable):
        A96_CHECKPOINT_PATH=/path/to/a96_champion.pt   (Linux/macOS)
        $env:A96_CHECKPOINT_PATH = "C:\\path\\to\\a96_champion.pt"   (PowerShell)
 
-4. Instantiate the agent (from the repo root, or with scripts/ on
+5. Instantiate the agent (from the repo root, or with scripts/ on
    sys.path):
-       from a96_friend_match_agent import A96FriendMatchAgent
+       from scripts.a96_friend_match_agent import A96FriendMatchAgent
        agent = A96FriendMatchAgent()   # reads A96_CHECKPOINT_PATH if set
 
-5. Call it once per decision:
+6. Call it once per decision:
        action = agent.act(state, legal_action_ids)
 
 See manifest.json for the exact checkpoint/actor SHA-256, dependency
